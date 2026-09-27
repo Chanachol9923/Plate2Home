@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { PLATE_LIMITS } from '@/lib/plate/limits';
 import { openTestDb, type TestDb } from './harness';
 import { cleanup, FAKE_PIN_HASH, ids, seed } from './fixtures';
 
@@ -93,6 +94,27 @@ describe('integrity constraints', () => {
 
   it('keeps site_settings to a single row', async () => {
     await expect(db.query(`insert into public.site_settings (id) values (2)`)).rejects.toThrow();
+  });
+});
+
+describe('plate length limits match lib/plate/limits.ts', () => {
+  const insert = (letters: string, number: string) =>
+    db.query(
+      `insert into public.posts (batch_id, kind, plate_type, letters, number, plate_canonical,
+                                 plate_key, plate_display, format_status)
+       values ($1, 'lost', 'car', $2, $3, 'x', 'x', 'x', 'unverified')`,
+      [ids.lostBatch, letters, number],
+    );
+
+  it('stores the longest allowed (unverified) plate', async () => {
+    await expect(
+      insert('ก'.repeat(PLATE_LIMITS.letters), '9'.repeat(PLATE_LIMITS.number)),
+    ).resolves.toBeDefined();
+  });
+
+  it('rejects anything longer', async () => {
+    await expect(insert('ก'.repeat(PLATE_LIMITS.letters + 1), '1')).rejects.toThrow();
+    await expect(insert('กข', '9'.repeat(PLATE_LIMITS.number + 1))).rejects.toThrow();
   });
 });
 

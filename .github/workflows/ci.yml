@@ -31,7 +31,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run check:contrast
       - run: npm run check:provinces
-      - run: npm run test:unit
+      - run: npm run test:coverage
       - run: npm run test:db
       - name: Dependency audit (production deps)
         run: npm audit --omit=dev --audit-level=high

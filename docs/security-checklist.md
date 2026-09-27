@@ -16,8 +16,8 @@ Each item says **how it is verified**. ✅ = verified by an automated test or ch
 - ✅ The `crops` bucket is private and WebP-only. _(rls.test.ts)_
 - ✅ Deleting a post really deletes contacts, push subscriptions, PIN state and matches, and queues the crop for Storage deletion. _(schema.test.ts)_
 - ✅ Integrity: a post's kind matches its batch; match sides can't be swapped; at least one visible contact; argon2id-only PIN hashes. _(schema.test.ts)_
-- ⏳ CI runs all of the above against a real `supabase start` database (workflow written; pending the first push to GitHub). Locally verified on PGlite only.
-- ⏳ `supabase db lint` clean _(runs in CI; first result pending the first push)_.
+- ✅ CI runs all of the above against a real `supabase start` database (first green run 2026-09-27).
+- ✅ `supabase db lint` clean at error level (CI).
 
 ## Secrets
 

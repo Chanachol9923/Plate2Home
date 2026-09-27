@@ -37,6 +37,11 @@ export default defineConfig({
       provider: 'v8',
       include: ['lib/**/*.ts'],
       exclude: ['**/*.test.ts'],
+      // The plate module and matching engine are the core of the product: keep them near-fully tested.
+      thresholds: {
+        'lib/plate/**': { lines: 95, functions: 95, branches: 90, statements: 95 },
+        'lib/matching/**': { lines: 95, functions: 95, branches: 90, statements: 95 },
+      },
     },
   },
 });

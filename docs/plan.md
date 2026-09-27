@@ -1,6 +1,6 @@
 # Plate2Home — Phase 0 Implementation Plan
 
-Status: **Approved 2026-09-27** with every recommendation in §17 accepted (see `docs/decisions.md`). Phase 1 complete.
+Status: **Approved 2026-09-27** with every recommendation in §17 accepted (see `docs/decisions.md`). Phases 1–2 complete.
 Date: 2026-09-27
 
 Product name: **Plate2Home** (EN) / **ป้ายกลับบ้าน** (TH, to be confirmed — see Q4). Both live in a single constant `lib/config/brand.ts`.

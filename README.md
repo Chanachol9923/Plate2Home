@@ -5,7 +5,7 @@ floods. People who **lost** a plate register a watch. People who **found** plate
 them, and the app reads the plates in the browser and matches them instantly. It is
 non-commercial, has no user accounts, and deletes everything automatically.
 
-> **Status: Phase 1 (foundation) done.** See [`docs/plan.md`](docs/plan.md) for the phase plan.
+> **Status: Phases 1–2 done** (foundation; Thai plate module + matching score). See [`docs/plan.md`](docs/plan.md) for the phase plan.
 
 ## Stack
 
@@ -44,7 +44,7 @@ publishable key and secret key into `.env.local`.
 | `npm run check`                          | Everything below except the build                                                    |
 | `npm run lint`                           | ESLint, including the no-hard-coded-text and no-server-env-in-client rules           |
 | `npm run typecheck`                      | `next typegen` + `tsc`                                                               |
-| `npm run test:unit`                      | Unit tests (CSP, env, messages, lint rule, secret scanner)                           |
+| `npm run test:unit`                      | Unit tests (plate module, matching, CSP, env, messages, lint rule, secret scanner)   |
 | `npm run test:db`                        | Migrations + RLS tests. PGlite by default; set `DATABASE_URL` to use a real database |
 | `npm run check:contrast`                 | WCAG contrast of the design tokens, both themes                                      |
 | `npm run check:provinces`                | Province seed migration matches `data/provinces.json`                                |
