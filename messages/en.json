@@ -47,7 +47,8 @@
   "footer": {
     "nonCommercial": "No ads. Not for profit in any way.",
     "privacy": "No GPS tracking. Posts are deleted automatically when they expire.",
-    "credit": "{brand} By an {author}"
+    "credit": "{brand} By an {author}",
+    "about": "About · Terms · Privacy"
   },
   "notFound": {
     "title": "Page not found",
@@ -325,5 +326,75 @@
     "lowConfidence": "Not very sure about this one. Check every character; unreadable ones show as ?.",
     "unread": "Couldn't read this plate. Please type it yourself.",
     "auto": "Found automatically"
+  },
+  "about": {
+    "title": "About {brand}",
+    "lead": "{brand} helps licence plates lost in floods get back to their owners. Owners register the plate number, finders send a photo, and we match them. Free, with no ads.",
+    "tocLabel": "On this page",
+    "updated": "Last updated {date}",
+    "how": {
+      "title": "How to use it",
+      "ownerTitle": "If you lost a plate",
+      "owner": {
+        "a": "Tap “I lost a plate”, type the plate number and choose the province.",
+        "b": "If someone has already found it, you see it straight away. Compare the photo with your plate, then get the finder’s contact details.",
+        "c": "If not, add your contact details, set a PIN and report it lost. When someone finds it, it is matched automatically. Check “My posts” for matches."
+      },
+      "finderTitle": "If you found a plate",
+      "finder": {
+        "a": "Tap “I found a plate” and take a photo. One photo can hold several plates.",
+        "b": "Plates are found and read automatically. If one is missed, drag a box around it and tap “Crop this plate”. Always check the number and province.",
+        "c": "Add your contact details and send. If the owner has reported it lost, you see the owner’s contact details.",
+        "d": "Return the plate yourself, or hand it in at a police station."
+      },
+      "handoverTitle": "At the handover",
+      "handover": {
+        "a": "If anyone asks you to transfer money before you have the plate back, don’t pay.",
+        "b": "Owners bring the registration book and ID card; finders ask to see them before handing over.",
+        "c": "Meet in a public place or at a police station."
+      }
+    },
+    "terms": {
+      "title": "Terms of use",
+      "items": {
+        "a": "{brand} is a free, non-profit service that only matches plate numbers. We never hold, collect or deliver plates.",
+        "b": "We do not verify who users are. Check for yourself before meeting or handing over a plate. We are not liable for loss or harm from contact or handovers between users.",
+        "c": "Post only true details of a plate you lost or found. No false posts, scams, demands for money, or using someone’s contact details for anything else.",
+        "d": "Finders should return plates to their owners or hand them to the police.",
+        "e": "Automatic plate reading can be wrong; check before sending. The service is provided as is and may pause at times.",
+        "f": "We may hide or remove posts that break these terms, and may update the terms; the date of the last update is shown on this page."
+      }
+    },
+    "privacy": {
+      "title": "Privacy",
+      "collectTitle": "What we keep",
+      "collect": {
+        "a": "The plate number, province and note you enter",
+        "b": "The contact details you enter (LINE ID, phone, email)",
+        "c": "Cropped plate photos only (from finders)",
+        "d": "Your PIN, stored one-way hashed: we cannot read it",
+        "e": "Your IP address, turned into a code that changes daily, used only against spam and abuse"
+      },
+      "notTitle": "What we don’t keep",
+      "not": {
+        "a": "Full photos: photos are cropped on your device and only the plate is sent",
+        "b": "GPS location or other data embedded in photos",
+        "c": "Names, ID card or bank account numbers (the forms reject them)",
+        "d": "No ads, no trackers, and we never sell data"
+      },
+      "shareTitle": "Who sees your details",
+      "share": {
+        "a": "Contact details: only the matched person, after reading the scam warning",
+        "b": "Lost plates never appear in search, so scammers cannot browse them",
+        "c": "Services we use: Supabase (database and photo storage), Vercel (website), Cloudflare Turnstile (bot protection)"
+      },
+      "keepTitle": "How long we keep it",
+      "keep": "Posts and photos are deleted automatically within {days} days. To have yours deleted sooner, or for any privacy question, email us below."
+    },
+    "contact": {
+      "title": "Contact",
+      "email": "Email",
+      "repo": "Source code on GitHub"
+    }
   }
 }

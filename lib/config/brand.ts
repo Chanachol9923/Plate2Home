@@ -11,6 +11,9 @@ export const brand = {
   slug: 'plate2home',
   /** Credit line in the footer ("Plate2Home By an AnnoyingDoggo"). */
   author: 'AnnoyingDoggo',
+  /** Public contact for questions and data requests (About page). */
+  contactEmail: 'chanachol.polk@gmail.com',
+  repoUrl: 'https://github.com/Chanachol9923/Plate2Home',
 } as const;
 
 export type BrandLocale = keyof typeof brand.name;
