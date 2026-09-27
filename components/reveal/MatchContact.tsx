@@ -58,6 +58,7 @@ export function MatchContact({
       return (
         <ContactCard
           title={t('ownerContactTitle')}
+          reminder={t('finderReminder')}
           lineId={contact.lineId}
           phone={contact.phone}
           email={contact.email}

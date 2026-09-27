@@ -36,7 +36,7 @@
       "title": "How it works",
       "step1": "Register a lost plate, or photograph one you found",
       "step2": "We match plate numbers instantly",
-      "step3": "You contact each other to arrange the handover"
+      "step3": "The owner and the finder contact each other to arrange the handover"
     },
     "myPosts": "My posts"
   },
@@ -134,12 +134,13 @@
   },
   "contact": {
     "title": "How to reach you",
-    "intro": "Only shown to the other person when there's a match. Add at least one.",
     "lineId": "LINE ID (recommended)",
     "lineIdHint": "e.g. somchai.p",
     "phone": "Phone number",
     "email": "Email",
-    "showEmail": "Let the other person see this email too"
+    "showEmail": "Show this email too",
+    "introLost": "Only the person who found your plate sees this, and only once there is a match. Add at least one.",
+    "introFound": "Only the plate's owner sees this, and only once there is a match. Add at least one."
   },
   "pin": {
     "title": "Set a PIN",
@@ -158,14 +159,14 @@
     "plateIntro": "Enter the number of the lost plate. We'll check right away whether someone has found it.",
     "checking": "Checking whether someone found it…",
     "foundAlready": "Someone has found this plate!",
-    "foundAlreadyBody": "Contact the finder right from the card below. Compare the photo with your plate first.",
-    "notFoundYet": "Nobody has found this plate yet. Register a watch and it will be matched automatically when someone does.",
-    "submit": "Register watch",
-    "doneTitle": "Your watch is set. It will be matched automatically when someone finds this plate.",
+    "foundAlreadyBody": "Compare the photo with your plate first. If it is yours, get the finder’s contact details from the card below.",
+    "notFoundYet": "Nobody has found this plate yet. Report it lost and it will be matched automatically when someone does.",
+    "submit": "Report lost plate",
+    "doneTitle": "Your lost plate is reported. It will be matched automatically when someone finds it.",
     "doneManage": "Check for matches under “My posts” on this device, and keep your PIN: you’ll need it with your plate number to delete or edit the post.",
     "doneMatches": "Someone may have found your plate",
     "viewMatch": "View details",
-    "alsoWatch": "Also register a watch, in case more turn up"
+    "alsoWatch": "Report it lost too, in case more turn up"
   },
   "found": {
     "title": "I found a plate",
@@ -204,25 +205,25 @@
     "plateFailed": "Not sent",
     "retryFailed": "Retry the plates that failed",
     "doneTitle": "Thank you for helping!",
-    "doneBody": "We'll match these plates with people looking for them, and keep matching as new lost plates are registered.",
-    "ownerLooking": "The owner is looking for it!",
-    "ownerLookingBody": "This plate matches a lost plate that someone registered.",
+    "doneBody": "We'll match these plates with owners who reported them lost, and keep matching as new reports come in.",
+    "ownerLooking": "The plate's owner is looking for it!",
+    "ownerLookingBody": "This plate matches one its owner reported lost. Open it to contact the owner.",
     "viewMatch": "View details",
     "reviewNote": "This plate will be shown after a moderator checks it.",
     "doneManage": "Check for matches under “My posts” on this device, and keep your PIN: you’ll need it with a plate number to delete or edit your posts.",
     "lostCheck": {
       "checking": "Checking whether anyone is looking for this plate…",
       "exactTitle": "Someone is looking for this plate!",
-      "exactBody": "Finish posting (step 2) and the owner will see that you found it and can contact you.",
+      "exactBody": "Finish posting (step 2) and you and the owner will each see the other’s contact details.",
       "nearTitle": "Someone is looking for a similar plate",
-      "nearBody": "Check the letters, number and province against the real plate, then post. The owner will be shown the match.",
+      "nearBody": "Check the letters, number and province against the real plate, then post. The owner will be asked to check whether it's theirs.",
       "none": "No one has reported this plate lost yet. Post it anyway: if the owner reports it later, they are matched automatically."
     },
     "cropping": "Cutting out the plate…"
   },
   "search": {
     "title": "Search a plate number",
-    "intro": "Search plates that people have found.",
+    "intro": "Search plates that people have found and posted.",
     "submit": "Search",
     "searching": "Searching…",
     "exact": "Match",
@@ -234,32 +235,33 @@
     "posted": "Found {when}",
     "cropAlt": "Photo of a found plate",
     "resultsCount": "{count, plural, one {# result} other {# results}}",
-    "viewPost": "View details"
+    "viewPost": "View details and contact the finder"
   },
   "match": {
     "title": "Match details",
     "exactTitle": "Match",
     "nearTitle": "Possible match",
-    "nearBody": "The numbers are close. Compare the photo to make sure it's your plate.",
-    "lostLabel": "The lost plate",
+    "nearBody": "The numbers are close. The owner should compare the photo before arranging a handover.",
+    "lostLabel": "The plate the owner lost",
     "foundLabel": "The plate someone found",
     "cropAlt": "Photo of the found plate",
     "foundAt": "Found {when}",
     "withFinder": "The finder has the plate",
     "atPolice": "The plate is at a police station",
     "youAreFinder": "You found this plate",
-    "finderBody": "Contact the owner to arrange the handover. Send a photo of the plate next to a paper with the owner’s name so they can trust you.",
-    "ownerContactButton": "See the owner’s contact details",
-    "ownerContactTitle": "The owner’s contact details",
-    "youAreOwner": "This is your plate"
+    "finderBody": "Contact the owner to arrange the handover. At the handover, ask to see their registration book and ID card, and check the name and plate number match.",
+    "ownerContactButton": "See the owner's contact details",
+    "ownerContactTitle": "The owner's contact details",
+    "youAreOwner": "This is your plate. Contact the finder with the button below.",
+    "finderReminder": "If you haven't seen a registration book and ID card showing they own it, don't hand the plate over yet."
   },
   "reveal": {
-    "button": "See contact details",
-    "sheetTitle": "Before you get in touch",
+    "button": "See the finder's contact details",
+    "sheetTitle": "Before you contact the finder",
     "intro": "To protect yourself from scams, always:",
     "tip1": "If anyone asks you to transfer money before you have the plate back, don't pay.",
     "tip2": "Ask the finder for a photo of the plate next to a paper with your name on it, to prove they have it.",
-    "tip3": "At the handover, check that the name and plate number match the registration book and ID card.",
+    "tip3": "Bring your registration book and ID card to the handover, to show the plate is yours.",
     "tip4": "Meet in a public place or at a police station.",
     "acknowledge": "I've read this and will follow it",
     "confirm": "Show contact details",
@@ -283,7 +285,7 @@
     "foundAt": "Found {when}",
     "withFinder": "The finder has the plate",
     "atPolice": "The plate is at a police station",
-    "compare": "Compare the photo with your plate before getting in touch."
+    "compare": "If you're the owner, compare the photo with your plate before getting in touch."
   },
   "note": {
     "label": "Note",
@@ -300,8 +302,8 @@
     "intro": "Posts made on this device, with their matches.",
     "empty": "No posts on this device yet",
     "emptyBody": "Posts you create on this device will appear here.",
-    "lost": "Lost",
-    "found": "Found",
+    "lost": "Lost (my plate)",
+    "found": "Found by me",
     "posted": "Posted {when}",
     "expires": "Deleted automatically {when}",
     "matches": "{count, plural, one {# match} other {# matches}}",

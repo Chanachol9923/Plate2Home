@@ -58,9 +58,9 @@ test('owner and finder are matched and can reach each other', async ({ page, bro
   await owner.getByLabel('ใส่ PIN อีกครั้ง').fill('2580');
   await owner.getByRole('checkbox').check();
   await passTurnstile(owner);
-  await owner.getByRole('button', { name: 'ตั้งรับ' }).click();
+  await owner.getByRole('button', { name: 'แจ้งป้ายหาย', exact: true }).click();
   await expect(
-    owner.getByText('ตั้งรับไว้แล้ว ระบบจะจับคู่ให้อัตโนมัติเมื่อมีคนเจอป้ายนี้'),
+    owner.getByText('แจ้งป้ายหายแล้ว เมื่อมีคนเก็บป้ายนี้ได้ ระบบจะจับคู่ให้อัตโนมัติ'),
   ).toBeVisible();
 
   // --- Finder: photograph, crop, confirm, send ------------------------------------------------
@@ -83,16 +83,16 @@ test('owner and finder are matched and can reach each other', async ({ page, bro
   await finder.getByRole('checkbox').check();
   await passTurnstile(finder);
   await finder.getByRole('button', { name: /^ส่ง 1 ป้าย/ }).click();
-  await expect(finder.getByText('เจ้าของกำลังตามหาอยู่!')).toBeVisible();
+  await expect(finder.getByText('เจ้าของป้ายกำลังตามหาอยู่!')).toBeVisible();
 
   // --- Finder on the match page: sees the owner's note and contact ---------------------------
   await finder.getByRole('link', { name: /ดูรายละเอียด/ }).click();
   await expect(finder).toHaveURL(/\/match\/[0-9a-f-]{36}$/);
   await expect(finder.getByText('ตรงกัน', { exact: true })).toBeVisible();
   await expect(finder.getByText('ป้ายหลัง มีสติกเกอร์')).toBeVisible(); // owner's note
-  await expect(finder.getByText('คุณเป็นคนเจอป้ายนี้')).toBeVisible();
+  await expect(finder.getByText('คุณเป็นคนที่เก็บป้ายนี้ได้')).toBeVisible();
   await expect(finder.getByText('e2e.owner')).toHaveCount(0);
-  await finder.getByRole('button', { name: 'ดูช่องทางติดต่อเจ้าของ' }).click();
+  await finder.getByRole('button', { name: 'ดูช่องทางติดต่อเจ้าของป้าย' }).click();
   await expect(finder.getByText('e2e.owner')).toBeVisible();
 
   // --- Owner: "My posts" shows the match; checklist, then the finder's contact --------------
@@ -100,11 +100,11 @@ test('owner and finder are matched and can reach each other', async ({ page, bro
   await expect(owner.getByText('จับคู่ได้ 1 รายการ')).toBeVisible();
   await owner.getByRole('link', { name: 'ดูการจับคู่' }).click();
   await expect(owner.getByText('คุณเป็นเจ้าของป้ายนี้')).toBeVisible();
-  await expect(owner.getByRole('img', { name: 'รูปป้ายที่มีคนเจอ' })).toBeVisible();
+  await expect(owner.getByRole('img', { name: 'รูปป้ายที่มีคนเก็บได้' })).toBeVisible();
   await expect(owner.getByText('e2e.finder')).toHaveCount(0);
 
-  await owner.getByRole('button', { name: 'ดูช่องทางติดต่อ' }).click();
-  const sheet = owner.getByRole('dialog', { name: 'ก่อนติดต่อ โปรดอ่านให้จบ' });
+  await owner.getByRole('button', { name: 'ดูช่องทางติดต่อคนที่เก็บป้ายได้' }).click();
+  const sheet = owner.getByRole('dialog', { name: 'ก่อนติดต่อคนที่เก็บป้ายได้ โปรดอ่านให้จบ' });
   await expect(sheet.getByText('ถ้ามีคนขอให้โอนเงินก่อนได้ป้ายคืน อย่าโอนเด็ดขาด')).toBeVisible();
   await sheet.getByRole('checkbox').check();
   await passTurnstile(owner);

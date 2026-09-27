@@ -42,6 +42,7 @@ export function ContactCard({
   phone,
   email,
   children,
+  reminder,
 }: {
   title: string;
   lineId: string | null;
@@ -49,6 +50,8 @@ export function ContactCard({
   email: string | null;
   /** Extra details below the contacts (district, note, where the plate is). */
   children?: ReactNode;
+  /** Safety line for the person reading it (owner and finder get different advice). */
+  reminder: string;
 }) {
   const t = useTranslations('reveal');
   return (
@@ -100,7 +103,7 @@ export function ContactCard({
         )}
       </dl>
       {children}
-      <p className="font-semibold text-danger">{t('reminder')}</p>
+      <p className="font-semibold text-danger">{reminder}</p>
     </section>
   );
 }

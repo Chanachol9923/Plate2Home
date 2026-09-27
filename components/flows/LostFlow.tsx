@@ -265,7 +265,12 @@ export function LostFlow() {
           {searchedThis && !search.failed && search.results.length === 0 && (
             <Alert tone="info">{t('notFoundYet')}</Alert>
           )}
-          <ContactFields value={contact} onChange={setContact} errors={contactErrors} />
+          <ContactFields
+            shownTo="finder"
+            value={contact}
+            onChange={setContact}
+            errors={contactErrors}
+          />
           <NoteField kind="lost" value={note} onChange={setNote} error={contactErrors.note} />
           <div className="grid grid-cols-2 gap-3">
             <Button variant="secondary" onClick={() => go('plate')}>

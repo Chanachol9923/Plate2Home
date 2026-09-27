@@ -12,7 +12,10 @@ export function ContactFields({
   value,
   onChange,
   errors,
+  shownTo,
 }: {
+  /** Who will see these details once matched: the owner (found flow) or the finder. */
+  shownTo: 'owner' | 'finder';
   value: ContactDraft;
   onChange: (value: ContactDraft) => void;
   errors: Record<string, string | null>;
@@ -24,7 +27,7 @@ export function ContactFields({
   return (
     <fieldset className="space-y-4">
       <legend className="text-lg font-bold">{t('title')}</legend>
-      <p className="text-ink-muted">{t('intro')}</p>
+      <p className="text-ink-muted">{t(shownTo === 'finder' ? 'introLost' : 'introFound')}</p>
       {errors.contact && (
         <p role="alert" className="font-semibold text-danger">
           {errors.contact}

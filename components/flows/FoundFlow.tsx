@@ -659,6 +659,7 @@ export function FoundFlow() {
           <NoteField kind="found" value={note} onChange={setNote} error={errors.note} />
 
           <ContactFields
+            shownTo="owner"
             value={contact}
             onChange={setContact}
             errors={Object.fromEntries(

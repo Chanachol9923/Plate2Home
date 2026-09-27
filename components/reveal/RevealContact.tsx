@@ -68,6 +68,7 @@ export function RevealContact({ postId }: { postId: string }) {
     return (
       <ContactCard
         title={t('contactTitle')}
+        reminder={t('reminder')}
         lineId={contact.lineId}
         phone={contact.phone}
         email={contact.email}
