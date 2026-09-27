@@ -32,6 +32,7 @@ export default function proxy(request: NextRequest) {
     nonce,
     isDev: process.env.NODE_ENV === 'development',
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    secure: request.nextUrl.protocol === 'https:',
   });
 
   // Next.js reads the nonce from the request's CSP header while rendering. Mutating the

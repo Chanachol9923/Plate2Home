@@ -10,9 +10,14 @@ export interface CspOptions {
   isDev: boolean;
   /** Supabase project URL. Only needed for admin auth and signed crop image URLs. */
   supabaseUrl?: string;
+  /**
+   * The page was served over https (default). Over plain http (a production build on
+   * localhost, as in CI) upgrading would point every asset at an https server that isn't there.
+   */
+  secure?: boolean;
 }
 
-export function buildCsp({ nonce, isDev, supabaseUrl }: CspOptions): string {
+export function buildCsp({ nonce, isDev, supabaseUrl, secure = true }: CspOptions): string {
   const supabase = supabaseUrl ? new URL(supabaseUrl).origin : undefined;
   const n = `'nonce-${nonce}'`;
 
@@ -44,7 +49,7 @@ export function buildCsp({ nonce, isDev, supabaseUrl }: CspOptions): string {
     'base-uri': ["'self'"],
     'form-action': ["'self'"],
     'frame-ancestors': ["'none'"],
-    'upgrade-insecure-requests': isDev ? undefined : [],
+    'upgrade-insecure-requests': isDev || !secure ? undefined : [],
   };
 
   return Object.entries(directives)

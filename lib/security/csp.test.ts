@@ -43,6 +43,12 @@ describe('buildCsp (production)', () => {
     expect(csp).toHaveProperty('upgrade-insecure-requests');
   });
 
+  it('does not upgrade a page served over plain http (production build on localhost)', () => {
+    expect(parse(buildCsp({ nonce: 'n', isDev: false, secure: false }))).not.toHaveProperty(
+      'upgrade-insecure-requests',
+    );
+  });
+
   it('uses the nonce for style elements in production', () => {
     expect(csp['style-src-elem']).toContain("'nonce-abc123'");
     expect(csp['style-src-elem']).not.toContain("'unsafe-inline'");
