@@ -57,6 +57,7 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
     batch: typeof import('@/app/api/found/batch/route');
     plate: typeof import('@/app/api/found/batch/[id]/plate/route');
     search: typeof import('@/app/api/search/route');
+    lostCheck: typeof import('@/app/api/lost-check/route');
     reveal: typeof import('@/app/api/reveal/route');
     revealOwner: typeof import('@/app/api/reveal-owner/route');
     myPosts: typeof import('@/app/api/my-posts/route');
@@ -70,6 +71,7 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
       batch: await import('@/app/api/found/batch/route'),
       plate: await import('@/app/api/found/batch/[id]/plate/route'),
       search: await import('@/app/api/search/route'),
+      lostCheck: await import('@/app/api/lost-check/route'),
       reveal: await import('@/app/api/reveal/route'),
       revealOwner: await import('@/app/api/reveal-owner/route'),
       myPosts: await import('@/app/api/my-posts/route'),
@@ -126,6 +128,21 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
     expect(body.formatStatus).toBe('valid');
     lostMatchCount = body.matches.length;
     expect(lostMatchCount).toBe(0);
+  });
+
+  it('tells a finder checking plates that someone is looking, and nothing more', async () => {
+    const check = async (p: object) => {
+      const res = await routes.lostCheck.POST(
+        jsonRequest('/api/lost-check', { plate: p }),
+        noParams,
+      );
+      expect(res.status).toBe(200);
+      return res.json();
+    };
+    const exact = await check(plate);
+    expect(exact).toEqual({ match: 'exact' });
+    expect((await check({ ...plate, letters: 'ฬ?' })).match).toBe('near');
+    expect((await check({ ...plate, number: '1' })).match).toBeNull();
   });
 
   it('rejects a failed Turnstile check', async () => {

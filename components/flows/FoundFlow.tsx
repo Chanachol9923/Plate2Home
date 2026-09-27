@@ -8,6 +8,7 @@ import { NoteField } from '@/components/forms/NoteField';
 import { PinFields } from '@/components/forms/PinFields';
 import { Turnstile, type TurnstileHandle } from '@/components/forms/Turnstile';
 import { useErrorText } from '@/components/forms/useErrorText';
+import { LostWatchHint } from '@/components/found/LostWatchHint';
 import { PhotoCropper } from '@/components/found/PhotoCropper';
 import { PlateInput, type PlateFieldErrors } from '@/components/plate/PlateInput';
 import { PlateView } from '@/components/plate/PlateView';
@@ -555,6 +556,7 @@ export function FoundFlow() {
                     onChange={(draft) => updatePlate(p.id, { draft })}
                     errors={p.errors}
                   />
+                  <LostWatchHint draft={p.draft} />
                 </li>
               ))}
             </ol>

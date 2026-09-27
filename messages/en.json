@@ -210,7 +210,15 @@
     "ownerLookingBody": "This plate matches a lost plate that someone registered.",
     "viewMatch": "View details",
     "reviewNote": "This plate will be shown after a moderator checks it.",
-    "doneManage": "Check for matches under “My posts” on this device, and keep your PIN: you’ll need it with a plate number to delete or edit your posts."
+    "doneManage": "Check for matches under “My posts” on this device, and keep your PIN: you’ll need it with a plate number to delete or edit your posts.",
+    "lostCheck": {
+      "checking": "Checking whether anyone is looking for this plate…",
+      "exactTitle": "Someone is looking for this plate!",
+      "exactBody": "Finish posting (step 2) and the owner will see that you found it and can contact you.",
+      "nearTitle": "Someone is looking for a similar plate",
+      "nearBody": "Check the letters, number and province against the real plate, then post. The owner will be shown the match.",
+      "none": "No one has reported this plate lost yet. Post it anyway: if the owner reports it later, they are matched automatically."
+    }
   },
   "search": {
     "title": "Search a plate number",
