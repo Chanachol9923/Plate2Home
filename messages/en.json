@@ -179,7 +179,7 @@
     "fromGallery": "Choose from gallery",
     "privacyNote": "Only the cropped plate images are sent, never the full photo, and location data is removed.",
     "photoLabel": "Photo {n}",
-    "drawHint": "Drag a box around one plate at a time. Let go and it is cut out and read automatically.",
+    "drawHint": "Drag a box around one plate at a time (drag again until it fits), then tap “Crop this plate”.",
     "useWhole": "Use the whole photo (one plate only)",
     "removePhoto": "Remove photo",
     "loadingPhoto": "Preparing photo…",
@@ -219,7 +219,7 @@
       "nearBody": "Check the letters, number and province against the real plate, then post. The owner will be asked to check whether it's theirs.",
       "none": "No one has reported this plate lost yet. Post it anyway: if the owner reports it later, they are matched automatically."
     },
-    "cropping": "Cutting out the plate…"
+    "cropThis": "Crop this plate"
   },
   "search": {
     "title": "Search a plate number",

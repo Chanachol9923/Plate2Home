@@ -3,8 +3,7 @@
  * Worker. Everything is self-hosted under /tesseract and loaded only when the found flow needs it.
  *
  *  - findPlates(photo):   plates in a whole photo (text spotting + verified stroke patterns)
- *  - readPlate(crop):     reads the plate number and province from one crop, and where the
- *                         plate sits in it (so loose boxes can be cropped automatically)
+ *  - readPlate(crop):     reads the plate number and province from one crop
  *
  * This is the fallback recognizer of spec §7.1 until a trained plate model exists (Phase 6).
  * Results are always prefilled for the user to confirm, never trusted blindly.
@@ -73,8 +72,10 @@ function exclusive<T>(job: (w: TWorker) => Promise<T>): Promise<T> {
 
 /**
  * Plate borders are long straight dark lines; OCR reads them as letters ("ป") and they merge
- * the number and province rows into one line. Any row or column that is mostly dark is a
- * border (letter strokes never are), so it is painted white. Works on RGBA grey pixels.
+ * the number and province rows into one line. An unbroken dark run longer than any character
+ * stroke (35% of the width across, 55% of the height down) is a border, so it is painted
+ * white. Runs, not totals, so it also works when the crop has margin around the plate.
+ * Works on RGBA grey pixels.
  */
 function eraseLongLines(d: Uint8ClampedArray, width: number, height: number) {
   const dark = (x: number, y: number) => d[(y * width + x) * 4]! < 110;
@@ -82,20 +83,33 @@ function eraseLongLines(d: Uint8ClampedArray, width: number, height: number) {
     const i = (y * width + x) * 4;
     d[i] = d[i + 1] = d[i + 2] = 255;
   };
-  const cols: number[] = [];
-  for (let x = 0; x < width; x++) {
-    let n = 0;
-    for (let y = 0; y < height; y++) if (dark(x, y)) n++;
-    if (n > height * 0.6) cols.push(x);
-  }
-  const rows: number[] = [];
+  const runs: [number, number, number, boolean][] = []; // [fixed, from, to, isRow]
   for (let y = 0; y < height; y++) {
-    let n = 0;
-    for (let x = 0; x < width; x++) if (dark(x, y)) n++;
-    if (n > width * 0.6) rows.push(y);
+    for (let x = 0, from = -1; x <= width; x++) {
+      if (x < width && dark(x, y)) {
+        if (from < 0) from = x;
+      } else if (from >= 0) {
+        if (x - from > width * 0.35) runs.push([y, from, x, true]);
+        from = -1;
+      }
+    }
   }
-  for (const x of cols) for (let y = 0; y < height; y++) paint(x, y);
-  for (const y of rows) for (let x = 0; x < width; x++) paint(x, y);
+  for (let x = 0; x < width; x++) {
+    for (let y = 0, from = -1; y <= height; y++) {
+      if (y < height && dark(x, y)) {
+        if (from < 0) from = y;
+      } else if (from >= 0) {
+        if (y - from > height * 0.55) runs.push([x, from, y, false]);
+        from = -1;
+      }
+    }
+  }
+  for (const [fixed, from, to, isRow] of runs) {
+    for (let v = from; v < to; v++) {
+      if (isRow) paint(v, fixed);
+      else paint(fixed, v);
+    }
+  }
 }
 
 /** Grey, contrast-stretched copy, scaled so text is a comfortable size for the OCR model. */
@@ -306,40 +320,13 @@ export async function findPlates(photo: LoadedPhoto): Promise<FoundPlate[]> {
         region.height,
       );
     const reading = await readSource(region, region.width, region.height, 'car');
-    if (!reading) continue;
-    const plate = (reading.plateBox && tightenCrop(rect, reading.plateBox, 1)) || rect;
+    // Stroke patterns match lots of things (signs, grilles): keep only confident plate readings.
+    if (!reading || reading.confidence < CANDIDATE_MIN_CONFIDENCE) continue;
+    const plate = generousPlateRect(rect, reading.plateBox);
     if (found.some((f) => overlaps(toBox(f.rect), toBox(plate)))) continue;
     found.push({ rect: plate, reading });
   }
   return found;
-}
-
-/**
- * The plate inside a box the user drew (or the whole photo), in photo pixels: the box is
- * treated as a photo of its own. The biggest plate wins; null when none is found.
- */
-export async function locatePlate(photo: LoadedPhoto, box: Rect): Promise<FoundPlate | null> {
-  const width = Math.max(1, Math.round(box.width));
-  const height = Math.max(1, Math.round(box.height));
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  canvas
-    .getContext('2d')!
-    .drawImage(photo.canvas, box.x, box.y, box.width, box.height, 0, 0, width, height);
-  const found = await findPlates({ canvas, width, height });
-  const best = found.sort((a, b) => b.rect.width * b.rect.height - a.rect.width * a.rect.height)[0];
-  if (!best) return null;
-  const k = box.width / width;
-  return {
-    reading: best.reading,
-    rect: {
-      x: box.x + best.rect.x * k,
-      y: box.y + best.rect.y * (box.height / height),
-      width: best.rect.width * k,
-      height: best.rect.height * (box.height / height),
-    },
-  };
 }
 
 /** Same plate: boxes overlap a lot, or one sits mostly inside the other. */
@@ -353,6 +340,22 @@ function overlaps(a: Corners, b: Corners): boolean {
 }
 
 const CANDIDATE_WIDTH = 960;
+const CANDIDATE_MIN_CONFIDENCE = 0.6;
+
+/**
+ * Where to cut a verified candidate: around the plate the reading located, with wide margins
+ * (a crop that is too loose is harmless; one that cuts into the plate is not), and never
+ * outside the candidate region.
+ */
+function generousPlateRect(region: Rect, plateBox: PlateReading['plateBox']): Rect {
+  const plate = plateBox && tightenCrop(region, plateBox, 1);
+  if (!plate) return region;
+  const x0 = Math.max(region.x, plate.x - plate.width * 0.2);
+  const y0 = Math.max(region.y, plate.y - plate.height * 0.3);
+  const x1 = Math.min(region.x + region.width, plate.x + plate.width * 1.2);
+  const y1 = Math.min(region.y + region.height, plate.y + plate.height * 1.3);
+  return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+}
 
 /** Plate-like stroke patterns, grown to a generous plate-sized box, in photo pixels. */
 function candidateRects(photo: LoadedPhoto): Rect[] {

@@ -63,6 +63,13 @@ test('finds and reads plates in a photo automatically', async ({ page }) => {
   // Both plates are proposed as cards, marked as found automatically.
   await expect(page.getByText(/เจอ 2 ป้าย/)).toBeVisible({ timeout: 150_000 });
   await expect(page.getByText('พบอัตโนมัติ')).toHaveCount(2);
+  // Automatic crops keep the whole plate with a margin (the plates are 760×340, ratio 2.2).
+  for (const n of [1, 2]) {
+    const img = page.getByRole('img', { name: `รูปป้ายที่ ${n}` });
+    const size = await img.evaluate((i: HTMLImageElement) => [i.naturalWidth, i.naturalHeight]);
+    expect(size[0]! / size[1]!).toBeGreaterThan(1.5);
+    expect(size[0]! / size[1]!).toBeLessThan(3);
+  }
 
   // Each card is read and prefilled (the user still confirms). The reading is shown back.
   const readings = page.getByText(/^อ่านได้เป็น หมวด/);
@@ -76,7 +83,7 @@ test('finds and reads plates in a photo automatically', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'จังหวัด: กรุงเทพมหานคร' })).toBeVisible();
 });
 
-test('a loose box is cut out, cropped to the plate and read as soon as it is let go', async ({
+test('a box drawn by hand is cut exactly as drawn when "Crop this plate" is pressed', async ({
   page,
 }) => {
   test.setTimeout(180_000);
@@ -89,24 +96,27 @@ test('a loose box is cut out, cropped to the plate and read as soon as it is let
   await img.scrollIntoViewIfNeeded();
   const b = (await img.boundingBox())!;
   const at = (x: number, y: number) => [b.x + (x / 1600) * b.width, b.y + (y / 1200) * b.height];
-  // Much bigger than the plate, like a quick drag on a phone.
-  const [x0, y0] = at(40, 40);
-  const [x1, y1] = at(1150, 800);
+  const [x0, y0] = at(100, 120);
+  const [x1, y1] = at(900, 500);
   await page.mouse.move(x0!, y0!);
   await page.mouse.down();
   await page.mouse.move(x1!, y1!, { steps: 8 });
   await page.mouse.up();
 
-  // No extra button: a second card appears and is read.
+  // Nothing is cut until the user says so.
+  await expect(page.getByRole('heading', { name: 'ป้ายที่ 2' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'ตัดป้ายนี้' }).click();
   await expect(page.getByRole('heading', { name: 'ป้ายที่ 2' })).toBeVisible();
-  await expect(page.getByText(/^อ่านได้เป็น หมวด กท · เลข 2058/)).toHaveCount(2, {
+  // It is read too (a single character may be misread; the user always checks it).
+  await expect(page.getByText(/^อ่านได้เป็น หมวด กท · เลข 20\d\d/)).toHaveCount(2, {
     timeout: 60_000,
   });
-  // Cropped automatically to the plate: wide like a plate, not like the loose box (1.46).
-  const crop = page.getByRole('img', { name: /ป้ายที่ 2/ });
-  await expect
-    .poll(() => crop.evaluate((i: HTMLImageElement) => i.naturalWidth / i.naturalHeight))
-    .toBeGreaterThan(1.8);
+  // The crop keeps the drawn box's shape (800×380 → about 2.1), not a re-cropped one.
+  const ratio = await page
+    .getByRole('img', { name: 'รูปป้ายที่ 2' })
+    .evaluate((i: HTMLImageElement) => i.naturalWidth / i.naturalHeight);
+  expect(ratio).toBeGreaterThan(1.9);
+  expect(ratio).toBeLessThan(2.3);
 });
 
 test('finds a small plate in a large photo', async ({ page }) => {

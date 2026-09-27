@@ -2,14 +2,15 @@
 
 import { useTranslations } from 'next-intl';
 import { useRef, useState, type PointerEvent } from 'react';
-import { Button, Spinner } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { MIN_CROP_EDGE, normalizeDrag, type LoadedPhoto, type Rect } from '@/lib/client/image';
 
 /**
- * Draw a box around a plate on the photo (pointer events: mouse, touch, pen). Letting go cuts
- * the plate out straight away and OCR reads it; plates already cut (by hand or found
- * automatically) stay outlined with their card number. "Use the whole photo" covers
- * single-plate photos and keyboard-only users. Coordinates are in photo pixels.
+ * Draw a box around a plate on the photo (pointer events: mouse, touch, pen), redraw until it
+ * fits, then "Crop this plate": exactly that box is cut (plus a small margin), never re-cropped.
+ * Plates already cut (by hand or found automatically) stay outlined with their card number.
+ * "Use the whole photo" covers single-plate photos and keyboard-only users. Coordinates are in
+ * photo pixels.
  */
 export function PhotoCropper({
   photo,
@@ -59,10 +60,8 @@ export function PhotoCropper({
   const onUp = () => {
     if (!start.current) return;
     start.current = null;
-    // Letting go of a big-enough box cuts the plate out right away (no extra button).
-    const b = boxRef.current;
-    if (usable(b) && !busy) void crop(b);
-    else setBox(null);
+    // A tap or a tiny slip clears the box instead of leaving a useless one.
+    if (!usable(boxRef.current)) setBox(null);
   };
 
   function usable(b: Rect | null): b is Rect {
@@ -134,19 +133,22 @@ export function PhotoCropper({
           />
         )}
       </div>
-      {busy && (
-        <p className="inline-flex items-center gap-2 text-sm" aria-live="polite">
-          <Spinner /> {t('cropping')}
-        </p>
-      )}
-      <Button
-        block
-        variant="secondary"
-        disabled={busy}
-        onClick={() => crop({ x: 0, y: 0, width: photo.width, height: photo.height })}
-      >
-        {t('useWhole')}
-      </Button>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Button
+          disabled={!usable(box)}
+          busy={busy && usable(box)}
+          onClick={() => usable(box) && crop(box)}
+        >
+          {t('cropThis')}
+        </Button>
+        <Button
+          variant="secondary"
+          disabled={busy}
+          onClick={() => crop({ x: 0, y: 0, width: photo.width, height: photo.height })}
+        >
+          {t('useWhole')}
+        </Button>
+      </div>
     </figure>
   );
 }
