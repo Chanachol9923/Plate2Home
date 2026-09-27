@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { ContactFields, EMPTY_CONTACT, type ContactDraft } from '@/components/forms/ContactFields';
 import { plateErrorsFrom, useStep } from '@/components/forms/flow';
+import { NoteField } from '@/components/forms/NoteField';
 import { PinFields } from '@/components/forms/PinFields';
 import { Turnstile, type TurnstileHandle } from '@/components/forms/Turnstile';
 import { useErrorText } from '@/components/forms/useErrorText';
@@ -76,6 +77,7 @@ export function FoundFlow() {
   const [handover, setHandover] = useState<'with_finder' | 'police_station'>('with_finder');
   const [policeNote, setPoliceNote] = useState('');
   const [district, setDistrict] = useState('');
+  const [note, setNote] = useState('');
   const [contact, setContact] = useState<ContactDraft>(EMPTY_CONTACT);
   const [pin, setPin] = useState('');
   const [pinConfirm, setPinConfirm] = useState('');
@@ -209,6 +211,7 @@ export function FoundFlow() {
       handover,
       policeStationNote: policeNote,
       district,
+      note,
       turnstileToken: token ?? '',
     };
     const errs: Record<string, string | null> = {};
@@ -504,6 +507,8 @@ export function FoundFlow() {
               />
             )}
           </Field>
+
+          <NoteField kind="found" value={note} onChange={setNote} error={errors.note} />
 
           <ContactFields
             value={contact}

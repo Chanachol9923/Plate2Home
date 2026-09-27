@@ -37,6 +37,7 @@ export interface CreateLostWatchInput {
   locale: 'th' | 'en';
   consentVersion: string;
   notifyEmail: boolean;
+  note: string | null;
 }
 
 export async function createLostWatch(input: CreateLostWatchInput) {
@@ -48,6 +49,7 @@ export async function createLostWatch(input: CreateLostWatchInput) {
     ...contactArgs(input.contact),
     p_notify_email: input.notifyEmail,
     ...plateArgs(input.record),
+    p_note: input.note,
   });
   if (error) throw toDbError('create_lost_watch', error);
   const row = (data as { out_batch_id: string; out_post_id: string }[])[0]!;
@@ -65,6 +67,7 @@ export interface CreateFoundBatchInput {
   handover: 'with_finder' | 'police_station';
   policeStationNote: string | null;
   district: string | null;
+  note: string | null;
 }
 
 export async function createFoundBatch(input: CreateFoundBatchInput): Promise<string> {
@@ -79,6 +82,7 @@ export async function createFoundBatch(input: CreateFoundBatchInput): Promise<st
     p_police_station_note: input.policeStationNote,
     p_district: input.district,
     ...contactArgs(input.contact),
+    p_note: input.note,
   });
   if (error) throw toDbError('create_found_batch', error);
   return data as string;

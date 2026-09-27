@@ -1,6 +1,11 @@
 'use client';
 
-import { useId, type InputHTMLAttributes, type ReactNode } from 'react';
+import {
+  useId,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type TextareaHTMLAttributes,
+} from 'react';
 
 interface FieldProps {
   label: string;
@@ -48,6 +53,16 @@ export const inputClass =
 
 export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={`${inputClass} ${props.className ?? ''}`} />;
+}
+
+export function TextArea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return (
+    <textarea
+      rows={3}
+      {...props}
+      className={`${inputClass} min-h-24 py-2 leading-relaxed ${props.className ?? ''}`}
+    />
+  );
 }
 
 export function Checkbox({

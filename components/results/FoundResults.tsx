@@ -2,6 +2,9 @@
 
 import { useFormatter, useTranslations } from 'next-intl';
 import { PlateView } from '@/components/plate/PlateView';
+import { RevealContact } from '@/components/reveal/RevealContact';
+import { textLink } from '@/components/ui/styles';
+import { Link } from '@/i18n/navigation';
 import type { Plate } from '@/lib/plate/types';
 
 export interface FoundResult {
@@ -13,7 +16,10 @@ export interface FoundResult {
   cropUrl: string | null;
 }
 
-/** Found plates matching a search: photo, plate, match strength, how long ago. */
+/**
+ * Found plates matching a search: photo, plate, match strength, how long ago, and the
+ * contact-reveal checkpoint right on the card (people who found their plate act immediately).
+ */
 export function FoundResults({ results }: { results: FoundResult[] }) {
   const t = useTranslations('search');
   const tp = useTranslations('plate');
@@ -55,6 +61,15 @@ export function FoundResults({ results }: { results: FoundResult[] }) {
               />
             )}
             <PlateView plate={r.plate} size="sm" />
+          </div>
+          <div className="mt-3 space-y-2">
+            <RevealContact postId={r.postId} />
+            <Link
+              href={`/post/${r.postId}`}
+              className={`${textLink} inline-flex min-h-11 items-center`}
+            >
+              {t('viewPost')}
+            </Link>
           </div>
         </li>
       ))}

@@ -34,6 +34,7 @@ export const POST = apiRoute('api/found/batch', async (request, { ip, ipHash }) 
     handover: body.handover,
     policeStationNote: body.handover === 'police_station' ? body.policeStationNote : null,
     district: body.district || null,
+    note: body.note || null,
   });
 
   return Response.json(

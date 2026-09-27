@@ -67,6 +67,7 @@ const API_CODES = new Set([
   'image_unreadable',
   'too_large',
   'network',
+  'not_found',
 ]);
 
 /** Message key (under `errors`) for an API failure code. */

@@ -96,10 +96,22 @@ function unsafeTextIssue(text: string): FieldErrorCode | null {
   return reason ? (`text_${reason}` as FieldErrorCode) : null;
 }
 
+/** Optional free-text note (หมายเหตุ): ≤ 300 chars, no links, account or ID numbers. */
+export const noteSchema = z
+  .string()
+  .trim()
+  .max(300)
+  .default('')
+  .superRefine((v, ctx) => {
+    const issue = unsafeTextIssue(v);
+    if (issue) ctx.addIssue({ code: 'custom', message: issue });
+  });
+
 export const lostCreateSchema = z.object({
   plate: plateInputSchema,
   contact: contactSchema,
   pin: pinSchema,
+  note: noteSchema,
   consent,
   consentVersion: z.string().max(32),
   locale,
@@ -117,6 +129,7 @@ export const foundBatchSchema = z
     handover: z.enum(['with_finder', 'police_station']),
     policeStationNote: z.string().trim().max(120).default(''),
     district: z.string().trim().max(80).default(''),
+    note: noteSchema,
     turnstileToken,
   })
   .superRefine((v, ctx) => {
@@ -145,6 +158,14 @@ export const foundPlateSchema = z.object({
 export type FoundPlateBody = z.input<typeof foundPlateSchema>;
 
 export const searchSchema = z.object({ plate: plateInputSchema });
+
+export const revealSchema = z.object({
+  postId: z.uuid(),
+  /** The user ticked "I've read the safety advice" in the reveal dialog. */
+  acknowledged: z.literal(true, { error: 'consent_required' }),
+  turnstileToken: z.string().min(1).max(2048),
+});
+export type RevealBody = z.input<typeof revealSchema>;
 export type SearchBody = z.input<typeof searchSchema>;
 
 /** Flatten zod issues into `{ path: code }` for the form (first issue per field wins). */

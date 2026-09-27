@@ -52,6 +52,8 @@ export interface MatchView {
   kind: MatchKind;
   matchedAt: string;
   lostPlate: Plate;
+  /** The owner's note (หมายเหตุ), shown to help the finder confirm it's the right plate. */
+  lostNote: string | null;
   found: {
     postId: string;
     plate: Plate;
@@ -81,6 +83,7 @@ interface MatchViewRow {
   found_crop_path: string | null;
   found_created_at: string;
   found_handover: 'with_finder' | 'police_station' | null;
+  lost_note: string | null;
 }
 
 /** Null when the match doesn't exist or either post is no longer active. */
@@ -100,6 +103,7 @@ export async function getMatchView(matchId: string): Promise<MatchView | null> {
       number: r.lost_number,
       provinceCode: r.lost_province_code,
     },
+    lostNote: r.lost_note,
     found: {
       postId: r.found_post_id,
       plate: {

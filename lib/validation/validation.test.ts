@@ -193,3 +193,36 @@ describe('foundBatchSchema', () => {
     expect(fieldErrors(r.error!)).toEqual({ district: 'district_invalid' });
   });
 });
+
+describe('noteSchema', () => {
+  it('accepts plain descriptions and trims them', async () => {
+    const { noteSchema } = await import('./schemas');
+    expect(noteSchema.parse('  ป้ายหลัง มีสติกเกอร์  ')).toBe('ป้ายหลัง มีสติกเกอร์');
+    expect(noteSchema.parse(undefined)).toBe('');
+  });
+
+  it('blocks links, account and ID numbers, and overlong text', async () => {
+    const { noteSchema } = await import('./schemas');
+    const code = (v: string) => fieldErrors(noteSchema.safeParse(v).error!)[''];
+    expect(code('ติดต่อ line.me/ti/p/abc')).toBe('text_url');
+    expect(code('โอนค่าส่งมาที่ 123-4-56789-0')).toBe('text_account_number');
+    expect(code('บัตร 1234567890123')).toBe('text_id_number');
+    expect(noteSchema.safeParse('ก'.repeat(301)).success).toBe(false);
+  });
+});
+
+describe('revealSchema', () => {
+  it('requires a post UUID, the safety acknowledgement and a token', async () => {
+    const { revealSchema } = await import('./schemas');
+    const ok = {
+      postId: '00000000-0000-4000-8000-000000000001',
+      acknowledged: true,
+      turnstileToken: 't',
+    };
+    expect(revealSchema.safeParse(ok).success).toBe(true);
+    expect(fieldErrors(revealSchema.safeParse({ ...ok, acknowledged: false }).error!)).toEqual({
+      acknowledged: 'consent_required',
+    });
+    expect(revealSchema.safeParse({ ...ok, postId: 'not-a-uuid' }).success).toBe(false);
+  });
+});

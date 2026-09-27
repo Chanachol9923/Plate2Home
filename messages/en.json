@@ -44,8 +44,9 @@
     "body": "We'll reopen when floods return. Stay safe."
   },
   "footer": {
-    "nonCommercial": "Non-profit. No ads. We never ask for money.",
-    "privacy": "No GPS tracking. Posts are deleted automatically when they expire."
+    "nonCommercial": "No ads. Not for profit in any way.",
+    "privacy": "No GPS tracking. Posts are deleted automatically when they expire.",
+    "credit": "{brand} by {author}"
   },
   "notFound": {
     "title": "Page not found",
@@ -120,7 +121,8 @@
       "image_unreadable": "We couldn't open this image. Try another one.",
       "too_large": "The image is too large.",
       "network": "Can't connect. Check your signal and try again.",
-      "generic": "Something went wrong. Please try again."
+      "generic": "Something went wrong. Please try again.",
+      "not_found": "We couldn't find this post. It may have been removed."
     }
   },
   "consent": {
@@ -155,13 +157,14 @@
     "plateIntro": "Enter the number of the lost plate. We'll check right away whether someone has found it.",
     "checking": "Checking whether someone found it…",
     "foundAlready": "Someone has found this plate!",
-    "foundAlreadyBody": "Register your watch, then open the details to contact the finder.",
+    "foundAlreadyBody": "Contact the finder right from the card below. Compare the photo with your plate first.",
     "notFoundYet": "Nobody has found this plate yet. Register a watch and we'll alert you as soon as someone does.",
     "submit": "Register watch",
     "doneTitle": "We'll alert you as soon as someone finds this plate",
     "doneManage": "You can manage or delete this post from this device, or with your plate number and PIN from another device.",
     "doneMatches": "Someone may have found your plate",
-    "viewMatch": "View details"
+    "viewMatch": "View details",
+    "alsoWatch": "Also register a watch, in case more turn up"
   },
   "found": {
     "title": "I found a plate",
@@ -222,7 +225,8 @@
     "posted": "Found {when}",
     "cropAlt": "Photo of a found plate",
     "resultsCount": "{count, plural, one {# result} other {# results}}",
-    "contactNext": "Want to contact the finder? Register your lost plate, then open the details from the match page."
+    "contactNext": "Want to contact the finder? Register your lost plate, then open the details from the match page.",
+    "viewPost": "Details and contact"
   },
   "match": {
     "title": "Match details",
@@ -234,8 +238,48 @@
     "cropAlt": "Photo of the found plate",
     "foundAt": "Found {when}",
     "withFinder": "The finder has the plate",
+    "atPolice": "The plate is at a police station"
+  },
+  "reveal": {
+    "button": "See contact details",
+    "sheetTitle": "Before you get in touch",
+    "intro": "To protect yourself from scams, always:",
+    "tip1": "Never transfer money before you have the plate back.",
+    "tip2": "Ask the finder for a photo of the plate next to a paper with your name on it, to prove they have it.",
+    "tip3": "At the handover, check that the name and plate number match the registration book and ID card.",
+    "tip4": "Meet in a public place or at a police station.",
+    "acknowledge": "I've read this and will follow it",
+    "confirm": "Show contact details",
+    "contactTitle": "The finder's contact details",
+    "line": "LINE",
+    "phone": "Phone",
+    "email": "Email",
+    "openLine": "Open in LINE",
+    "call": "Call",
+    "sendEmail": "Send email",
+    "copy": "Copy",
+    "copied": "Copied",
+    "district": "District where it was found",
+    "withFinder": "The finder has the plate",
+    "atPolice": "The plate is at {station}",
+    "reminder": "Never transfer money before you have your plate back."
+  },
+  "post": {
+    "title": "Found plate",
+    "cropAlt": "Photo of the found plate",
+    "foundAt": "Found {when}",
+    "withFinder": "The finder has the plate",
     "atPolice": "The plate is at a police station",
-    "contactSoon": "Viewing contact details will be available soon.",
-    "safety": "Never transfer money before you have your plate back."
+    "compare": "Compare the photo with your plate before getting in touch."
+  },
+  "note": {
+    "label": "Note",
+    "lostHint": "e.g. front or rear plate, marks on the plate, where it was lost",
+    "foundHint": "e.g. both front and rear plates, marks, where you found them",
+    "rule": "No links, bank account or ID card numbers.",
+    "lostShownTo": "The finder sees this note when there is a match.",
+    "foundShownTo": "The owner sees this note after asking for your contact details.",
+    "ownerNote": "Owner's note",
+    "finderNote": "Finder's note"
   }
 }

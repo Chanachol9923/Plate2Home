@@ -10,6 +10,7 @@ import {
   useStep,
   writeDraft,
 } from '@/components/forms/flow';
+import { NoteField } from '@/components/forms/NoteField';
 import { PinFields } from '@/components/forms/PinFields';
 import { Turnstile, type TurnstileHandle } from '@/components/forms/Turnstile';
 import { useErrorText } from '@/components/forms/useErrorText';
@@ -27,7 +28,13 @@ import { rememberDevicePost } from '@/lib/client/devices';
 import { plateDisplay } from '@/lib/plate/canonical';
 import { draftToInput, EMPTY_DRAFT, type PlateDraft } from '@/lib/plate/draft';
 import { normalizePlate } from '@/lib/plate/normalize';
-import { contactSchema, fieldErrors, pinSchema, plateInputSchema } from '@/lib/validation/schemas';
+import {
+  contactSchema,
+  fieldErrors,
+  noteSchema,
+  pinSchema,
+  plateInputSchema,
+} from '@/lib/validation/schemas';
 
 const STEPS = ['plate', 'contact', 'confirm'] as const;
 type Step = (typeof STEPS)[number];
@@ -49,6 +56,7 @@ export function LostFlow() {
 
   const [plate, setPlate] = useState<PlateDraft>(EMPTY_DRAFT);
   const [contact, setContact] = useState<ContactDraft>(EMPTY_CONTACT);
+  const [note, setNote] = useState('');
   const [pin, setPin] = useState('');
   const [pinConfirm, setPinConfirm] = useState('');
   const [consent, setConsent] = useState(false);
@@ -70,7 +78,7 @@ export function LostFlow() {
 
   // Restore the draft (never the PIN) after a reload or navigation.
   useEffect(() => {
-    const saved = readDraft<{ plate: PlateDraft; contact: ContactDraft }>(DRAFT_KEY);
+    const saved = readDraft<{ plate: PlateDraft; contact: ContactDraft; note?: string }>(DRAFT_KEY);
     // Ignore drafts saved by an older version of the form (different shape).
     if (saved && typeof saved.plate?.text === 'string') {
       // Syncing from an external store (sessionStorage) once after hydration; reading it during
@@ -78,12 +86,13 @@ export function LostFlow() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPlate(saved.plate);
       setContact(saved.contact);
+      setNote(saved.note ?? '');
     }
     setRestored(true);
   }, []);
   useEffect(() => {
-    if (restored && !created) writeDraft(DRAFT_KEY, { plate, contact });
-  }, [plate, contact, created, restored]);
+    if (restored && !created) writeDraft(DRAFT_KEY, { plate, contact, note });
+  }, [plate, contact, note, created, restored]);
 
   const plateInput = draftToInput(plate);
   const plateKey = JSON.stringify(plateInput);
@@ -112,15 +121,17 @@ export function LostFlow() {
   }
 
   function checkContact() {
+    const errs: Record<string, string | null> = {};
     const parsed = contactSchema.safeParse(contact);
     if (!parsed.success) {
-      const errs = errorsUnder(fieldErrors(parsed.error), '', errorText);
-      if (errs.lineId && fieldErrors(parsed.error).lineId === 'contact_required') {
-        setContactErrors({ contact: errs.lineId });
-      } else setContactErrors(errs);
-      return;
+      const codes = fieldErrors(parsed.error);
+      if (codes.lineId === 'contact_required') errs.contact = errorText('contact_required');
+      else Object.assign(errs, errorsUnder(codes, '', errorText));
     }
-    setContactErrors({});
+    const noteParsed = noteSchema.safeParse(note);
+    if (!noteParsed.success) errs.note = errorText(noteParsed.error.issues[0]?.message);
+    setContactErrors(errs);
+    if (Object.values(errs).some(Boolean)) return;
     go('confirm');
   }
 
@@ -140,6 +151,7 @@ export function LostFlow() {
       '/api/lost',
       {
         plate: plateInput,
+        note,
         contact,
         pin,
         consent: true,
@@ -155,7 +167,10 @@ export function LostFlow() {
     if (!res.ok) {
       if (res.code === 'invalid_input') {
         setPlateErrors(plateErrorsFrom(res.fields, errorText, 'plate.'));
-        setContactErrors(errorsUnder(res.fields, 'contact.', errorText));
+        setContactErrors({
+          ...errorsUnder(res.fields, 'contact.', errorText),
+          note: errorText(res.fields.note),
+        });
         setConfirmErrors({ pin: errorText(res.fields.pin) });
         setFormError(errorText('invalid'));
       } else {
@@ -229,8 +244,8 @@ export function LostFlow() {
                 <p>{t('foundAlreadyBody')}</p>
               </Alert>
               <FoundResults results={search.results} />
-              <Button block onClick={() => go('contact')}>
-                {tc('next')}
+              <Button block variant="secondary" onClick={() => go('contact')}>
+                {t('alsoWatch')}
               </Button>
             </div>
           ) : (
@@ -247,6 +262,7 @@ export function LostFlow() {
             <Alert tone="info">{t('notFoundYet')}</Alert>
           )}
           <ContactFields value={contact} onChange={setContact} errors={contactErrors} />
+          <NoteField kind="lost" value={note} onChange={setNote} error={contactErrors.note} />
           <div className="grid grid-cols-2 gap-3">
             <Button variant="secondary" onClick={() => go('plate')}>
               {tc('back')}

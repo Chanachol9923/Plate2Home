@@ -248,3 +248,119 @@ describe('plate_candidates', () => {
     expect(rows.map((r) => r.id)).not.toContain(found!.id);
   });
 });
+
+describe('get_found_post and reveal_found_contact', () => {
+  it('shows a found post without contact details, and reveals the contact with a log entry', async () => {
+    const batch = await createFoundBatch();
+    const [found] = await addFound(batch, { letters: 'ถท' });
+    const [post] = await db.query<Record<string, unknown>>(
+      `select * from public.get_found_post($1)`,
+      [found!.id],
+    );
+    expect(post).toMatchObject({ letters: 'ถท', handover: 'with_finder' });
+    expect(post).not.toHaveProperty('line_id');
+    expect(post).not.toHaveProperty('district');
+
+    const ipHash = 'e'.repeat(64);
+    const [contact] = await db.query<Record<string, unknown>>(
+      `select * from public.reveal_found_contact($1, $2)`,
+      [found!.id, ipHash],
+    );
+    expect(contact).toMatchObject({ line_id: 'finder.line', email: null, handover: 'with_finder' });
+    const logged = await db.query(
+      `select 1 from public.contact_reveals where post_id = $1 and ip_hash = $2`,
+      [found!.id, ipHash],
+    );
+    expect(logged).toHaveLength(1);
+  });
+
+  it('reveals nothing (and logs nothing) for lost watches or hidden posts', async () => {
+    const { out_post_id } = await createLost('ธน', '31');
+    expect(
+      await db.query(`select * from public.reveal_found_contact($1, $2)`, [
+        out_post_id,
+        'e'.repeat(64),
+      ]),
+    ).toEqual([]);
+    expect(await db.query(`select * from public.get_found_post($1)`, [out_post_id])).toEqual([]);
+
+    const batch = await createFoundBatch();
+    const [found] = await addFound(batch, { letters: 'นบ' });
+    await db.query(`update public.posts set status = 'hidden' where id = $1`, [found!.id]);
+    expect(
+      await db.query(`select * from public.reveal_found_contact($1, $2)`, [
+        found!.id,
+        'e'.repeat(64),
+      ]),
+    ).toEqual([]);
+    expect(
+      await db.query(`select 1 from public.contact_reveals where post_id = $1`, [found!.id]),
+    ).toEqual([]);
+  });
+});
+
+describe('notes (หมายเหตุ)', () => {
+  it("shows the owner's note on the match view and the finder's note only with the reveal", async () => {
+    const args = [...lostArgs('ปผ', '808'), 'ป้ายหลัง มีสติกเกอร์'];
+    const [lost] = await db.query<{ out_batch_id: string; out_post_id: string }>(
+      `select * from public.create_lost_watch($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)`,
+      args,
+    );
+    created.push(lost!.out_batch_id);
+
+    const [fb] = await db.query<{ id: string }>(
+      `select public.create_found_batch($1,$2,$3, now() + interval '30 minutes', 'th', 'v1',
+                                        'with_finder', null, null, 'finder.line', null, null, false,
+                                        'เจอใกล้วัด ทั้งป้ายหน้าและหลัง') as id`,
+      [FAKE_PIN_HASH, HEX64, HEX64_B],
+    );
+    created.push(fb!.id);
+    const [found] = await addFound(fb!.id, { letters: 'ปผ' });
+    const [m] = await db.query<{ out_match_id: string }>(
+      `select * from public.record_matches($1::jsonb)`,
+      [
+        JSON.stringify([
+          { lost_post_id: lost!.out_post_id, found_post_id: found!.id, score: 1, kind: 'near' },
+        ]),
+      ],
+    );
+
+    const [view] = await db.query<Record<string, unknown>>(
+      `select * from public.get_match_view($1)`,
+      [m!.out_match_id],
+    );
+    expect(view?.lost_note).toBe('ป้ายหลัง มีสติกเกอร์');
+    expect(JSON.stringify(view)).not.toContain('เจอใกล้วัด');
+
+    const [post] = await db.query<Record<string, unknown>>(
+      `select * from public.get_found_post($1)`,
+      [found!.id],
+    );
+    expect(JSON.stringify(post)).not.toContain('เจอใกล้วัด');
+
+    const [contact] = await db.query<Record<string, unknown>>(
+      `select * from public.reveal_found_contact($1, $2)`,
+      [found!.id, 'f'.repeat(64)],
+    );
+    expect(contact?.note).toBe('เจอใกล้วัด ทั้งป้ายหน้าและหลัง');
+  });
+
+  it('stores an empty note as null and rejects notes over 300 characters', async () => {
+    const [lost] = await db.query<{ out_batch_id: string }>(
+      `select * from public.create_lost_watch($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)`,
+      [...lostArgs('ฝพ', '9'), ''],
+    );
+    created.push(lost!.out_batch_id);
+    const [row] = await db.query<{ note: string | null }>(
+      `select note from public.batches where id = $1`,
+      [lost!.out_batch_id],
+    );
+    expect(row?.note).toBeNull();
+    await expect(
+      db.query(
+        `select * from public.create_lost_watch($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)`,
+        [...lostArgs('ฝพ', '10'), 'ก'.repeat(301)],
+      ),
+    ).rejects.toThrow();
+  });
+});

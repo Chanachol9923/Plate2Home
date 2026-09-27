@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { PlateView } from '@/components/plate/PlateView';
+import { RevealContact } from '@/components/reveal/RevealContact';
 import { PageShell } from '@/components/site/PageShell';
 import { Alert } from '@/components/ui/Alert';
 import { getMatchView } from '@/lib/db/matches';
@@ -26,6 +27,7 @@ export default async function MatchPage({ params }: PageProps<'/[locale]/match/[
   if (!view) notFound();
 
   const t = await getTranslations('match');
+  const tn = await getTranslations('note');
   const format = await getFormatter();
   const urls = view.found.cropPath ? await signCropUrls([view.found.cropPath]) : new Map();
   const cropUrl = view.found.cropPath ? urls.get(view.found.cropPath) : undefined;
@@ -68,11 +70,15 @@ export default async function MatchPage({ params }: PageProps<'/[locale]/match/[
             {t('lostLabel')}
           </h2>
           <PlateView plate={view.lostPlate} size="md" />
+          {view.lostNote && (
+            <div className="rounded-md border-2 border-line-soft bg-surface p-3">
+              <p className="font-semibold">{tn('ownerNote')}</p>
+              <p className="whitespace-pre-line">{view.lostNote}</p>
+            </div>
+          )}
         </section>
 
-        <Alert tone="info" title={t('safety')}>
-          <p>{t('contactSoon')}</p>
-        </Alert>
+        <RevealContact postId={view.found.postId} />
       </div>
     </PageShell>
   );

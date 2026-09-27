@@ -57,6 +57,7 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
     batch: typeof import('@/app/api/found/batch/route');
     plate: typeof import('@/app/api/found/batch/[id]/plate/route');
     search: typeof import('@/app/api/search/route');
+    reveal: typeof import('@/app/api/reveal/route');
   };
   let db: typeof import('@/lib/db/server');
   let matches: typeof import('@/lib/db/matches');
@@ -67,6 +68,7 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
       batch: await import('@/app/api/found/batch/route'),
       plate: await import('@/app/api/found/batch/[id]/plate/route'),
       search: await import('@/app/api/search/route'),
+      reveal: await import('@/app/api/reveal/route'),
     };
     db = await import('@/lib/db/server');
     matches = await import('@/lib/db/matches');
@@ -99,15 +101,18 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
   let batchId = '';
   let uploadToken = '';
   let matchId = '';
+  let foundPostId = '';
+  let lostPostId = '';
 
   it('creates a lost watch (no matches yet)', async () => {
     const res = await routes.lost.POST(
-      jsonRequest('/api/lost', { ...base, plate, contact }),
+      jsonRequest('/api/lost', { ...base, plate, contact, note: 'ป้ายหลัง มีสติกเกอร์' }),
       noParams,
     );
     expect(res.status).toBe(201);
     const body = await res.json();
     createdBatches.push(body.batchId);
+    lostPostId = body.postId;
     expect(body.deviceToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(body.formatStatus).toBe('valid');
     lostMatchCount = body.matches.length;
@@ -144,6 +149,7 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
         handover: 'police_station',
         policeStationNote: 'สภ.ทดสอบ',
         district: 'บางเขน',
+        note: 'เจอใกล้วัด ทั้งป้ายหน้าและหลัง',
       }),
       noParams,
     );
@@ -187,6 +193,7 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
     expect(body.matches).toHaveLength(1);
     expect(body.matches[0].kind).toBe('exact');
     matchId = body.matches[0].matchId;
+    foundPostId = body.postId;
 
     // The stored crop is a re-encoded WebP.
     const { data } = await db
@@ -226,7 +233,60 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
       kind: 'exact',
       lostPlate: { letters: 'ฬฮ', number },
       found: { handover: 'police_station' },
+      lostNote: 'ป้ายหลัง มีสติกเกอร์',
     });
     expect(JSON.stringify(view)).not.toContain('0812345678');
+    expect(JSON.stringify(view)).not.toContain('เจอใกล้วัด');
+  });
+
+  const revealBody = (postId: string, extra: Record<string, unknown> = {}) => ({
+    postId,
+    acknowledged: true,
+    turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
+    ...extra,
+  });
+
+  it('reveals the finder contact, district and note after the acknowledgement', async () => {
+    const res = await routes.reveal.POST(
+      jsonRequest('/api/reveal', revealBody(foundPostId)),
+      noParams,
+    );
+    expect(res.status).toBe(200);
+    const { contact } = await res.json();
+    expect(contact).toMatchObject({
+      phone: '0812345678',
+      lineId: null,
+      email: null,
+      handover: 'police_station',
+      policeStationNote: 'สภ.ทดสอบ',
+      district: 'บางเขน',
+      note: 'เจอใกล้วัด ทั้งป้ายหน้าและหลัง',
+    });
+  });
+
+  it("never reveals a lost-plate owner's contact through this endpoint", async () => {
+    const res = await routes.reveal.POST(
+      jsonRequest('/api/reveal', revealBody(lostPostId)),
+      noParams,
+    );
+    expect(res.status).toBe(404);
+    expect(JSON.stringify(await res.json())).not.toContain('itest.owner');
+  });
+
+  it('requires the safety acknowledgement', async () => {
+    const res = await routes.reveal.POST(
+      jsonRequest('/api/reveal', revealBody(foundPostId, { acknowledged: false })),
+      noParams,
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects notes with payment details', async () => {
+    const res = await routes.lost.POST(
+      jsonRequest('/api/lost', { ...base, plate, contact, note: 'โอนมา 123-4-56789-0' }),
+      noParams,
+    );
+    expect(res.status).toBe(400);
+    expect((await res.json()).fields).toMatchObject({ note: 'text_account_number' });
   });
 });

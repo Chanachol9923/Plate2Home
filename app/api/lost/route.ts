@@ -30,6 +30,7 @@ export const POST = apiRoute('api/lost', async (request, { ip, ipHash }) => {
     locale: body.locale,
     consentVersion: CONSENT_VERSION,
     notifyEmail: false, // Phase 5 (double opt-in)
+    note: body.note || null,
   });
 
   // The watch exists now; a matching failure must not fail the request (the daily safety-net

@@ -44,6 +44,7 @@ test('lost watch, then found plate, are matched and link to the match page', asy
   await expect(page).toHaveURL(/step=contact/);
 
   await page.getByLabel('LINE ID (แนะนำ)').fill('e2e.owner');
+  await page.getByLabel(/^หมายเหตุ/).fill('ป้ายหลัง มีสติกเกอร์');
   await page.getByRole('button', { name: 'ต่อไป' }).click();
   await expect(page).toHaveURL(/step=confirm/);
 
@@ -65,6 +66,7 @@ test('lost watch, then found plate, are matched and link to the match page', asy
   await page.getByRole('button', { name: 'ต่อไป' }).click();
   await expect(page).toHaveURL(/step=details/);
 
+  await page.getByLabel(/^หมายเหตุ/).fill('เจอใกล้วัด ทั้งป้ายหน้าและหลัง');
   await page.getByLabel('LINE ID (แนะนำ)').fill('e2e.finder');
   await page.getByLabel('PIN 4–6 หลัก').fill('1397');
   await page.getByLabel('ใส่ PIN อีกครั้ง').fill('1397');
@@ -81,6 +83,21 @@ test('lost watch, then found plate, are matched and link to the match page', asy
   await expect(page.getByRole('img', { name: 'รูปป้ายที่มีคนเจอ' })).toBeVisible();
   // No contact details on the match page (reveal flow comes in Phase 4).
   await expect(page.getByText('e2e.finder')).toHaveCount(0);
+  await expect(page.getByText('ป้ายหลัง มีสติกเกอร์')).toBeVisible(); // owner's note
+
+  // --- Contact reveal: safety checklist + Turnstile, then the finder's contact --------------
+  await page.getByRole('button', { name: 'ดูช่องทางติดต่อ' }).click();
+  const sheet = page.getByRole('dialog', { name: 'ก่อนติดต่อ โปรดอ่านให้จบ' });
+  await expect(sheet.getByText('ห้ามโอนเงินก่อนได้ป้ายคืน')).toBeVisible();
+  await sheet.getByRole('checkbox').check();
+  await passTurnstile(page);
+  await sheet.getByRole('button', { name: 'แสดงช่องทางติดต่อ' }).click();
+  await expect(page.getByText('e2e.finder')).toBeVisible();
+  await expect(page.getByText('เจอใกล้วัด ทั้งป้ายหน้าและหลัง')).toBeVisible(); // finder's note
+  await expect(page.getByRole('link', { name: 'เปิดใน LINE' })).toHaveAttribute(
+    'href',
+    'https://line.me/ti/p/~e2e.finder',
+  );
 
   // --- Search finds the found plate --------------------------------------------------------
   await page.goto('/search');
