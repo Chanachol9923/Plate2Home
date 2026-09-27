@@ -477,10 +477,37 @@ const SUGGESTION_MARGIN = 0.04;
 export async function findPlates(photo: LoadedPhoto): Promise<FoundPlate[]> {
   // Let the "looking for plates" status paint before the synchronous pass runs.
   await new Promise((r) => setTimeout(r, 0));
-  let rects = layoutPass(photo, WORK_WIDTH);
-  if (rects.length === 0) rects = layoutPass(photo, CLOSE_UP_WIDTH);
+  let rects = await verified(photo, layoutPass(photo, WORK_WIDTH));
+  if (rects.length === 0) rects = await verified(photo, layoutPass(photo, CLOSE_UP_WIDTH));
   if (rects.length === 0) rects = await spotPlates(photo);
   return readingOrder(rects).map((rect) => ({ rect }));
+}
+
+/** Suggestions whose reading is at least this sure (mean character probability) are kept. */
+const SUGGESTION_MIN_SCORE = 0.6;
+
+/**
+ * Keep only suggestions that read as a plate (D-076): each box is cut out, its number line
+ * found and read by the recognizer under the plate grammar. Windows, signs and lights don't
+ * produce a confident plate reading. Without the model, every box is kept.
+ */
+async function verified(photo: LoadedPhoto, rects: Rect[]): Promise<Rect[]> {
+  if (rects.length === 0) return rects;
+  const model = await modelAt(MODEL_URL);
+  if (!model) return rects;
+  return rects.filter((r) => {
+    const w = Math.max(1, Math.round(r.width));
+    const h = Math.max(1, Math.round(r.height));
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    c.getContext('2d')!.drawImage(photo.canvas, r.x, r.y, r.width, r.height, 0, 0, w, h);
+    const { canvas, lines } = cropLines(c, w, h);
+    if (!lines) return false;
+    const rec = recognizePlate(model, modelInput(canvas, lines.number, model));
+    const mean = rec.probs.reduce((a, b) => a + b, 0) / Math.max(1, rec.probs.length);
+    return rec.text.length >= 3 && mean >= SUGGESTION_MIN_SCORE;
+  });
 }
 
 function layoutPass(photo: LoadedPhoto, width: number): Rect[] {

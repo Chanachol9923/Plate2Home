@@ -11,7 +11,8 @@ const vector = JSON.parse(
 ) as { cases: { text: string; input: string; argmax: number[]; decoded: string }[] };
 const model = loadRecognizer(bin.buffer.slice(bin.byteOffset, bin.byteOffset + bin.byteLength));
 
-describe('plate-text recognizer runtime', () => {
+// Full model passes are slow under coverage instrumentation on CI machines.
+describe('plate-text recognizer runtime', { timeout: 120_000 }, () => {
   it('loads the model header', () => {
     expect(model.height).toBe(48);
     expect(model.width).toBe(192);
