@@ -341,7 +341,7 @@ Results are capped at 200. Volumes are small (thousands of rows), so recall matt
 - CSP will need `'wasm-unsafe-eval'` for WASM and `worker-src 'self' blob:`.
 - Per photo:
   1. Decode with `createImageBitmap(file, { imageOrientation: 'from-image' })` to apply EXIF orientation.
-  2. Downscale so the longest edge is ~1280 px.
+  2. Downscale so the longest edge is ~2048 px (D-066).
   3. Run the detector, then compute boxes with 10–15% padding, clamped to the image.
   4. Reject crops that are too small, and flag blurry ones (Laplacian variance check).
   5. Run the vehicle check (§8.4).

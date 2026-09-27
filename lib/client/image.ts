@@ -4,7 +4,8 @@
  * (which discards EXIF/GPS), and upload small WebP crops.
  */
 
-export const PHOTO_MAX_EDGE = 1280;
+// Large enough that a small plate in a wide shot is still readable; crops stay ≤ 800 px.
+export const PHOTO_MAX_EDGE = 2048;
 export const CROP_MAX_WIDTH = 800;
 export const CROP_TARGET_BYTES = 150 * 1024;
 export const CROP_PADDING = 0.12;
@@ -23,7 +24,7 @@ export interface LoadedPhoto {
   height: number;
 }
 
-/** Decode (orientation-corrected) and downscale so the longest edge is ≤ 1280 px. */
+/** Decode (orientation-corrected) and downscale so the longest edge is ≤ 2048 px. */
 export async function loadPhoto(file: Blob): Promise<LoadedPhoto> {
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
   const scale = Math.min(1, PHOTO_MAX_EDGE / Math.max(bitmap.width, bitmap.height));

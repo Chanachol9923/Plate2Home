@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   findPlateRegions,
+  growPlateBox,
   interpretPlateLines,
   maskUnsure,
+  tightenCrop,
   type OcrLine,
   type OcrWord,
 } from './interpret';
@@ -186,5 +188,38 @@ describe('findPlateRegions', () => {
         600,
       ),
     ).toEqual([]);
+  });
+});
+
+describe('tightenCrop', () => {
+  const crop = { x: 100, y: 50, width: 1000, height: 800 };
+
+  it('cuts a loose crop down to the plate, in photo coordinates', () => {
+    expect(tightenCrop(crop, { x0: 0.25, y0: 0.25, x1: 0.75, y1: 0.5 })).toEqual({
+      x: 350,
+      y: 250,
+      width: 500,
+      height: 200,
+    });
+  });
+
+  it('keeps a crop that is already tight', () => {
+    expect(tightenCrop(crop, { x0: 0.02, y0: 0.05, x1: 0.97, y1: 0.95 })).toBeNull();
+  });
+
+  it('clamps to the crop and rejects empty boxes', () => {
+    expect(tightenCrop(crop, { x0: -0.5, y0: 0, x1: 0.1, y1: 0.1 })).toMatchObject({ x: 100 });
+    expect(tightenCrop(crop, { x0: 0.5, y0: 0.5, x1: 0.5, y1: 0.9 })).toBeNull();
+  });
+});
+
+describe('growPlateBox', () => {
+  it('adds margins and the province line, clamped to the image', () => {
+    expect(growPlateBox({ x0: 10, y0: 100, x1: 300, y1: 140 }, 320, 200)).toEqual({
+      x0: 0,
+      y0: 82,
+      x1: 320,
+      y1: 200,
+    });
   });
 });

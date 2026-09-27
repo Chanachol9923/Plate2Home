@@ -44,6 +44,8 @@ export interface PlateReading {
   confidence: number;
   /** Box of the plate-number line inside the image, for a focused second pass. */
   lineBox: Box | null;
+  /** Where the whole plate is in the image read, as fractions 0..1 (for automatic cropping). */
+  plateBox?: Box | null;
 }
 
 /** Characters read with less confidence than this (0..100) become `?`. */
@@ -200,7 +202,7 @@ function overlapY(a: Box, b: Box): number {
   return Math.max(0, bottom - top) / Math.min(a.y1 - a.y0, b.y1 - b.y0 || 1);
 }
 
-function iou(a: Box, b: Box): number {
+export function iou(a: Box, b: Box): number {
   const w = Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0));
   const h = Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0));
   const inter = w * h;
@@ -267,16 +269,50 @@ export function findPlateRegions(lines: OcrWordLine[], width: number, height: nu
 
   const regions: Box[] = [];
   for (const b of textBoxes) {
-    const h = b.y1 - b.y0;
-    const grown: Box = {
-      x0: Math.max(0, b.x0 - h * 0.6),
-      y0: Math.max(0, b.y0 - h * 0.45),
-      x1: Math.min(width, b.x1 + h * 0.6),
-      y1: Math.min(height, b.y1 + h * 1.5),
-    };
+    const grown = growPlateBox(b, width, height);
     const dup = regions.findIndex((r) => iou(r, grown) > 0.3);
     if (dup >= 0) regions[dup] = union(regions[dup]!, grown);
     else regions.push(grown);
   }
   return regions;
+}
+
+/**
+ * The whole plate around its number line: side margins, a little above, and the province line
+ * below (car plates). Clamped to the image.
+ */
+export function growPlateBox(line: Box, width: number, height: number): Box {
+  const h = line.y1 - line.y0;
+  return {
+    x0: Math.max(0, line.x0 - h * 0.6),
+    y0: Math.max(0, line.y0 - h * 0.45),
+    x1: Math.min(width, line.x1 + h * 0.6),
+    y1: Math.min(height, line.y1 + h * 1.5),
+  };
+}
+
+export interface RectLike {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Automatic cropping: `plate` is where the plate sits inside a crop, as fractions (0..1) of
+ * that crop; `crop` is the crop's rectangle in the photo. Returns the plate's rectangle in the
+ * photo when it is clearly smaller than the crop (a loose box, or the whole photo), else null.
+ */
+export function tightenCrop(crop: RectLike, plate: Box, maxAreaRatio = 0.7): RectLike | null {
+  const x0 = Math.max(0, Math.min(1, plate.x0));
+  const y0 = Math.max(0, Math.min(1, plate.y0));
+  const x1 = Math.max(0, Math.min(1, plate.x1));
+  const y1 = Math.max(0, Math.min(1, plate.y1));
+  if (x1 - x0 <= 0 || y1 - y0 <= 0 || (x1 - x0) * (y1 - y0) > maxAreaRatio) return null;
+  return {
+    x: crop.x + x0 * crop.width,
+    y: crop.y + y0 * crop.height,
+    width: (x1 - x0) * crop.width,
+    height: (y1 - y0) * crop.height,
+  };
 }

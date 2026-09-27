@@ -21,8 +21,9 @@ import { Link } from '@/i18n/navigation';
 import { CONSENT_VERSION, MAX_PLATES_PER_BATCH } from '@/lib/config/app';
 import { postForm, postJson } from '@/lib/client/api';
 import { rememberDevicePost } from '@/lib/client/devices';
-import { cropToBlob, loadPhoto, type LoadedPhoto, type Rect } from '@/lib/client/image';
-import { findPlates, OCR_ENABLED, onOcrLoading, readPlate } from '@/lib/client/ocr';
+import { cropToBlob, loadPhoto, padRect, type LoadedPhoto, type Rect } from '@/lib/client/image';
+import { findPlates, locatePlate, OCR_ENABLED, onOcrLoading, readPlate } from '@/lib/client/ocr';
+import { tightenCrop, type PlateReading } from '@/lib/ocr/interpret';
 import { plateDisplay } from '@/lib/plate/canonical';
 import { draftToInput, EMPTY_DRAFT, type PlateDraft } from '@/lib/plate/draft';
 import { normalizePlate } from '@/lib/plate/normalize';
@@ -72,6 +73,10 @@ interface Batch {
 }
 
 const uid = () => crypto.randomUUID();
+
+/** The plate found inside a box is clearly smaller than the box, so it is worth re-cutting. */
+const isLoose = (outer: Rect, inner: Rect) =>
+  inner.width * inner.height < outer.width * outer.height * 0.7;
 
 export function FoundFlow() {
   const t = useTranslations('found');
@@ -163,9 +168,11 @@ export function FoundFlow() {
   async function scanPhoto(id: string, photo: LoadedPhoto) {
     setScan(id, { state: 'scanning' });
     try {
-      const regions = await findPlates(photo);
-      for (const rect of regions) await addCrop(id, photo, rect, { auto: true, padding: 0.03 });
-      setScan(id, { state: 'done', found: regions.length });
+      const found = await findPlates(photo);
+      for (const f of found) {
+        await addCrop(id, photo, f.rect, { auto: true, padding: 0.04, reading: f.reading });
+      }
+      setScan(id, { state: 'done', found: found.length });
     } catch {
       setScan(id, { state: 'failed' });
     }
@@ -175,7 +182,7 @@ export function FoundFlow() {
     photoId: string,
     photo: LoadedPhoto,
     rect: Rect,
-    opts: { auto?: boolean; padding?: number } = {},
+    opts: { auto?: boolean; padding?: number; reading?: PlateReading | null } = {},
   ) {
     // Count synchronously: several crops can be added before React re-renders.
     if (cardCount.current >= MAX_PLATES_PER_BATCH) {
@@ -200,11 +207,32 @@ export function FoundFlow() {
       },
     ]);
     if (!OCR_ENABLED) return;
-    const reading = await readPlate(blob, 'car').catch(() => null);
+    // Automatic cropping: a loose box (or the whole photo) is cut down to the plate in it.
+    const outer = padRect(rect, photo.width, photo.height, opts.padding);
+    let reading = opts.reading ?? null;
+    let cropped: Rect | null = null;
+    if (!opts.auto) {
+      const located = await locatePlate(photo, outer).catch(() => null);
+      if (located && isLoose(outer, located.rect)) {
+        cropped = located.rect;
+        reading = located.reading;
+      }
+    }
+    let tight = cropped ? await cropToBlob(photo, cropped, 0.04).catch(() => null) : null;
+    reading ??= await readPlate(tight ?? blob, 'car').catch(() => null);
+    if (!cropped && reading?.plateBox) {
+      // Nothing located separately: use where the reading says the plate is.
+      cropped = tightenCrop(outer, reading.plateBox);
+      tight = cropped ? await cropToBlob(photo, cropped, 0.04).catch(() => null) : null;
+    }
+    const tightUrl = tight && objectUrl(tight);
     setPlates((ps) =>
       ps.map((p) => {
         if (p.id !== id) return p;
         if (!reading) return { ...p, ocr: { state: 'unread' } };
+        if (cropped && tight && tightUrl) {
+          p = { ...p, blob: tight, url: tightUrl, source: { photoId, rect: cropped } };
+        }
         // Never overwrite what the user already typed.
         const draft = p.draft.text.trim()
           ? p.draft
