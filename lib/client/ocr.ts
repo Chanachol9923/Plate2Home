@@ -9,8 +9,16 @@
  * Results are always prefilled for the user to confirm, never trusted blindly.
  */
 import type Tesseract from 'tesseract.js';
-import { downscale, findPlatesInLayout, WORK_WIDTH } from '@/lib/ocr/layout';
 import {
+  downscale,
+  findPlatesInLayout,
+  LINE_WORK_WIDTH,
+  otsu,
+  plateTextLines,
+  WORK_WIDTH,
+} from '@/lib/ocr/layout';
+import {
+  type Box,
   findPlateRegions,
   interpretPlateLines,
   type OcrLine,
@@ -149,7 +157,7 @@ function prepare(
   return { canvas, scale };
 }
 
-function linesOf(page: Tesseract.Page): OcrLine[] {
+function ocrLinesOf(page: Tesseract.Page): OcrLine[] {
   return (page.blocks ?? []).flatMap((b) =>
     b.paragraphs.flatMap((p) =>
       p.lines.map((l) => ({
@@ -184,6 +192,80 @@ export async function readPlate(crop: Blob, type: PlateType): Promise<PlateReadi
   }
 }
 
+/** Full-resolution pixels of a crop, and its text lines (in crop pixels) if found. */
+function cropLines(source: CanvasImageSource, width: number, height: number) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  ctx.drawImage(source, 0, 0, width, height);
+  const full = ctx.getImageData(0, 0, width, height);
+  const small = downscale(full.data, width, height, LINE_WORK_WIDTH);
+  const found = plateTextLines(small.data, small.width, small.height);
+  const up = (b: Box): Box => ({
+    x0: b.x0 / small.scale,
+    y0: b.y0 / small.scale,
+    x1: b.x1 / small.scale,
+    y1: b.y1 / small.scale,
+  });
+  return {
+    canvas,
+    lines: found && { number: up(found.number), province: found.province && up(found.province) },
+  };
+}
+
+/**
+ * One text line, cut out with a margin, scaled so the text is `textHeight` px tall and
+ * binarized (Otsu), on a white border: the input Tesseract reads best.
+ */
+function lineImage(source: HTMLCanvasElement, box: Box, textHeight: number) {
+  const bh = box.y1 - box.y0;
+  const px = bh * 0.15;
+  const py = bh * 0.2;
+  const sx = Math.max(0, box.x0 - px);
+  const sy = Math.max(0, box.y0 - py);
+  const sw = Math.min(source.width, box.x1 + px) - sx;
+  const sh = Math.min(source.height, box.y1 + py) - sy;
+  const scale = textHeight / bh;
+  const border = 16;
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(sw * scale) + border * 2;
+  canvas.height = Math.round(sh * scale) + border * 2;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(
+    source,
+    sx,
+    sy,
+    sw,
+    sh,
+    border,
+    border,
+    canvas.width - border * 2,
+    canvas.height - border * 2,
+  );
+  const img = ctx.getImageData(
+    border,
+    border,
+    canvas.width - border * 2,
+    canvas.height - border * 2,
+  );
+  const d = img.data;
+  const grey = new Uint8Array(d.length / 4);
+  for (let i = 0, j = 0; j < grey.length; i += 4, j++) {
+    grey[j] = (d[i]! * 299 + d[i + 1]! * 587 + d[i + 2]! * 114) / 1000;
+  }
+  const t = otsu(grey);
+  for (let i = 0, j = 0; j < grey.length; i += 4, j++) {
+    const v = grey[j]! <= t ? 0 : 255;
+    d[i] = d[i + 1] = d[i + 2] = v;
+  }
+  ctx.putImageData(img, border, border);
+  return canvas;
+}
+
 async function readSource(
   source: CanvasImageSource,
   width: number,
@@ -191,16 +273,54 @@ async function readSource(
   type: PlateType,
 ): Promise<PlateReading | null> {
   const { canvas } = prepare(source, width, height, 320, 1400, true);
+  const found = type === 'motorcycle' ? null : cropLines(source, width, height);
 
   return exclusive(async (w) => {
     const T = await import('tesseract.js');
+
+    // 1. Line by line (D-073): the number line with plate characters only, at two sizes,
+    //    and the province line on its own.
+    if (found?.lines) {
+      const { number, province } = found.lines;
+      const readLine = async (box: Box, textHeight: number, whitelist: string) => {
+        await w.setParameters({
+          tessedit_pageseg_mode: T.PSM.SINGLE_LINE,
+          tessedit_char_whitelist: whitelist,
+        });
+        const res = await w.recognize(
+          lineImage(found.canvas, box, textHeight),
+          {},
+          { blocks: true, text: true },
+        );
+        const ls = ocrLinesOf(res.data);
+        return {
+          text: ls.map((l) => l.text).join(' '),
+          confidence: ls.length ? Math.min(...ls.map((l) => l.confidence)) : 0,
+          bbox: box,
+          symbols: ls.flatMap((l) => l.symbols ?? []),
+        };
+      };
+      const provinceLine = province ? await readLine(province, 48, '') : null;
+      let best: PlateReading | null = null;
+      for (const textHeight of [64, 96]) {
+        const numberLine = await readLine(number, textHeight, WHITELIST);
+        const r = interpretPlateLines(
+          provinceLine ? [numberLine, provinceLine] : [numberLine],
+          type,
+        );
+        if (r && (!best || r.confidence > best.confidence)) best = r;
+      }
+      if (best && best.confidence >= 0.5) return best;
+    }
+
+    // 2. Fallback: let OCR analyse the whole crop.
     // Page layout analysis handles plate borders better than "single block" (which reads the
     // borders as letters); fall back to single block if it finds nothing plate-like.
     let reading: PlateReading | null = null;
     for (const psm of [T.PSM.AUTO, T.PSM.SINGLE_BLOCK]) {
       await w.setParameters({ tessedit_pageseg_mode: psm, tessedit_char_whitelist: '' });
       const pass = await w.recognize(canvas, {}, { blocks: true, text: true });
-      reading = interpretPlateLines(linesOf(pass.data), type);
+      reading = interpretPlateLines(ocrLinesOf(pass.data), type);
       if (reading) break;
     }
     // Second, focused pass on the plate-number line with plate characters only.
@@ -223,7 +343,7 @@ async function readSource(
         },
         { blocks: true, text: true },
       );
-      const refined = interpretPlateLines(linesOf(second.data), type);
+      const refined = interpretPlateLines(ocrLinesOf(second.data), type);
       if (refined && refined.confidence >= reading.confidence) {
         reading = { ...refined, provinceCode: reading.provinceCode };
       }

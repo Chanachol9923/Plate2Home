@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Box } from './interpret';
-import { canny, dedupe, downscale, findPlatesInLayout } from './layout';
+import { canny, dedupe, downscale, findPlatesInLayout, otsu, plateTextLines } from './layout';
 
 type RGB = readonly [number, number, number];
 
@@ -105,5 +105,51 @@ describe('downscale', () => {
     expect(half).toMatchObject({ width: 1, height: 1, scale: 0.5 });
     expect([...half.data]).toEqual([100, 50, 25, 255]);
     expect(downscale(px, 2, 1, 10)).toMatchObject({ width: 2, scale: 1 });
+  });
+});
+
+describe('plateTextLines', () => {
+  it('finds the number line and the province line below it', () => {
+    const w = 400;
+    const h = 180;
+    const px = new Uint8ClampedArray(w * h * 4);
+    for (let i = 0; i < w * h; i++) px.set([235, 235, 230, 255], i * 4);
+    const rect = (x0: number, y0: number, x1: number, y1: number) => {
+      for (let y = y0; y < y1; y++)
+        for (let x = x0; x < x1; x++) px.set([20, 20, 20, 255], (y * w + x) * 4);
+    };
+    // Border (must be ignored), number line letters (outlines), province blocks.
+    rect(4, 4, 396, 8);
+    rect(4, 172, 396, 176);
+    for (let k = 0; k < 7; k++) {
+      if (k === 3) continue;
+      const lx = 40 + k * 48;
+      rect(lx, 30, lx + 36, 38);
+      rect(lx, 98, lx + 36, 106);
+      rect(lx, 30, lx + 8, 106);
+      rect(lx + 28, 30, lx + 36, 106);
+    }
+    for (let k = 0; k < 14; k++) rect(90 + k * 16, 125, 90 + k * 16 + 10, 150);
+    const lines = plateTextLines(px, w, h);
+    expect(lines).not.toBeNull();
+    expect(lines!.number.y0).toBeLessThanOrEqual(31);
+    expect(lines!.number.y1).toBeGreaterThanOrEqual(105);
+    expect(lines!.number.x0).toBeLessThanOrEqual(41);
+    expect(lines!.province).not.toBeNull();
+    expect(lines!.province!.y0).toBeGreaterThanOrEqual(120);
+    expect(lines!.province!.y1).toBeLessThanOrEqual(155);
+  });
+
+  it('returns null for a crop without text', () => {
+    const px = new Uint8ClampedArray(400 * 180 * 4).fill(230);
+    expect(plateTextLines(px, 400, 180)).toBeNull();
+  });
+});
+
+describe('otsu', () => {
+  it('splits two clusters', () => {
+    const t = otsu([10, 12, 15, 20, 200, 210, 220, 230]);
+    expect(t).toBeGreaterThanOrEqual(20);
+    expect(t).toBeLessThan(200);
   });
 });

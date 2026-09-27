@@ -54,3 +54,17 @@ here is a benchmark; the numbers below come from synthetic test images only.
 Collect a consented, labeled set of real found-plate photos. Build `ml/eval/` to measure this
 pipeline (detection recall/precision, exact plate match, character and province accuracy,
 latency) against the Phase 6 trained models (YOLOX detector + fast-plate-ocr recognizer, D-001).
+
+## Benchmarks (2026-09-28)
+
+A private set, not in the repo: a real photo of 22 plates laid out on a patterned floor, from
+the user. Scored with local-only harnesses (`e2e/zz-*`, git-ignored).
+
+| Step                                                   | Found (IoU ≥ 0.5) | Exact plate | Characters | Province |
+| ------------------------------------------------------ | ----------------- | ----------- | ---------- | -------- |
+| Tesseract text spotting + whole-crop OCR               | 0/22              | 3/22        | 45%        | 12/22    |
+| Layout detector (D-072) + line-by-line reading (D-073) | 15–16/22          | 5/22        | 65%        | 15/22    |
+
+Next: 131 freely licensed Thai plate photos from Wikimedia Commons (kept locally, licences
+recorded) as a second benchmark. Then a recognizer trained on the plate font (synthetic data;
+local RTX 2080 Ti) exported to ONNX for the browser.

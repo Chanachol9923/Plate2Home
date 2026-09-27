@@ -460,3 +460,124 @@ export function dedupe(boxes: Box[]): Box[] {
   }
   return out;
 }
+
+// ------------------------------------------------------------------ text lines inside a plate
+
+/** Width a plate crop is scaled to before finding its text lines. */
+export const LINE_WORK_WIDTH = 400;
+
+export interface PlateLines {
+  /** The big number line (series and number). */
+  number: Box;
+  /** The province line below it, if any. */
+  province: Box | null;
+}
+
+/**
+ * The number line and province line inside a plate crop (about LINE_WORK_WIDTH wide), found
+ * from dark-text rows. Reading each line on its own is far more accurate than letting OCR
+ * guess the layout of a bordered, two-line plate.
+ */
+export function plateTextLines(rgba: ArrayLike<number>, w: number, h: number): PlateLines | null {
+  if (w < 40 || h < 20) return null;
+  const n = w * h;
+  const grey = new Uint8Array(n);
+  for (let i = 0, j = 0; j < n; i += 4, j++) {
+    grey[j] = Math.round(0.299 * rgba[i]! + 0.587 * rgba[i + 1]! + 0.114 * rgba[i + 2]!);
+  }
+  const r = Math.max(4, Math.round(w / 28));
+  const closed = close(grey, w, h, r, r);
+  const text = new Uint8Array(n);
+  for (let i = 0; i < n; i++) {
+    const bh = closed[i]! - grey[i]!;
+    if (bh > 40 && bh > 0.35 * closed[i]!) text[i] = 1;
+  }
+  const labels = new Int32Array(n);
+  const keep = new Set<number>();
+  const comps = components(text, w, h, labels);
+  for (const c of comps) {
+    const cw = c.x1 - c.x0 + 1;
+    const ch = c.y1 - c.y0 + 1;
+    const line = (ch <= 0.05 * h && cw > 0.12 * w) || (cw <= 0.03 * w && ch > 0.55 * h);
+    if (c.area < 0.0004 * n || line || cw > 0.5 * w || ch > 0.75 * h) continue;
+    keep.add(c.label);
+  }
+  const kept = comps.filter((c) => keep.has(c.label));
+  if (kept.length === 0) return null;
+
+  // Rows with text (ignoring the outermost columns, where borders live).
+  const rows = new Int32Array(h);
+  const xa = Math.floor(0.03 * w);
+  const xb = Math.ceil(0.97 * w);
+  for (let y = 0; y < h; y++) {
+    for (let x = xa; x < xb; x++) if (keep.has(labels[y * w + x]!)) rows[y]!++;
+  }
+  const minRow = Math.max(2, 0.015 * w);
+  const bands: { y0: number; y1: number; mass: number }[] = [];
+  for (let y = 0; y < h; y++) {
+    if (rows[y]! < minRow) continue;
+    const last = bands[bands.length - 1];
+    // Small gaps (vowel marks, tails) stay in the same band.
+    if (last && y - last.y1 <= Math.max(2, 0.025 * h)) {
+      last.y1 = y + 1;
+      last.mass += rows[y]!;
+    } else bands.push({ y0: y, y1: y + 1, mass: rows[y]! });
+  }
+  if (bands.length === 0) return null;
+  const maxMass = Math.max(...bands.map((b) => b.mass));
+  const numberBand = bands
+    .filter((b) => b.mass >= 0.2 * maxMass && b.y1 - b.y0 >= 0.1 * h)
+    .sort((a, b) => b.y1 - b.y0 - (a.y1 - a.y0))[0];
+  if (!numberBand) return null;
+  const nh = numberBand.y1 - numberBand.y0;
+  const provinceBand = bands
+    .filter((b) => b.y0 >= numberBand.y1 && b.y1 - b.y0 <= 0.85 * nh && b.y1 - b.y0 >= 0.12 * nh)
+    .sort((a, b) => b.mass - a.mass)[0];
+
+  /** Horizontal extent of the components whose middle lies in a band. */
+  const extent = (band: { y0: number; y1: number }): Box | null => {
+    const bh = band.y1 - band.y0;
+    const inBand = kept.filter((c) => {
+      const cy = (c.y0 + c.y1) / 2;
+      return cy >= band.y0 && cy <= band.y1 && c.y1 - c.y0 + 1 >= 0.25 * bh;
+    });
+    if (inBand.length === 0) return null;
+    return {
+      x0: Math.min(...inBand.map((c) => c.x0)),
+      y0: band.y0,
+      x1: Math.max(...inBand.map((c) => c.x1)) + 1,
+      y1: band.y1,
+    };
+  };
+  const number = extent(numberBand);
+  if (!number) return null;
+  return { number, province: provinceBand ? extent(provinceBand) : null };
+}
+
+/** Otsu threshold of grey values (0..255). */
+export function otsu(grey: ArrayLike<number>): number {
+  const hist = new Float64Array(256);
+  for (let i = 0; i < grey.length; i++) hist[grey[i]!]!++;
+  const total = grey.length;
+  let sum = 0;
+  for (let t = 0; t < 256; t++) sum += t * hist[t]!;
+  let sumB = 0;
+  let wB = 0;
+  let best = 0;
+  let threshold = 127;
+  for (let t = 0; t < 256; t++) {
+    wB += hist[t]!;
+    if (wB === 0) continue;
+    const wF = total - wB;
+    if (wF === 0) break;
+    sumB += t * hist[t]!;
+    const mB = sumB / wB;
+    const mF = (sum - sumB) / wF;
+    const between = wB * wF * (mB - mF) ** 2;
+    if (between > best) {
+      best = between;
+      threshold = t;
+    }
+  }
+  return threshold;
+}
