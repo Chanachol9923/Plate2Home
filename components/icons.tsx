@@ -69,6 +69,17 @@ export function PhoneIcon(props: IconProps) {
   );
 }
 
+/** A stack of cards: "my posts". */
+export function PostsIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="4" y="7" width="16" height="13" rx="2" />
+      <path d="M7 4h10" />
+      <path d="M8 12h8M8 16h5" />
+    </Icon>
+  );
+}
+
 /** Magnifier: "search a plate number". */
 export function SearchIcon(props: IconProps) {
   return (

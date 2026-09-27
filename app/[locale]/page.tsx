@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import {
   ArrowRightIcon,
+  PostsIcon,
   SearchIcon,
   CameraIcon,
   LostPlateIcon,
@@ -9,7 +10,7 @@ import {
   PhoneIcon,
 } from '@/components/icons';
 import { Phrased } from '@/components/ui/Phrased';
-import { actionTile, textLink } from '@/components/ui/styles';
+import { actionTile, bigLink } from '@/components/ui/styles';
 import { Link } from '@/i18n/navigation';
 
 function ActionTile({
@@ -76,20 +77,17 @@ export default async function HomePage() {
       </nav>
 
       {/* Full-width, bordered and with an icon: easy to spot for people checking a plate. */}
-      <Link
-        href="/search"
-        className="mt-4 flex min-h-16 w-full items-center gap-3 rounded-md border-2 border-line bg-surface px-4 font-heading text-lg font-bold text-ink shadow-sign transition-[transform,box-shadow] duration-100 hover:bg-surface-sunk active:translate-y-0.5 active:shadow-sign-pressed"
-      >
+      <Link href="/search" className={`${bigLink} mt-4`}>
         <SearchIcon size={28} />
         <span className="flex-1">{t('search')}</span>
         <ArrowRightIcon size={24} />
       </Link>
 
-      <p className="mt-3 flex justify-center">
-        <Link href="/my-posts" className={`${textLink} inline-flex min-h-11 items-center`}>
-          {t('myPosts')}
-        </Link>
-      </p>
+      <Link href="/my-posts" className={`${bigLink} mt-3`}>
+        <PostsIcon size={28} />
+        <span className="flex-1">{t('myPosts')}</span>
+        <ArrowRightIcon size={24} />
+      </Link>
 
       <section aria-labelledby="how-title" className="mt-10 border-t-2 border-line-soft pt-6">
         <h2 id="how-title" className="text-lg font-bold">

@@ -9,7 +9,7 @@ export const brand = {
   },
   /** Used where one locale-independent identifier is needed (manifest id, storage keys). */
   slug: 'plate2home',
-  /** Credit line in the footer ("Plate2Home By AnnoyingDoggo"). */
+  /** Credit line in the footer ("Plate2Home By an AnnoyingDoggo"). */
   author: 'AnnoyingDoggo',
 } as const;
 

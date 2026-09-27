@@ -47,7 +47,7 @@
   "footer": {
     "nonCommercial": "No ads. Not for profit in any way.",
     "privacy": "No GPS tracking. Posts are deleted automatically when they expire.",
-    "credit": "{brand} by {author}"
+    "credit": "{brand} By an {author}"
   },
   "notFound": {
     "title": "Page not found",
@@ -303,5 +303,17 @@
     "hidden": "Temporarily hidden",
     "loading": "Loading…",
     "otherDevices": "Posts from other devices don’t show here."
+  },
+  "ocr": {
+    "loading": "Loading the automatic plate reader {percent}% (about 5 MB the first time)",
+    "scanning": "Looking for plates in the photo…",
+    "found": "{count, plural, one {Found # plate} other {Found # plates}}. Check the cards below; drag a box around any plate that was missed.",
+    "none": "No plates found automatically. Drag a box around each plate yourself.",
+    "failed": "Automatic reading didn't work. Drag a box and type the plate yourself.",
+    "reading": "Reading the plate…",
+    "read": "Read automatically. Please check it before sending.",
+    "lowConfidence": "Not very sure about this one. Check every character; unreadable ones show as ?.",
+    "unread": "Couldn't read this plate. Please type it yourself.",
+    "auto": "Found automatically"
   }
 }

@@ -21,6 +21,7 @@ import { CONSENT_VERSION, MAX_PLATES_PER_BATCH } from '@/lib/config/app';
 import { postForm, postJson } from '@/lib/client/api';
 import { rememberDevicePost } from '@/lib/client/devices';
 import { cropToBlob, loadPhoto, type LoadedPhoto, type Rect } from '@/lib/client/image';
+import { findPlates, OCR_ENABLED, onOcrLoading, readPlate } from '@/lib/client/ocr';
 import { plateDisplay } from '@/lib/plate/canonical';
 import { draftToInput, EMPTY_DRAFT, type PlateDraft } from '@/lib/plate/draft';
 import { normalizePlate } from '@/lib/plate/normalize';
@@ -39,6 +40,8 @@ interface Photo {
   status: 'loading' | 'ready' | 'error';
   photo?: LoadedPhoto;
   url?: string;
+  /** Automatic plate finding on this photo. */
+  scan?: { state: 'scanning' } | { state: 'done'; found: number } | { state: 'failed' };
 }
 
 type UploadState =
@@ -54,6 +57,9 @@ interface PlateCard {
   draft: PlateDraft;
   errors: PlateFieldErrors;
   upload: UploadState;
+  /** Found automatically in the photo (not drawn by hand). */
+  auto: boolean;
+  ocr: { state: 'off' | 'reading' | 'unread' } | { state: 'read'; confidence: number };
 }
 
 interface Batch {
@@ -68,6 +74,7 @@ export function FoundFlow() {
   const t = useTranslations('found');
   const tc = useTranslations('common');
   const tMine = useTranslations('myPosts');
+  const tOcr = useTranslations('ocr');
   const tConsent = useTranslations('consent');
   const errorText = useErrorText();
   const locale = useLocale() as 'th' | 'en';
@@ -90,6 +97,8 @@ export function FoundFlow() {
   const [formError, setFormError] = useState<string | null>(null);
   const [batch, setBatch] = useState<Batch | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState<number | null>(null);
+  const cardCount = useRef(0);
   const cameraInput = useRef<HTMLInputElement>(null);
   const galleryInput = useRef<HTMLInputElement>(null);
 
@@ -101,6 +110,13 @@ export function FoundFlow() {
     urls.current.push(u);
     return u;
   };
+
+  // First-time download progress of the OCR engine + Thai model.
+  useEffect(
+    () =>
+      onOcrLoading((progress) => setOcrLoading(progress >= 1 ? null : Math.round(progress * 100))),
+    [],
+  );
 
   // Warn before leaving with unsent plates.
   const unsent = plates.some((p) => p.upload.state !== 'done');
@@ -130,29 +146,71 @@ export function FoundFlow() {
         setPhotos((ps) =>
           ps.map((p) => (p.id === id ? { id, status: 'ready', photo, url: objectUrl(blob) } : p)),
         );
+        if (OCR_ENABLED) void scanPhoto(id, photo);
       } catch {
         setPhotos((ps) => ps.map((p) => (p.id === id ? { id, status: 'error' } : p)));
       }
     }
   }
 
-  async function addCrop(photo: LoadedPhoto, rect: Rect) {
-    if (plates.length >= MAX_PLATES_PER_BATCH) {
+  const setScan = (id: string, scan: Photo['scan']) =>
+    setPhotos((ps) => ps.map((p) => (p.id === id ? { ...p, scan } : p)));
+
+  /** Find plate-shaped text in the photo and propose a card (with a reading) for each. */
+  async function scanPhoto(id: string, photo: LoadedPhoto) {
+    setScan(id, { state: 'scanning' });
+    try {
+      const regions = await findPlates(photo);
+      for (const rect of regions) await addCrop(photo, rect, { auto: true, padding: 0.03 });
+      setScan(id, { state: 'done', found: regions.length });
+    } catch {
+      setScan(id, { state: 'failed' });
+    }
+  }
+
+  async function addCrop(
+    photo: LoadedPhoto,
+    rect: Rect,
+    opts: { auto?: boolean; padding?: number } = {},
+  ) {
+    // Count synchronously: several crops can be added before React re-renders.
+    if (cardCount.current >= MAX_PLATES_PER_BATCH) {
       setFormError(t('tooMany', { max: MAX_PLATES_PER_BATCH }));
       return;
     }
-    const blob = await cropToBlob(photo, rect);
+    cardCount.current++;
+    const blob = await cropToBlob(photo, rect, opts.padding);
+    const id = uid();
     setPlates((ps) => [
       ...ps,
       {
-        id: uid(),
+        id,
         blob,
         url: objectUrl(blob),
         draft: EMPTY_DRAFT,
         errors: {},
         upload: { state: 'pending' },
+        auto: Boolean(opts.auto),
+        ocr: { state: OCR_ENABLED ? 'reading' : 'off' },
       },
     ]);
+    if (!OCR_ENABLED) return;
+    const reading = await readPlate(blob, 'car').catch(() => null);
+    setPlates((ps) =>
+      ps.map((p) => {
+        if (p.id !== id) return p;
+        if (!reading) return { ...p, ocr: { state: 'unread' } };
+        // Never overwrite what the user already typed.
+        const draft = p.draft.text.trim()
+          ? p.draft
+          : {
+              ...p.draft,
+              text: reading.text,
+              provinceCode: p.draft.provinceCode ?? reading.provinceCode,
+            };
+        return { ...p, draft, ocr: { state: 'read', confidence: reading.confidence } };
+      }),
+    );
   }
 
   const updatePlate = (id: string, patch: Partial<PlateCard>) =>
@@ -181,7 +239,14 @@ export function FoundFlow() {
       if (card.upload.state === 'done') continue;
       updatePlate(card.id, { upload: { state: 'uploading' } });
       const form = new FormData();
-      form.set('data', JSON.stringify({ plate: draftToInput(card.draft), vehicleWarning: false }));
+      form.set(
+        'data',
+        JSON.stringify({
+          plate: draftToInput(card.draft),
+          vehicleWarning: false,
+          ocrMinConfidence: card.ocr.state === 'read' ? card.ocr.confidence : null,
+        }),
+      );
       form.set('crop', card.blob, card.blob.type === 'image/webp' ? 'crop.webp' : 'crop.jpg');
       const res = await postForm<{
         status: 'active' | 'needs_review';
@@ -398,16 +463,35 @@ export function FoundFlow() {
           />
           <p className="text-sm text-ink-muted">{t('privacyNote')}</p>
 
+          {ocrLoading !== null && (
+            <p className="inline-flex items-center gap-2 text-sm" aria-live="polite">
+              <Spinner /> {tOcr('loading', { percent: ocrLoading })}
+            </p>
+          )}
+
           {photos.map((p, i) =>
             p.status === 'ready' && p.photo && p.url ? (
-              <PhotoCropper
-                key={p.id}
-                photo={p.photo}
-                url={p.url}
-                label={t('photoLabel', { n: i + 1 })}
-                onCrop={(rect) => addCrop(p.photo!, rect)}
-                onRemove={() => setPhotos((ps) => ps.filter((x) => x.id !== p.id))}
-              />
+              <div key={p.id} className="space-y-2">
+                {p.scan && (
+                  <p className="text-sm font-semibold" aria-live="polite">
+                    {p.scan.state === 'scanning' && (
+                      <span className="inline-flex items-center gap-2">
+                        <Spinner /> {tOcr('scanning')}
+                      </span>
+                    )}
+                    {p.scan.state === 'done' &&
+                      (p.scan.found > 0 ? tOcr('found', { count: p.scan.found }) : tOcr('none'))}
+                    {p.scan.state === 'failed' && tOcr('failed')}
+                  </p>
+                )}
+                <PhotoCropper
+                  photo={p.photo}
+                  url={p.url}
+                  label={t('photoLabel', { n: i + 1 })}
+                  onCrop={(rect) => addCrop(p.photo!, rect)}
+                  onRemove={() => setPhotos((ps) => ps.filter((x) => x.id !== p.id))}
+                />
+              </div>
             ) : (
               <div key={p.id} className="rounded-md border-2 border-line-soft p-4">
                 {p.status === 'loading' ? (
@@ -428,10 +512,20 @@ export function FoundFlow() {
               {plates.map((p, i) => (
                 <li key={p.id} className="space-y-3 rounded-md border-2 border-line bg-surface p-3">
                   <div className="flex items-center justify-between gap-2">
-                    <h2 className="text-lg font-bold">{t('cardTitle', { n: i + 1 })}</h2>
+                    <h2 className="text-lg font-bold">
+                      {t('cardTitle', { n: i + 1 })}
+                      {p.auto && (
+                        <span className="ms-2 rounded-sm border-2 border-line-soft px-1.5 align-middle text-sm font-semibold">
+                          {tOcr('auto')}
+                        </span>
+                      )}
+                    </h2>
                     <button
                       type="button"
-                      onClick={() => setPlates((ps) => ps.filter((x) => x.id !== p.id))}
+                      onClick={() => {
+                        cardCount.current--;
+                        setPlates((ps) => ps.filter((x) => x.id !== p.id));
+                      }}
                       className="min-h-11 px-2 text-sm font-semibold text-danger underline decoration-2 underline-offset-4"
                     >
                       {t('removePlate')}
@@ -443,6 +537,19 @@ export function FoundFlow() {
                     alt={t('cropAlt', { n: i + 1 })}
                     className="max-h-40 w-full rounded-sm border-2 border-line-soft object-contain"
                   />
+                  {p.ocr.state === 'reading' && (
+                    <p className="inline-flex items-center gap-2 text-sm" aria-live="polite">
+                      <Spinner /> {tOcr('reading')}
+                    </p>
+                  )}
+                  {p.ocr.state === 'read' && (
+                    <p
+                      className={`text-sm font-semibold ${p.ocr.confidence < 0.6 ? 'text-danger' : 'text-success'}`}
+                    >
+                      {p.ocr.confidence < 0.6 ? tOcr('lowConfidence') : tOcr('read')}
+                    </p>
+                  )}
+                  {p.ocr.state === 'unread' && <p className="text-sm">{tOcr('unread')}</p>}
                   <PlateInput
                     value={p.draft}
                     onChange={(draft) => updatePlate(p.id, { draft })}

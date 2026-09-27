@@ -58,6 +58,7 @@ const eslintConfig = defineConfig([
     'coverage/**',
     'next-env.d.ts',
     'supabase/.temp/**',
+    'public/tesseract/**',
   ]),
 ]);
 

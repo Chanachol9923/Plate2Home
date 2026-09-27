@@ -5,3 +5,4 @@ supabase/.temp
 package-lock.json
 next-env.d.ts
 docs/plan.md
+public/tesseract
