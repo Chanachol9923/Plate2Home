@@ -2,20 +2,17 @@
  * In-browser plate OCR with Tesseract.js (Thai LSTM model, Apache-2.0), running in its own Web
  * Worker. Everything is self-hosted under /tesseract and loaded only when the found flow needs it.
  *
- *  - findPlates(photo):   plates in a whole photo (text spotting + verified stroke patterns)
+ *  - findPlates(photo):   plates in a whole photo (layout detector; text spotting fallback)
  *  - readPlate(crop):     reads the plate number and province from one crop
  *
  * This is the fallback recognizer of spec §7.1 until a trained plate model exists (Phase 6).
  * Results are always prefilled for the user to confirm, never trusted blindly.
  */
 import type Tesseract from 'tesseract.js';
-import { plateCandidates } from '@/lib/ocr/candidates';
+import { downscale, findPlatesInLayout, WORK_WIDTH } from '@/lib/ocr/layout';
 import {
   findPlateRegions,
-  growPlateBox,
   interpretPlateLines,
-  iou,
-  tightenCrop,
   type OcrLine,
   type OcrWordLine,
   type PlateReading,
@@ -206,18 +203,6 @@ async function readSource(
       reading = interpretPlateLines(linesOf(pass.data), type);
       if (reading) break;
     }
-    // Where the whole plate is, for automatic cropping (from the first pass's number line).
-    let plateBox: PlateReading['plateBox'] = null;
-    if (reading?.lineBox) {
-      const b = growPlateBox(reading.lineBox, canvas.width, canvas.height);
-      plateBox = {
-        x0: b.x0 / canvas.width,
-        y0: b.y0 / canvas.height,
-        x1: b.x1 / canvas.width,
-        y1: b.y1 / canvas.height,
-      };
-    }
-
     // Second, focused pass on the plate-number line with plate characters only.
     if (reading?.lineBox && type !== 'motorcycle') {
       const b = reading.lineBox;
@@ -260,7 +245,7 @@ async function readSource(
         if (snap) reading = { ...reading, provinceCode: snap.code };
       }
     }
-    return reading && { ...reading, plateBox };
+    return reading;
   });
 }
 
@@ -270,22 +255,48 @@ const SPOT_WIDTH = 1280;
 export interface FoundPlate {
   /** The plate in photo pixels. */
   rect: Rect;
-  /** Already read while verifying it (candidates found without text spotting). */
-  reading: PlateReading | null;
 }
 
-type Corners = { x0: number; y0: number; x1: number; y1: number };
-const toBox = (r: Rect): Corners => ({ x0: r.x, y0: r.y, x1: r.x + r.width, y1: r.y + r.height });
+/** Width for close-ups, tried only when the normal width finds nothing (text too big). */
+const CLOSE_UP_WIDTH = 450;
+/** Margin added around a detected plate face (its border and frame are left outside). */
+const SUGGESTION_MARGIN = 0.04;
 
 /**
- * Plates in a whole photo, in photo pixel coordinates. Two passes:
- *  1. text spotting over the photo (finds plates whose text is big enough to read there);
- *  2. plate-like stroke patterns (lib/ocr/candidates), each cut out at full resolution and
- *     kept only if it reads as a plate. This catches small plates in large photos.
+ * Plates in a whole photo, in photo pixel coordinates, in reading order (D-072):
+ *  1. the layout detector (lib/ocr/layout): plate paint regions seeded by text, which also
+ *     splits photos of many plates laid out together; at a smaller scale for close-ups;
+ *  2. only if that finds nothing, OCR text spotting over the photo.
  */
 export async function findPlates(photo: LoadedPhoto): Promise<FoundPlate[]> {
+  // Let the "looking for plates" status paint before the synchronous pass runs.
+  await new Promise((r) => setTimeout(r, 0));
+  let rects = layoutPass(photo, WORK_WIDTH);
+  if (rects.length === 0) rects = layoutPass(photo, CLOSE_UP_WIDTH);
+  if (rects.length === 0) rects = await spotPlates(photo);
+  return readingOrder(rects).map((rect) => ({ rect }));
+}
+
+function layoutPass(photo: LoadedPhoto, width: number): Rect[] {
+  const ctx = photo.canvas.getContext('2d', { willReadFrequently: true })!;
+  const full = ctx.getImageData(0, 0, photo.width, photo.height);
+  const small = downscale(full.data, photo.width, photo.height, width);
+  const { width: w, height: h, scale } = small;
+  return findPlatesInLayout(small.data, w, h).map((b) => {
+    const mx = (b.x1 - b.x0) * SUGGESTION_MARGIN;
+    const my = (b.y1 - b.y0) * SUGGESTION_MARGIN;
+    const x0 = Math.max(0, b.x0 - mx) / scale;
+    const y0 = Math.max(0, b.y0 - my) / scale;
+    const x1 = Math.min(w, b.x1 + mx) / scale;
+    const y1 = Math.min(h, b.y1 + my) / scale;
+    return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+  });
+}
+
+/** Fallback: OCR text spotting over the whole photo. */
+async function spotPlates(photo: LoadedPhoto): Promise<Rect[]> {
   const { canvas, scale } = prepare(photo.canvas, photo.width, photo.height, 0, SPOT_WIDTH);
-  const spotted = await exclusive(async (w) => {
+  return exclusive(async (w) => {
     const T = await import('tesseract.js');
     await w.setParameters({
       tessedit_pageseg_mode: T.PSM.AUTO,
@@ -299,88 +310,17 @@ export async function findPlates(photo: LoadedPhoto): Promise<FoundPlate[]> {
       height: (r.y1 - r.y0) / scale,
     }));
   });
-  const found: FoundPlate[] = spotted.map((rect) => ({ rect, reading: null }));
+}
 
-  for (const rect of candidateRects(photo)) {
-    if (found.some((f) => overlaps(toBox(f.rect), toBox(rect)))) continue;
-    const region = document.createElement('canvas');
-    region.width = Math.max(1, Math.round(rect.width));
-    region.height = Math.max(1, Math.round(rect.height));
-    region
-      .getContext('2d')!
-      .drawImage(
-        photo.canvas,
-        rect.x,
-        rect.y,
-        rect.width,
-        rect.height,
-        0,
-        0,
-        region.width,
-        region.height,
-      );
-    const reading = await readSource(region, region.width, region.height, 'car');
-    // Stroke patterns match lots of things (signs, grilles): keep only confident plate readings.
-    if (!reading || reading.confidence < CANDIDATE_MIN_CONFIDENCE) continue;
-    const plate = generousPlateRect(rect, reading.plateBox);
-    if (found.some((f) => overlaps(toBox(f.rect), toBox(plate)))) continue;
-    found.push({ rect: plate, reading });
+/** Top to bottom in rows, left to right within a row. */
+function readingOrder(rects: Rect[]): Rect[] {
+  const sorted = [...rects].sort((a, b) => a.y - b.y);
+  const rows: Rect[][] = [];
+  for (const r of sorted) {
+    const row = rows[rows.length - 1];
+    const last = row?.[0];
+    if (last && r.y < last.y + last.height * 0.5) row.push(r);
+    else rows.push([r]);
   }
-  return found;
-}
-
-/** Same plate: boxes overlap a lot, or one sits mostly inside the other. */
-function overlaps(a: Corners, b: Corners): boolean {
-  if (iou(a, b) > 0.2) return true;
-  const inter =
-    Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)) *
-    Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0));
-  const smaller = Math.min((a.x1 - a.x0) * (a.y1 - a.y0), (b.x1 - b.x0) * (b.y1 - b.y0));
-  return inter > smaller * 0.5;
-}
-
-const CANDIDATE_WIDTH = 960;
-const CANDIDATE_MIN_CONFIDENCE = 0.6;
-
-/**
- * Where to cut a verified candidate: around the plate the reading located, with wide margins
- * (a crop that is too loose is harmless; one that cuts into the plate is not), and never
- * outside the candidate region.
- */
-function generousPlateRect(region: Rect, plateBox: PlateReading['plateBox']): Rect {
-  const plate = plateBox && tightenCrop(region, plateBox, 1);
-  if (!plate) return region;
-  const x0 = Math.max(region.x, plate.x - plate.width * 0.2);
-  const y0 = Math.max(region.y, plate.y - plate.height * 0.3);
-  const x1 = Math.min(region.x + region.width, plate.x + plate.width * 1.2);
-  const y1 = Math.min(region.y + region.height, plate.y + plate.height * 1.3);
-  return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
-}
-
-/** Plate-like stroke patterns, grown to a generous plate-sized box, in photo pixels. */
-function candidateRects(photo: LoadedPhoto): Rect[] {
-  const scale = Math.min(1, CANDIDATE_WIDTH / photo.width);
-  const w = Math.max(1, Math.round(photo.width * scale));
-  const h = Math.max(1, Math.round(photo.height * scale));
-  const c = document.createElement('canvas');
-  c.width = w;
-  c.height = h;
-  const ctx = c.getContext('2d', { willReadFrequently: true })!;
-  ctx.drawImage(photo.canvas, 0, 0, w, h);
-  const d = ctx.getImageData(0, 0, w, h).data;
-  const grey = new Uint8Array(w * h);
-  for (let i = 0, j = 0; j < grey.length; i += 4, j++) {
-    grey[j] = (d[i]! * 299 + d[i + 1]! * 587 + d[i + 2]! * 114) / 1000;
-  }
-  return plateCandidates(grey, w, h).map((b) => {
-    // The blob may be just the number line: leave room for the whole plate around it.
-    const g = growPlateBox(b, w, h);
-    const padX = (g.x1 - g.x0) * 0.15;
-    const padY = (g.y1 - g.y0) * 0.2;
-    const x0 = Math.max(0, g.x0 - padX);
-    const y0 = Math.max(0, g.y0 - padY);
-    const x1 = Math.min(w, g.x1 + padX);
-    const y1 = Math.min(h, g.y1 + padY);
-    return { x: x0 / scale, y: y0 / scale, width: (x1 - x0) / scale, height: (y1 - y0) / scale };
-  });
+  return rows.flatMap((row) => row.sort((a, b) => a.x - b.x));
 }
