@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  checks:
+    name: Lint, types, unit + DB tests (PGlite)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run check:contrast
+      - run: npm run check:provinces
+      - run: npm run test:unit
+      - run: npm run test:db
+      - name: Dependency audit (production deps)
+        run: npm audit --omit=dev --audit-level=high
+
+  database:
+    name: Migrations + RLS tests (real Supabase)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Start local Supabase (applies all migrations)
+        run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,supavisor,mailpit,postgres-meta
+      - name: Lint database schema
+        run: npx supabase db lint --level warning --fail-on error
+      - name: RLS + schema tests against real Postgres
+        run: npm run test:db
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+      - if: always()
+        run: npx supabase stop --no-backup
+
+  build:
+    name: Build + client secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Build with canary secrets
+        run: npm run build
+        env:
+          # Unique canary values: if any appears in a client file, the scan below fails.
+          NEXT_PUBLIC_SUPABASE_URL: https://ci-project.supabase.co
+          SUPABASE_SECRET_KEY: sb_secret_CI_CANARY_7d1f0c9a2b
+          TURNSTILE_SECRET_KEY: CI_CANARY_turnstile_4e8b
+          VAPID_PRIVATE_KEY: CI_CANARY_vapid_91c3
+          RESEND_API_KEY: CI_CANARY_resend_5a2d
+          CRON_SECRET: CI_CANARY_cron_0b7e6f4c3d2a1908
+          IP_HASH_SECRET: CI_CANARY_iphash_8c7d6e5f4a3b2c1d
+          ACCESS_LOG_KEY: Q0lfQ0FOQVJZX2FjY2Vzc19sb2dfa2V5XzAwMDAwMDA=
+      - name: Scan client bundle for secrets
+        run: npm run check:secrets
+        env:
+          SUPABASE_SECRET_KEY: sb_secret_CI_CANARY_7d1f0c9a2b
+          TURNSTILE_SECRET_KEY: CI_CANARY_turnstile_4e8b
+          VAPID_PRIVATE_KEY: CI_CANARY_vapid_91c3
+          RESEND_API_KEY: CI_CANARY_resend_5a2d
+          CRON_SECRET: CI_CANARY_cron_0b7e6f4c3d2a1908
+          IP_HASH_SECRET: CI_CANARY_iphash_8c7d6e5f4a3b2c1d
+          ACCESS_LOG_KEY: Q0lfQ0FOQVJZX2FjY2Vzc19sb2dfa2V5XzAwMDAwMDA=

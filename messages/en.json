@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "title": "{brand} · Lost & found licence plates in Thailand",
+    "description": "Lost a licence plate in a flood, or found one? Post it here. We match plate numbers and alert the owner straight away. Free, no ads."
+  },
+  "a11y": {
+    "skipToContent": "Skip to content"
+  },
+  "header": {
+    "homeLabel": "{brand} home"
+  },
+  "language": {
+    "switchTo": "ภาษาไทย",
+    "switchToLabel": "เปลี่ยนเป็นภาษาไทย"
+  },
+  "theme": {
+    "toDark": "Dark",
+    "toLight": "Light",
+    "toDarkLabel": "Switch to dark theme",
+    "toLightLabel": "Switch to light theme"
+  },
+  "home": {
+    "title": "Lost a plate in the flood? Let's get it home.",
+    "lead": "People who lost a plate register the number. People who found one send a photo. We match them and tell the owner right away.",
+    "actionsLabel": "What would you like to do?",
+    "lost": {
+      "title": "I lost a plate",
+      "hint": "Register your plate. We'll alert you the moment someone finds it."
+    },
+    "found": {
+      "title": "I found a plate",
+      "hint": "Take a photo of it and we'll help find the owner."
+    },
+    "search": "Search a plate number",
+    "how": {
+      "title": "How it works",
+      "step1": "Register a lost plate, or photograph one you found",
+      "step2": "We match plate numbers instantly",
+      "step3": "You contact each other to arrange the handover"
+    }
+  },
+  "dormant": {
+    "title": "We're closed for now",
+    "body": "We'll reopen when floods return. Stay safe."
+  },
+  "footer": {
+    "nonCommercial": "Non-profit. No ads. We never ask for money.",
+    "privacy": "No GPS tracking. Posts are deleted automatically when they expire."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The link may be wrong, or the post has been removed.",
+    "home": "Back to home"
+  }
+}
