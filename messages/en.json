@@ -68,11 +68,7 @@
     "car": "Car",
     "motorcycle": "Motorcycle",
     "other": "Other",
-    "instructions": "Type it exactly as it appears: letters, number and province",
-    "seriesLabel": "Letters (may start with a digit, e.g. 1กข)",
-    "seriesPlaceholder": "กข",
-    "numberLabel": "Number",
-    "numberPlaceholder": "1234",
+    "instructions": "Type the plate in one go, e.g. กค7812 or 1กข 1234, then tap to choose the province.",
     "provinceLabel": "Province",
     "provinceChoose": "Tap to choose a province",
     "provinceUnknown": "Not sure",
@@ -89,7 +85,10 @@
     "wildcardHint": "Can't read a character? Put ? in its place.",
     "viewLabel": "Licence plate {plate} {province}",
     "unverified": "Unverified",
-    "unverifiedHint": "This doesn't look like a standard plate. It may have a typo; please check it."
+    "unverifiedHint": "This doesn't look like a standard plate. It may have a typo; please check it.",
+    "textLabel": "Plate number",
+    "textPlaceholder": "กค7812",
+    "parsed": "Read as: letters {series} · number {number}"
   },
   "errors": {
     "invalid": "Something isn't right. Please check and try again.",

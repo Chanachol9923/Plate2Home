@@ -19,9 +19,24 @@ export default defineConfig({
     locale: 'th-TH',
     timezoneId: 'Asia/Bangkok',
   },
+  // E2E_CHANNEL=msedge (or chrome) drives an installed browser instead of Playwright's download.
   projects: [
-    { name: 'phone-390', use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } } },
-    { name: 'phone-360', use: { ...devices['Pixel 7'], viewport: { width: 360, height: 640 } } },
+    {
+      name: 'phone-390',
+      use: {
+        ...devices['Pixel 7'],
+        viewport: { width: 390, height: 844 },
+        channel: process.env.E2E_CHANNEL,
+      },
+    },
+    {
+      name: 'phone-360',
+      use: {
+        ...devices['Pixel 7'],
+        viewport: { width: 360, height: 640 },
+        channel: process.env.E2E_CHANNEL,
+      },
+    },
   ],
   webServer: {
     command: `npx next start -p ${PORT}`,

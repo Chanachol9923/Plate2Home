@@ -68,11 +68,7 @@
     "car": "รถยนต์",
     "motorcycle": "มอเตอร์ไซค์",
     "other": "อื่น ๆ",
-    "instructions": "พิมพ์ตามที่เห็นบนป้าย: หมวดอักษร ตัวเลข และจังหวัด",
-    "seriesLabel": "หมวดอักษร (มีเลขนำหน้าได้ เช่น 1กข)",
-    "seriesPlaceholder": "กข",
-    "numberLabel": "เลขทะเบียน",
-    "numberPlaceholder": "1234",
+    "instructions": "พิมพ์เลขทะเบียนต่อกันได้เลย เช่น กค7812 หรือ 1กข 1234 แล้วแตะเลือกจังหวัด",
     "provinceLabel": "จังหวัด",
     "provinceChoose": "แตะเพื่อเลือกจังหวัด",
     "provinceUnknown": "ไม่แน่ใจ",
@@ -89,7 +85,10 @@
     "wildcardHint": "อ่านไม่ออกตัวไหน ใส่ ? แทนตัวนั้น",
     "viewLabel": "ป้ายทะเบียน {plate} {province}",
     "unverified": "ยังไม่ยืนยัน",
-    "unverifiedHint": "รูปแบบไม่ตรงกับป้ายทั่วไป อาจพิมพ์ผิด ลองตรวจอีกครั้ง"
+    "unverifiedHint": "รูปแบบไม่ตรงกับป้ายทั่วไป อาจพิมพ์ผิด ลองตรวจอีกครั้ง",
+    "textLabel": "เลขทะเบียน",
+    "textPlaceholder": "กค7812",
+    "parsed": "อ่านได้เป็น หมวด {series} · เลข {number}"
   },
   "errors": {
     "invalid": "ข้อมูลไม่ถูกต้อง ลองตรวจอีกครั้ง",

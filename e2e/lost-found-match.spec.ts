@@ -10,8 +10,9 @@ import sharp from 'sharp';
 const letters = 'ฬฮ';
 
 async function fillPlate(page: Page, number: string) {
-  await page.getByLabel(/^หมวดอักษร/).fill(letters);
-  await page.getByLabel('เลขทะเบียน', { exact: true }).fill(number);
+  // One field for the whole plate, typed the way it reads ("ฬฮ1234").
+  await page.getByLabel('เลขทะเบียน', { exact: true }).fill(`${letters}${number}`);
+  await expect(page.getByText(`อ่านได้เป็น หมวด ${letters} · เลข ${number}`)).toBeVisible();
   await page.getByRole('button', { name: /^จังหวัด:/ }).click();
   const sheet = page.getByRole('dialog', { name: 'เลือกจังหวัด' });
   await sheet.getByRole('searchbox').fill('กทม');

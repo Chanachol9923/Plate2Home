@@ -71,7 +71,8 @@ export function LostFlow() {
   // Restore the draft (never the PIN) after a reload or navigation.
   useEffect(() => {
     const saved = readDraft<{ plate: PlateDraft; contact: ContactDraft }>(DRAFT_KEY);
-    if (saved) {
+    // Ignore drafts saved by an older version of the form (different shape).
+    if (saved && typeof saved.plate?.text === 'string') {
       // Syncing from an external store (sessionStorage) once after hydration; reading it during
       // render would make the server and client markup differ.
       // eslint-disable-next-line react-hooks/set-state-in-effect
