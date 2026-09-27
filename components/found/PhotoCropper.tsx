@@ -2,12 +2,14 @@
 
 import { useTranslations } from 'next-intl';
 import { useRef, useState, type PointerEvent } from 'react';
-import { Button } from '@/components/ui/Button';
+import { Button, Spinner } from '@/components/ui/Button';
 import { MIN_CROP_EDGE, normalizeDrag, type LoadedPhoto, type Rect } from '@/lib/client/image';
 
 /**
- * Draw a box around a plate on the photo (pointer events: mouse, touch, pen). "Use the whole
- * photo" covers single-plate photos and keyboard-only users. Coordinates are in photo pixels.
+ * Draw a box around a plate on the photo (pointer events: mouse, touch, pen). Letting go cuts
+ * the plate out straight away and OCR reads it; plates already cut (by hand or found
+ * automatically) stay outlined with their card number. "Use the whole photo" covers
+ * single-plate photos and keyboard-only users. Coordinates are in photo pixels.
  */
 export function PhotoCropper({
   photo,
@@ -15,17 +17,26 @@ export function PhotoCropper({
   label,
   onCrop,
   onRemove,
+  marked = [],
 }: {
   photo: LoadedPhoto;
   url: string;
   label: string;
   onCrop: (rect: Rect) => Promise<void>;
   onRemove: () => void;
+  /** Plates already cut from this photo, labelled with their card number. */
+  marked?: { rect: Rect; n: number }[];
 }) {
   const t = useTranslations('found');
   const surface = useRef<HTMLDivElement>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
-  const [box, setBox] = useState<Rect | null>(null);
+  const [box, setBoxState] = useState<Rect | null>(null);
+  // Latest box for the pointer-up handler (it may run before a re-render).
+  const boxRef = useRef<Rect | null>(null);
+  const setBox = (b: Rect | null) => {
+    boxRef.current = b;
+    setBoxState(b);
+  };
   const [busy, setBusy] = useState(false);
 
   const toPhoto = (e: PointerEvent) => {
@@ -46,10 +57,17 @@ export function PhotoCropper({
     setBox(normalizeDrag(start.current, toPhoto(e), photo.width, photo.height));
   };
   const onUp = () => {
+    if (!start.current) return;
     start.current = null;
+    // Letting go of a big-enough box cuts the plate out right away (no extra button).
+    const b = boxRef.current;
+    if (usable(b) && !busy) void crop(b);
+    else setBox(null);
   };
 
-  const usable = box !== null && box.width >= MIN_CROP_EDGE && box.height >= MIN_CROP_EDGE / 2;
+  function usable(b: Rect | null): b is Rect {
+    return b !== null && b.width >= MIN_CROP_EDGE && b.height >= MIN_CROP_EDGE / 2;
+  }
 
   const crop = async (rect: Rect) => {
     setBusy(true);
@@ -86,6 +104,23 @@ export function PhotoCropper({
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- local blob: URL of the user's own photo */}
         <img src={url} alt="" draggable={false} className="block w-full" />
+        {marked.map(({ rect, n }) => (
+          <div
+            key={n}
+            aria-hidden="true"
+            className="pointer-events-none absolute border-[3px] border-accent"
+            style={{
+              left: pct(rect.x, photo.width),
+              top: pct(rect.y, photo.height),
+              width: pct(rect.width, photo.width),
+              height: pct(rect.height, photo.height),
+            }}
+          >
+            <span className="absolute left-0 top-0 bg-accent px-1.5 text-sm font-bold text-on-accent">
+              {n}
+            </span>
+          </div>
+        ))}
         {box && (
           <div
             aria-hidden="true"
@@ -99,18 +134,19 @@ export function PhotoCropper({
           />
         )}
       </div>
-      <div className="grid gap-2 sm:grid-cols-2">
-        <Button disabled={!usable} busy={busy && usable} onClick={() => box && crop(box)}>
-          {t('cropThis')}
-        </Button>
-        <Button
-          variant="secondary"
-          disabled={busy}
-          onClick={() => crop({ x: 0, y: 0, width: photo.width, height: photo.height })}
-        >
-          {t('useWhole')}
-        </Button>
-      </div>
+      {busy && (
+        <p className="inline-flex items-center gap-2 text-sm" aria-live="polite">
+          <Spinner /> {t('cropping')}
+        </p>
+      )}
+      <Button
+        block
+        variant="secondary"
+        disabled={busy}
+        onClick={() => crop({ x: 0, y: 0, width: photo.width, height: photo.height })}
+      >
+        {t('useWhole')}
+      </Button>
     </figure>
   );
 }

@@ -60,6 +60,8 @@ interface PlateCard {
   upload: UploadState;
   /** Found automatically in the photo (not drawn by hand). */
   auto: boolean;
+  /** Where on which photo it was cut from (outlined on the photo). */
+  source: { photoId: string; rect: Rect };
   ocr: { state: 'off' | 'reading' | 'unread' } | { state: 'read'; confidence: number };
 }
 
@@ -162,7 +164,7 @@ export function FoundFlow() {
     setScan(id, { state: 'scanning' });
     try {
       const regions = await findPlates(photo);
-      for (const rect of regions) await addCrop(photo, rect, { auto: true, padding: 0.03 });
+      for (const rect of regions) await addCrop(id, photo, rect, { auto: true, padding: 0.03 });
       setScan(id, { state: 'done', found: regions.length });
     } catch {
       setScan(id, { state: 'failed' });
@@ -170,6 +172,7 @@ export function FoundFlow() {
   }
 
   async function addCrop(
+    photoId: string,
     photo: LoadedPhoto,
     rect: Rect,
     opts: { auto?: boolean; padding?: number } = {},
@@ -192,6 +195,7 @@ export function FoundFlow() {
         errors: {},
         upload: { state: 'pending' },
         auto: Boolean(opts.auto),
+        source: { photoId, rect },
         ocr: { state: OCR_ENABLED ? 'reading' : 'off' },
       },
     ]);
@@ -489,7 +493,10 @@ export function FoundFlow() {
                   photo={p.photo}
                   url={p.url}
                   label={t('photoLabel', { n: i + 1 })}
-                  onCrop={(rect) => addCrop(p.photo!, rect)}
+                  onCrop={(rect) => addCrop(p.id, p.photo!, rect)}
+                  marked={plates.flatMap((c, n) =>
+                    c.source.photoId === p.id ? [{ rect: c.source.rect, n: n + 1 }] : [],
+                  )}
                   onRemove={() => setPhotos((ps) => ps.filter((x) => x.id !== p.id))}
                 />
               </div>

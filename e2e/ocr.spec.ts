@@ -69,3 +69,30 @@ test('finds and reads plates in a photo automatically', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'จังหวัด: ฉะเชิงเทรา' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'จังหวัด: กรุงเทพมหานคร' })).toBeVisible();
 });
+
+test('a box dragged around a plate is cut out and read as soon as it is let go', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  await page.goto('/found');
+  await addDrawnPhoto(page, [{ x: 120, y: 140, text: 'กท 2058', province: 'ฉะเชิงเทรา' }]);
+  await expect(page.getByText(/เจอ 1 ป้าย/)).toBeVisible({ timeout: 150_000 });
+
+  // Drag a box around the same plate (photo is 1600×1200; plate at 120,140 size 760×340).
+  const img = page.locator('figure img').first();
+  await img.scrollIntoViewIfNeeded();
+  const b = (await img.boundingBox())!;
+  const at = (x: number, y: number) => [b.x + (x / 1600) * b.width, b.y + (y / 1200) * b.height];
+  const [x0, y0] = at(100, 120);
+  const [x1, y1] = at(900, 500);
+  await page.mouse.move(x0!, y0!);
+  await page.mouse.down();
+  await page.mouse.move(x1!, y1!, { steps: 8 });
+  await page.mouse.up();
+
+  // No extra button: a second card appears and is read.
+  await expect(page.getByRole('heading', { name: 'ป้ายที่ 2' })).toBeVisible();
+  await expect(page.getByText(/^อ่านได้เป็น หมวด กท · เลข 2058/)).toHaveCount(2, {
+    timeout: 60_000,
+  });
+});
