@@ -53,6 +53,11 @@ const schema = z.object({
 
 export type ServerEnv = z.infer<typeof schema>;
 
+/** Misconfiguration. Its message holds only variable names, so it is safe to log. */
+export class ConfigError extends Error {
+  override readonly name = 'ConfigError';
+}
+
 let cached: ServerEnv | undefined;
 
 export function serverEnv(): ServerEnv {
@@ -61,7 +66,7 @@ export function serverEnv(): ServerEnv {
     if (!parsed.success) {
       // Report names only, never values.
       const names = parsed.error.issues.map((i) => i.path.join('.')).join(', ');
-      throw new Error(`Invalid environment variables: ${names}`);
+      throw new ConfigError(`Invalid environment variables: ${names}`);
     }
     cached = parsed.data;
   }
@@ -75,7 +80,7 @@ type RequiredKey = {
 export function requireEnv<K extends RequiredKey>(key: K): NonNullable<ServerEnv[K]> {
   const value = serverEnv()[key];
   if (value === undefined || value === null || value === '') {
-    throw new Error(`Missing required environment variable: ${key}`);
+    throw new ConfigError(`Missing required environment variable: ${key}`);
   }
   return value as NonNullable<ServerEnv[K]>;
 }

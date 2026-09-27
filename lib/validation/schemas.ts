@@ -1,0 +1,162 @@
+/**
+ * Request schemas shared by forms and API routes. Issue messages are stable error codes that
+ * the UI maps to `errors.*` messages; they never contain user input.
+ */
+import { z } from 'zod';
+import { normalizeNumber } from '@/lib/plate/normalize';
+import { isKnownProvince } from '@/lib/plate/provinces';
+import { PLATE_TYPES } from '@/lib/plate/types';
+import { normalizeEmail, normalizeLineId, normalizeThaiPhone } from './contact';
+import { findUnsafeText, isSafeDistrict } from './text';
+
+export const ERROR_CODES = [
+  'plate_number_required',
+  'province_invalid',
+  'line_id_invalid',
+  'phone_invalid',
+  'email_invalid',
+  'contact_required',
+  'pin_format',
+  'pin_weak',
+  'consent_required',
+  'text_url',
+  'text_id_number',
+  'text_account_number',
+  'district_invalid',
+  'police_note_required',
+] as const;
+export type FieldErrorCode = (typeof ERROR_CODES)[number];
+
+export const plateInputSchema = z
+  .object({
+    type: z.enum(PLATE_TYPES),
+    prefixDigit: z.string().max(4).nullish(),
+    letters: z.string().max(16),
+    number: z.string().max(16),
+    provinceCode: z.string().max(8).nullish(),
+  })
+  .superRefine((v, ctx) => {
+    if (normalizeNumber(v.number) === '') {
+      ctx.addIssue({ code: 'custom', message: 'plate_number_required', path: ['number'] });
+    }
+    if (v.provinceCode && !isKnownProvince(v.provinceCode)) {
+      ctx.addIssue({ code: 'custom', message: 'province_invalid', path: ['provinceCode'] });
+    }
+  });
+export type PlateInputBody = z.infer<typeof plateInputSchema>;
+
+export const contactSchema = z
+  .object({
+    lineId: z.string().max(64).default(''),
+    phone: z.string().max(32).default(''),
+    email: z.string().max(254).default(''),
+    showEmail: z.boolean().default(false),
+  })
+  .transform((v, ctx) => {
+    const lineId = v.lineId.trim() ? normalizeLineId(v.lineId) : null;
+    const phone = v.phone.trim() ? normalizeThaiPhone(v.phone) : null;
+    const email = v.email.trim() ? normalizeEmail(v.email) : null;
+    let formatError = false;
+    const issue = (message: FieldErrorCode, field: string) => {
+      formatError = true;
+      ctx.addIssue({ code: 'custom', message, path: [field] });
+    };
+    if (v.lineId.trim() && !lineId) issue('line_id_invalid', 'lineId');
+    if (v.phone.trim() && !phone) issue('phone_invalid', 'phone');
+    if (v.email.trim() && !email) issue('email_invalid', 'email');
+    const showEmail = v.showEmail && email !== null;
+    // Only ask for "at least one contact" once the entered ones are valid.
+    if (!lineId && !phone && !showEmail && !formatError) {
+      ctx.addIssue({ code: 'custom', message: 'contact_required', path: ['lineId'] });
+    }
+    return { lineId, phone, email, showEmail };
+  });
+export type ContactBody = z.input<typeof contactSchema>;
+export type Contact = z.output<typeof contactSchema>;
+
+/** PINs a stranger would try first. */
+export function isWeakPin(pin: string): boolean {
+  if (/^(\d)\1+$/.test(pin)) return true;
+  const digits = [...pin].map(Number);
+  const steps = digits.slice(1).map((d, i) => d - digits[i]!);
+  return steps.every((s) => s === 1) || steps.every((s) => s === -1);
+}
+
+export const pinSchema = z
+  .string()
+  .regex(/^\d{4,6}$/, 'pin_format')
+  .refine((pin) => !isWeakPin(pin), 'pin_weak');
+
+const turnstileToken = z.string().min(1).max(2048);
+const consent = z.literal(true, { error: 'consent_required' });
+const locale = z.enum(['th', 'en']);
+
+function unsafeTextIssue(text: string): FieldErrorCode | null {
+  const reason = findUnsafeText(text);
+  return reason ? (`text_${reason}` as FieldErrorCode) : null;
+}
+
+export const lostCreateSchema = z.object({
+  plate: plateInputSchema,
+  contact: contactSchema,
+  pin: pinSchema,
+  consent,
+  consentVersion: z.string().max(32),
+  locale,
+  turnstileToken,
+});
+export type LostCreateBody = z.input<typeof lostCreateSchema>;
+
+export const foundBatchSchema = z
+  .object({
+    contact: contactSchema,
+    pin: pinSchema,
+    consent,
+    consentVersion: z.string().max(32),
+    locale,
+    handover: z.enum(['with_finder', 'police_station']),
+    policeStationNote: z.string().trim().max(120).default(''),
+    district: z.string().trim().max(80).default(''),
+    turnstileToken,
+  })
+  .superRefine((v, ctx) => {
+    if (v.handover === 'police_station' && !v.policeStationNote) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'police_note_required',
+        path: ['policeStationNote'],
+      });
+    }
+    const noteIssue = unsafeTextIssue(v.policeStationNote);
+    if (noteIssue)
+      ctx.addIssue({ code: 'custom', message: noteIssue, path: ['policeStationNote'] });
+    if (v.district && !isSafeDistrict(v.district)) {
+      ctx.addIssue({ code: 'custom', message: 'district_invalid', path: ['district'] });
+    }
+  });
+export type FoundBatchBody = z.input<typeof foundBatchSchema>;
+
+export const foundPlateSchema = z.object({
+  plate: plateInputSchema,
+  /** The user confirmed the plate is detached despite the plate-on-vehicle warning (Phase 6). */
+  vehicleWarning: z.boolean().default(false),
+  ocrMinConfidence: z.number().min(0).max(1).nullish(),
+});
+export type FoundPlateBody = z.input<typeof foundPlateSchema>;
+
+export const searchSchema = z.object({ plate: plateInputSchema });
+export type SearchBody = z.input<typeof searchSchema>;
+
+/** Flatten zod issues into `{ path: code }` for the form (first issue per field wins). */
+export function fieldErrors(error: z.ZodError): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const issue of error.issues) {
+    const key = issue.path.join('.');
+    if (!(key in out)) {
+      out[key] = (ERROR_CODES as readonly string[]).includes(issue.message)
+        ? issue.message
+        : 'invalid';
+    }
+  }
+  return out;
+}

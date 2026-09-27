@@ -1,7 +1,10 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
-const alias = { '@': fileURLToPath(new URL('.', import.meta.url)) };
+const alias = {
+  '@': fileURLToPath(new URL('.', import.meta.url)),
+  'server-only': fileURLToPath(new URL('./test/server-only-stub.ts', import.meta.url)),
+};
 
 export default defineConfig({
   test: {
@@ -29,6 +32,18 @@ export default defineConfig({
           // Test files share fixture ids; against a real database they must not interleave.
           fileParallelism: false,
           testTimeout: 30_000,
+          hookTimeout: 60_000,
+        },
+      },
+      {
+        resolve: { alias },
+        test: {
+          name: 'integration',
+          environment: 'node',
+          include: ['tests/integration/**/*.test.ts'],
+          setupFiles: ['tests/integration/setup.ts'],
+          fileParallelism: false,
+          testTimeout: 60_000,
           hookTimeout: 60_000,
         },
       },

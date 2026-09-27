@@ -217,10 +217,10 @@ describe('pg_trgm with Thai plate keys', () => {
   });
 });
 
-describe('match_candidates', () => {
+describe('plate_candidates', () => {
   it('finds the opposite-kind post by trigram similarity', async () => {
     const rows = await db.query<{ id: string }>(
-      `select id from public.match_candidates('lost', 'car', 'กข1235', '1235')`,
+      `select id from public.plate_candidates('lost', 'car', 'กข1235', '1235')`,
     );
     expect(rows.map((r) => r.id)).toContain(ids.foundPost);
     expect(rows.map((r) => r.id)).not.toContain(ids.lostPost);
@@ -228,7 +228,7 @@ describe('match_candidates', () => {
 
   it('finds a post with the same number even when letters differ completely', async () => {
     const rows = await db.query<{ id: string }>(
-      `select id from public.match_candidates('lost', 'car', 'ฮฮ1234', '1234')`,
+      `select id from public.plate_candidates('lost', 'car', 'ฮฮ1234', '1234')`,
     );
     expect(rows.map((r) => r.id)).toContain(ids.foundPost);
   });
@@ -238,18 +238,18 @@ describe('match_candidates', () => {
       ids.foundPost,
     ]);
     const rows = await db.query<{ id: string }>(
-      `select id from public.match_candidates('lost', 'car', 'กข1234', '1234')`,
+      `select id from public.plate_candidates('lost', 'car', 'กข1234', '1234')`,
     );
     expect(rows.map((r) => r.id)).not.toContain(ids.foundPost);
   });
 
   it('keeps car and motorcycle apart but lets "other" match either', async () => {
     const moto = await db.query<{ id: string }>(
-      `select id from public.match_candidates('lost', 'motorcycle', 'กข1234', '1234')`,
+      `select id from public.plate_candidates('lost', 'motorcycle', 'กข1234', '1234')`,
     );
     expect(moto.map((r) => r.id)).not.toContain(ids.foundPost);
     const other = await db.query<{ id: string }>(
-      `select id from public.match_candidates('lost', 'other', 'กข1234', '1234')`,
+      `select id from public.plate_candidates('lost', 'other', 'กข1234', '1234')`,
     );
     expect(other.map((r) => r.id)).toContain(ids.foundPost);
   });

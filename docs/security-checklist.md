@@ -32,8 +32,8 @@ Each item says **how it is verified**. ✅ = verified by an automated test or ch
 
 - ✅ Nonce-based CSP; no `'unsafe-inline'`/`'unsafe-eval'` for scripts in production; `frame-ancestors 'none'`; `object-src 'none'`. _(csp.test.ts)_
 - ☑️ Production server: CSP, HSTS, nosniff, Referrer-Policy, Permissions-Policy, X-Frame-Options present; `X-Powered-By` absent; no CSP violations in the console; pre-paint theme script carries the nonce (2026-09-27).
-- ⏳ Origin header check on every non-GET API route (Phase 3).
-- ⏳ Turnstile server-side verification with action/hostname checks (Phase 3).
+- ✅ Origin header check on every non-GET API route (`apiRoute`; lib/api/route.test.ts, lib/security/security.test.ts).
+- ✅ Turnstile server-side verification with action/hostname checks, failing closed (security.test.ts; integration test covers rejection).
 
 ## Auth (admin)
 
@@ -49,9 +49,13 @@ Each item says **how it is verified**. ✅ = verified by an automated test or ch
 
 ## Later phases
 
-- ⏳ zod on every input; free-text anti-scam sanitization (Phase 3)
-- ⏳ sharp re-encode and validation of uploads (Phase 3)
-- ⏳ PIN argon2id, lockout and backoff (Phase 4)
+- ✅ zod on every input; free-text anti-scam checks (URLs, ID/account numbers, digits in district) (validation.test.ts)
+- ✅ sharp re-validation of uploads: real format, pixel limit, min size, EXIF/GPS stripped, WebP ≤ 300 KB (crop.test.ts)
+- ⏳ PIN lockout and backoff (Phase 4)
 - ⏳ IP hashing with rotating salt (Phase 4)
-- ⏳ Signed URLs ≤ 5 minutes (Phase 3)
-- ⏳ No PII in logs (logger, Phase 3)
+- ✅ Signed URLs ≤ 5 minutes; plain `<img>`, never the image optimizer cache (D-051)
+- ✅ No PII in logs: `logError` records scope and error kind only (route.test.ts asserts it)
+- ✅ Rate limits wired on lost/found/search routes (Postgres `rl_hit`)
+- ✅ Search never returns lost watches or contacts; match view has no contacts (integration test)
+- ✅ Upload token hashed, 30-minute expiry, plate cap enforced under a row lock (posting.test.ts)
+- ✅ Weak PINs rejected; PINs hashed with argon2id m=19 MiB, t=2, p=1 (security.test.ts)

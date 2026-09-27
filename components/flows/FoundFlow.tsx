@@ -1,0 +1,556 @@
+'use client';
+
+import { useLocale, useTranslations } from 'next-intl';
+import { useEffect, useRef, useState } from 'react';
+import { ContactFields, EMPTY_CONTACT, type ContactDraft } from '@/components/forms/ContactFields';
+import { plateErrorsFrom, useStep } from '@/components/forms/flow';
+import { PinFields } from '@/components/forms/PinFields';
+import { Turnstile, type TurnstileHandle } from '@/components/forms/Turnstile';
+import { useErrorText } from '@/components/forms/useErrorText';
+import { PhotoCropper } from '@/components/found/PhotoCropper';
+import { PlateInput, type PlateFieldErrors } from '@/components/plate/PlateInput';
+import { PlateView } from '@/components/plate/PlateView';
+import { Alert } from '@/components/ui/Alert';
+import { Button, buttonClass, Spinner } from '@/components/ui/Button';
+import { Choice } from '@/components/ui/Choice';
+import { Checkbox, Field, TextInput } from '@/components/ui/Field';
+import { Stepper } from '@/components/ui/Stepper';
+import { Link } from '@/i18n/navigation';
+import { CONSENT_VERSION, MAX_PLATES_PER_BATCH } from '@/lib/config/app';
+import { postForm, postJson } from '@/lib/client/api';
+import { rememberDevicePost } from '@/lib/client/devices';
+import { cropToBlob, loadPhoto, type LoadedPhoto, type Rect } from '@/lib/client/image';
+import { plateDisplay } from '@/lib/plate/canonical';
+import { draftToInput, EMPTY_DRAFT, type PlateDraft } from '@/lib/plate/draft';
+import { normalizePlate } from '@/lib/plate/normalize';
+import {
+  contactSchema,
+  fieldErrors,
+  foundBatchSchema,
+  pinSchema,
+  plateInputSchema,
+} from '@/lib/validation/schemas';
+
+const STEPS = ['plates', 'details'] as const;
+
+interface Photo {
+  id: string;
+  status: 'loading' | 'ready' | 'error';
+  photo?: LoadedPhoto;
+  url?: string;
+}
+
+type UploadState =
+  | { state: 'pending' }
+  | { state: 'uploading' }
+  | { state: 'done'; status: 'active' | 'needs_review'; matches: { matchId: string }[] }
+  | { state: 'failed'; code: string };
+
+interface PlateCard {
+  id: string;
+  blob: Blob;
+  url: string;
+  draft: PlateDraft;
+  errors: PlateFieldErrors;
+  upload: UploadState;
+}
+
+interface Batch {
+  batchId: string;
+  uploadToken: string;
+  deviceToken: string;
+}
+
+const uid = () => crypto.randomUUID();
+
+export function FoundFlow() {
+  const t = useTranslations('found');
+  const tc = useTranslations('common');
+  const tConsent = useTranslations('consent');
+  const errorText = useErrorText();
+  const locale = useLocale() as 'th' | 'en';
+  const [step, go] = useStep(STEPS);
+
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [plates, setPlates] = useState<PlateCard[]>([]);
+  const [handover, setHandover] = useState<'with_finder' | 'police_station'>('with_finder');
+  const [policeNote, setPoliceNote] = useState('');
+  const [district, setDistrict] = useState('');
+  const [contact, setContact] = useState<ContactDraft>(EMPTY_CONTACT);
+  const [pin, setPin] = useState('');
+  const [pinConfirm, setPinConfirm] = useState('');
+  const [consent, setConsent] = useState(false);
+  const [token, setToken] = useState<string | null>(null);
+  const turnstile = useRef<TurnstileHandle>(null);
+
+  const [errors, setErrors] = useState<Record<string, string | null>>({});
+  const [formError, setFormError] = useState<string | null>(null);
+  const [batch, setBatch] = useState<Batch | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const cameraInput = useRef<HTMLInputElement>(null);
+  const galleryInput = useRef<HTMLInputElement>(null);
+
+  // Release object URLs when the flow unmounts.
+  const urls = useRef<string[]>([]);
+  useEffect(() => () => urls.current.forEach((u) => URL.revokeObjectURL(u)), []);
+  const objectUrl = (blob: Blob) => {
+    const u = URL.createObjectURL(blob);
+    urls.current.push(u);
+    return u;
+  };
+
+  // Warn before leaving with unsent plates.
+  const unsent = plates.some((p) => p.upload.state !== 'done');
+  useEffect(() => {
+    if (!unsent) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [unsent]);
+
+  // Photos live in memory only; on a fresh load of step 2 there is nothing to send.
+  useEffect(() => {
+    if (step === 'details' && plates.length === 0 && !batch) go('plates');
+  }, [step, plates.length, batch, go]);
+
+  async function addFiles(files: FileList | null) {
+    if (!files) return;
+    for (const file of Array.from(files)) {
+      const id = uid();
+      setPhotos((ps) => [...ps, { id, status: 'loading' }]);
+      try {
+        const photo = await loadPhoto(file);
+        const blob = await new Promise<Blob | null>((r) =>
+          photo.canvas.toBlob(r, 'image/jpeg', 0.85),
+        );
+        if (!blob) throw new Error('encode');
+        setPhotos((ps) =>
+          ps.map((p) => (p.id === id ? { id, status: 'ready', photo, url: objectUrl(blob) } : p)),
+        );
+      } catch {
+        setPhotos((ps) => ps.map((p) => (p.id === id ? { id, status: 'error' } : p)));
+      }
+    }
+  }
+
+  async function addCrop(photo: LoadedPhoto, rect: Rect) {
+    if (plates.length >= MAX_PLATES_PER_BATCH) {
+      setFormError(t('tooMany', { max: MAX_PLATES_PER_BATCH }));
+      return;
+    }
+    const blob = await cropToBlob(photo, rect);
+    setPlates((ps) => [
+      ...ps,
+      {
+        id: uid(),
+        blob,
+        url: objectUrl(blob),
+        draft: EMPTY_DRAFT,
+        errors: {},
+        upload: { state: 'pending' },
+      },
+    ]);
+  }
+
+  const updatePlate = (id: string, patch: Partial<PlateCard>) =>
+    setPlates((ps) => ps.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+
+  function checkPlates() {
+    setFormError(null);
+    if (plates.length === 0) {
+      setFormError(t('needPlates'));
+      return;
+    }
+    const checked = plates.map((p) => {
+      const parsed = plateInputSchema.safeParse(draftToInput(p.draft));
+      return parsed.success
+        ? { ...p, errors: {} }
+        : { ...p, errors: plateErrorsFrom(fieldErrors(parsed.error), errorText) };
+    });
+    setPlates(checked);
+    if (checked.every((p) => !p.errors.number && !p.errors.series && !p.errors.provinceCode)) {
+      go('details');
+    }
+  }
+
+  async function uploadPlates(target: Batch, list: PlateCard[]) {
+    for (const card of list) {
+      if (card.upload.state === 'done') continue;
+      updatePlate(card.id, { upload: { state: 'uploading' } });
+      const form = new FormData();
+      form.set('data', JSON.stringify({ plate: draftToInput(card.draft), vehicleWarning: false }));
+      form.set('crop', card.blob, card.blob.type === 'image/webp' ? 'crop.webp' : 'crop.jpg');
+      const res = await postForm<{
+        status: 'active' | 'needs_review';
+        matches: { matchId: string }[];
+      }>(`/api/found/batch/${target.batchId}/plate`, form, {
+        'x-upload-token': target.uploadToken,
+      });
+      if (res.ok) {
+        updatePlate(card.id, {
+          upload: { state: 'done', status: res.data.status, matches: res.data.matches },
+        });
+      } else {
+        const fields =
+          res.code === 'invalid_input' ? plateErrorsFrom(res.fields, errorText, 'plate.') : {};
+        updatePlate(card.id, { upload: { state: 'failed', code: res.code }, errors: fields });
+      }
+    }
+  }
+
+  async function submit() {
+    setFormError(null);
+    const body = {
+      contact,
+      pin,
+      consent,
+      consentVersion: CONSENT_VERSION,
+      locale,
+      handover,
+      policeStationNote: policeNote,
+      district,
+      turnstileToken: token ?? '',
+    };
+    const errs: Record<string, string | null> = {};
+    const parsed = foundBatchSchema.safeParse(body);
+    if (!parsed.success) {
+      for (const [k, v] of Object.entries(fieldErrors(parsed.error))) {
+        if (k === 'turnstileToken') continue;
+        errs[k] = errorText(v);
+      }
+    }
+    const contactParsed = contactSchema.safeParse(contact);
+    if (!contactParsed.success && fieldErrors(contactParsed.error).lineId === 'contact_required') {
+      errs['contact.contact'] = errorText('contact_required');
+      delete errs['contact.lineId'];
+    }
+    if (pinSchema.safeParse(pin).success && pin !== pinConfirm)
+      errs.confirm = errorText('pin_mismatch');
+    if (!token) errs.turnstile = errorText('turnstile_required');
+    setErrors(errs);
+    if (Object.keys(errs).length) return;
+
+    setSubmitting(true);
+    const res = await postJson<Batch>('/api/found/batch', body, 0);
+    turnstile.current?.reset();
+    if (!res.ok) {
+      setSubmitting(false);
+      if (res.code === 'invalid_input') {
+        const mapped: Record<string, string | null> = {};
+        for (const [k, v] of Object.entries(res.fields)) mapped[k] = errorText(v);
+        setErrors(mapped);
+        setFormError(errorText('invalid'));
+      } else setFormError(errorText(res.code));
+      return;
+    }
+    const created = res.data;
+    rememberDevicePost({
+      batchId: created.batchId,
+      kind: 'found',
+      token: created.deviceToken,
+      labels: plates.map((p) => plateDisplay(normalizePlate(draftToInput(p.draft)))),
+      createdAt: new Date().toISOString(),
+    });
+    setPin('');
+    setPinConfirm('');
+    setBatch(created);
+    await uploadPlates(created, plates);
+    setSubmitting(false);
+  }
+
+  async function retryFailed() {
+    if (!batch) return;
+    setSubmitting(true);
+    await uploadPlates(batch, plates);
+    setSubmitting(false);
+  }
+
+  // ---------------------------------------------------------------- submission / result view
+  if (batch) {
+    const done = plates.filter((p) => p.upload.state === 'done').length;
+    const failed = plates.filter((p) => p.upload.state === 'failed');
+    const finished = !submitting && failed.length === 0;
+    return (
+      <div className="space-y-5">
+        {finished ? (
+          <Alert tone="success" title={t('doneTitle')} live>
+            <p>{t('doneBody')}</p>
+          </Alert>
+        ) : (
+          <p className="font-semibold" aria-live="polite">
+            {t('uploading', { done, total: plates.length })}
+          </p>
+        )}
+        <ul className="space-y-3">
+          {plates.map((p, i) => (
+            <li key={p.id} className="rounded-md border-2 border-line-soft bg-surface p-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <PlateView plate={normalizePlate(draftToInput(p.draft))} size="sm" />
+                <span className="text-sm font-semibold">
+                  {p.upload.state === 'uploading' && (
+                    <span className="inline-flex items-center gap-2">
+                      <Spinner /> {t('plateUploading')}
+                    </span>
+                  )}
+                  {p.upload.state === 'done' && (
+                    <span className="text-success">{t('plateDone')}</span>
+                  )}
+                  {p.upload.state === 'failed' && (
+                    <span className="text-danger">
+                      {t('plateFailed')}: {errorText(p.upload.code)}
+                    </span>
+                  )}
+                </span>
+              </div>
+              {p.upload.state === 'done' && p.upload.status === 'needs_review' && (
+                <p className="mt-2 text-sm text-ink-muted">{t('reviewNote')}</p>
+              )}
+              {p.upload.state === 'done' && p.upload.matches.length > 0 && (
+                <div className="mt-3">
+                  <Alert tone="highlight" title={t('ownerLooking')}>
+                    <p>{t('ownerLookingBody')}</p>
+                    <Link
+                      href={`/match/${p.upload.matches[0]!.matchId}`}
+                      className={`${buttonClass('primary')} mt-2`}
+                      aria-label={`${t('viewMatch')} · ${t('cardTitle', { n: i + 1 })}`}
+                    >
+                      {t('viewMatch')}
+                    </Link>
+                  </Alert>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+        {failed.length > 0 && !submitting && (
+          <Button block onClick={retryFailed}>
+            {t('retryFailed')}
+          </Button>
+        )}
+        {finished && (
+          <>
+            <p className="text-ink-muted">{t('doneManage')}</p>
+            <Link href="/" className={buttonClass('secondary')}>
+              {tc('backHome')}
+            </Link>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  const index = STEPS.indexOf(step) + 1;
+
+  return (
+    <div>
+      <Stepper
+        current={index}
+        total={STEPS.length}
+        label={`${tc('step', { current: index, total: STEPS.length })} · ${t(`steps.${step}`)}`}
+      />
+      {formError && (
+        <div className="mb-4">
+          <Alert tone="error" title={formError} live />
+        </div>
+      )}
+
+      {step === 'plates' && (
+        <div className="space-y-5">
+          <p>{t('intro')}</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Button onClick={() => cameraInput.current?.click()}>{t('takePhoto')}</Button>
+            <Button variant="secondary" onClick={() => galleryInput.current?.click()}>
+              {t('fromGallery')}
+            </Button>
+          </div>
+          <input
+            ref={cameraInput}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+            onChange={(e) => {
+              void addFiles(e.target.files);
+              e.target.value = '';
+            }}
+          />
+          <input
+            ref={galleryInput}
+            type="file"
+            accept="image/*"
+            multiple
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+            onChange={(e) => {
+              void addFiles(e.target.files);
+              e.target.value = '';
+            }}
+          />
+          <p className="text-sm text-ink-muted">{t('privacyNote')}</p>
+
+          {photos.map((p, i) =>
+            p.status === 'ready' && p.photo && p.url ? (
+              <PhotoCropper
+                key={p.id}
+                photo={p.photo}
+                url={p.url}
+                label={t('photoLabel', { n: i + 1 })}
+                onCrop={(rect) => addCrop(p.photo!, rect)}
+                onRemove={() => setPhotos((ps) => ps.filter((x) => x.id !== p.id))}
+              />
+            ) : (
+              <div key={p.id} className="rounded-md border-2 border-line-soft p-4">
+                {p.status === 'loading' ? (
+                  <span className="inline-flex items-center gap-2">
+                    <Spinner /> {t('loadingPhoto')}
+                  </span>
+                ) : (
+                  <span className="text-danger">{t('photoError')}</span>
+                )}
+              </div>
+            ),
+          )}
+
+          {plates.length === 0 ? (
+            <p className="text-ink-muted">{t('noPlatesYet')}</p>
+          ) : (
+            <ol className="space-y-4">
+              {plates.map((p, i) => (
+                <li key={p.id} className="space-y-3 rounded-md border-2 border-line bg-surface p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <h2 className="text-lg font-bold">{t('cardTitle', { n: i + 1 })}</h2>
+                    <button
+                      type="button"
+                      onClick={() => setPlates((ps) => ps.filter((x) => x.id !== p.id))}
+                      className="min-h-11 px-2 text-sm font-semibold text-danger underline decoration-2 underline-offset-4"
+                    >
+                      {t('removePlate')}
+                    </button>
+                  </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- local blob: URL of the crop */}
+                  <img
+                    src={p.url}
+                    alt={t('cropAlt', { n: i + 1 })}
+                    className="max-h-40 w-full rounded-sm border-2 border-line-soft object-contain"
+                  />
+                  <PlateInput
+                    value={p.draft}
+                    onChange={(draft) => updatePlate(p.id, { draft })}
+                    errors={p.errors}
+                  />
+                </li>
+              ))}
+            </ol>
+          )}
+
+          <Button block onClick={checkPlates}>
+            {tc('next')}
+          </Button>
+        </div>
+      )}
+
+      {step === 'details' && (
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <Choice
+              legend={t('whereTitle')}
+              value={handover}
+              onChange={setHandover}
+              options={[
+                { value: 'with_finder', label: t('withFinder') },
+                { value: 'police_station', label: t('atPolice') },
+              ]}
+              columns={1}
+            />
+            {handover === 'police_station' && (
+              <Field
+                label={t('policeNote')}
+                hint={t('policeNoteHint')}
+                error={errors.policeStationNote}
+              >
+                {({ inputId, describedBy, invalid }) => (
+                  <TextInput
+                    id={inputId}
+                    aria-describedby={describedBy}
+                    aria-invalid={invalid || undefined}
+                    value={policeNote}
+                    maxLength={120}
+                    onChange={(e) => setPoliceNote(e.target.value)}
+                  />
+                )}
+              </Field>
+            )}
+            {/* LEGAL-TODO(found-property): wording to be confirmed. */}
+            <p className="text-sm text-ink-muted">{t('legalNote')}</p>
+          </div>
+
+          <Field
+            label={t('district')}
+            hint={t('districtHint')}
+            optional={tc('optional')}
+            error={errors.district}
+          >
+            {({ inputId, describedBy, invalid }) => (
+              <TextInput
+                id={inputId}
+                aria-describedby={describedBy}
+                aria-invalid={invalid || undefined}
+                value={district}
+                maxLength={80}
+                onChange={(e) => setDistrict(e.target.value)}
+              />
+            )}
+          </Field>
+
+          <ContactFields
+            value={contact}
+            onChange={setContact}
+            errors={Object.fromEntries(
+              Object.entries(errors)
+                .filter(([k]) => k.startsWith('contact.'))
+                .map(([k, v]) => [k.slice('contact.'.length), v]),
+            )}
+          />
+
+          <PinFields
+            pin={pin}
+            confirm={pinConfirm}
+            onChange={(p, c) => {
+              setPin(p);
+              setPinConfirm(c);
+            }}
+            errors={{ pin: errors.pin, confirm: errors.confirm }}
+          />
+
+          <Checkbox
+            label={tConsent('label')}
+            checked={consent}
+            onChange={setConsent}
+            error={errors.consent}
+          />
+
+          <div>
+            <Turnstile ref={turnstile} action="found_batch" onToken={setToken} />
+            {errors.turnstile && !token && (
+              <p role="alert" className="text-sm font-semibold text-danger">
+                {errors.turnstile}
+              </p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Button variant="secondary" onClick={() => go('plates')}>
+              {tc('back')}
+            </Button>
+            <Button busy={submitting} busyLabel={tc('sending')} onClick={submit}>
+              {t('submit', { count: plates.length })}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

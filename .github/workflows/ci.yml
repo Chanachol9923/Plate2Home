@@ -54,6 +54,44 @@ jobs:
         run: npm run test:db
         env:
           DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+      - name: Export local Supabase URL and keys
+        run: npx supabase status -o json | node scripts/ci-supabase-env.mjs >> "$GITHUB_ENV"
+      - name: API integration tests (route handlers + real Storage)
+        run: npm run test:integration
+        env:
+          IP_HASH_SECRET: ci-integration-ip-hash-secret-000000
+      - if: always()
+        run: npx supabase stop --no-backup
+
+  e2e:
+    name: E2E (Playwright, mobile viewports)
+    runs-on: ubuntu-latest
+    env:
+      E2E_PORT: '3100'
+      APP_ORIGIN: http://localhost:3100
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
+      TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
+      IP_HASH_SECRET: ci-e2e-ip-hash-secret-000000000000
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Start local Supabase
+        run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,supavisor,mailpit,postgres-meta
+      - name: Export local Supabase URL and keys
+        run: npx supabase status -o json | node scripts/ci-supabase-env.mjs >> "$GITHUB_ENV"
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test
+      - if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
       - if: always()
         run: npx supabase stop --no-backup
 

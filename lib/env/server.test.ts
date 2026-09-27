@@ -1,8 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
-vi.mock('server-only', () => ({}));
-
-const { requireEnv, resetServerEnvForTests, serverEnv } = await import('./server');
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { requireEnv, resetServerEnvForTests, serverEnv } from './server';
 
 const saved = { ...process.env };
 

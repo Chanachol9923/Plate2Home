@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint --max-warnings=0",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --project unit --project db",
     "test:unit": "vitest run --project unit",
     "test:db": "vitest run --project db",
     "test:coverage": "vitest run --project unit --coverage",
@@ -22,9 +22,11 @@
     "db:types": "supabase gen types typescript --local > lib/db/types.gen.ts",
     "gen:provinces": "node scripts/gen-provinces-sql.mjs",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:integration": "vitest run --project integration"
   },
   "dependencies": {
+    "@node-rs/argon2": "2.2.1",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.117.2",
     "next": "16.3.6",
@@ -32,10 +34,12 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "server-only": "0.0.1",
+    "sharp": "0.35.4",
     "zod": "4.6.5"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
+    "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "24.19.0",
     "@types/pg": "8.23.1",

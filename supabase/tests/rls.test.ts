@@ -121,11 +121,11 @@ describe('anon', () => {
     expect(res.error?.code).toBe(PERMISSION_DENIED);
   });
 
-  it('cannot call match_candidates', async () => {
+  it('cannot call plate_candidates', async () => {
     const res = await db.as(
       'anon',
       claims.anon,
-      `select * from public.match_candidates('lost', 'car', 'กข1234', '1234')`,
+      `select * from public.plate_candidates('lost', 'car', 'กข1234', '1234')`,
     );
     expect(res.error?.code).toBe(PERMISSION_DENIED);
   });

@@ -5,7 +5,7 @@ floods. People who **lost** a plate register a watch. People who **found** plate
 them, and the app reads the plates in the browser and matches them instantly. It is
 non-commercial, has no user accounts, and deletes everything automatically.
 
-> **Status: Phases 1–2 done** (foundation; Thai plate module + matching score). See [`docs/plan.md`](docs/plan.md) for the phase plan.
+> **Status: Phases 1–3 done** (foundation; Thai plate module; lost/found/search/match flows with manual entry). See [`docs/plan.md`](docs/plan.md) for the phase plan.
 
 ## Stack
 
@@ -27,15 +27,25 @@ npm run dev
 Open http://localhost:3000 (Thai) or http://localhost:3000/en (English). Phase 1 pages don't
 need a database.
 
-### Local Supabase (needs Docker)
+### Development backend: hosted Supabase dev project (no Docker needed)
 
-```bash
-npx supabase start
-npx supabase status
-```
+1. Create a free project at https://supabase.com/dashboard in the **Southeast Asia (Singapore)**
+   region. Use a separate project for development, never production.
+2. Link it and apply the migrations:
+   ```bash
+   npx supabase login
+   npx supabase link --project-ref <your-project-ref>
+   npx supabase db push
+   ```
+3. In the dashboard, under **Project Settings → API Keys**, copy the project URL, the
+   **publishable** key and a **secret** key into `.env.local` (see `.env.example`). The secret
+   key bypasses RLS: keep it out of chat, screenshots and commits.
+4. Under **Authentication → Sign In / Providers**, turn off "Allow new users to sign up".
+5. `npm run dev`, then try lost → found → match. `npm run test:integration` runs the API flow
+   against the same project and cleans up after itself.
 
-`supabase start` applies every migration in `supabase/migrations/`. Copy the printed API URL,
-publishable key and secret key into `.env.local`.
+With Docker installed you can use a fully local stack instead: `npx supabase start` (it applies
+the migrations and prints local keys).
 
 ## Checks
 
@@ -46,6 +56,8 @@ publishable key and secret key into `.env.local`.
 | `npm run typecheck`                      | `next typegen` + `tsc`                                                               |
 | `npm run test:unit`                      | Unit tests (plate module, matching, CSP, env, messages, lint rule, secret scanner)   |
 | `npm run test:db`                        | Migrations + RLS tests. PGlite by default; set `DATABASE_URL` to use a real database |
+| `npm run test:integration`               | API flow against real Supabase (needs Supabase keys in the environment/.env.local)   |
+| `npx playwright test`                    | E2E in mobile viewports (needs a built app and Supabase)                             |
 | `npm run check:contrast`                 | WCAG contrast of the design tokens, both themes                                      |
 | `npm run check:provinces`                | Province seed migration matches `data/provinces.json`                                |
 | `npm run build && npm run check:secrets` | Production build, then scan client files for secrets                                 |
