@@ -73,15 +73,14 @@ added ช/ซ, ษ, and a few weaker pairs (cost 0.5: ค/ด, อ/ฮ, ม/ฆ,
 See `lib/matching/score.ts` and `lib/config/thresholds.ts`.
 
 - **exact (ตรงกัน):** identical prefix, letters and number, no wildcards, same _known_ province.
-- **near (อาจตรงกัน):** similarity ≥ 0.7, with at most about one misread in the series (prefix +
-  letters) and one in the number.
-  - A forgotten leading digit costs 0.5.
-  - A look-alike character costs 0.3–0.5.
-  - An adjacent digit swap costs 0.8.
+- **near (อาจตรงกัน):** only the number may differ (D-077). The series (leading digit + letters)
+  must be the same, except where one side typed `?`. The province must be the same or unknown
+  on one side. Similarity must be ≥ 0.7, with at most about one misread in the number:
+  - A look-alike digit (8/0, 1/7, 3/8, …) costs 0.3–0.5.
+  - An adjacent digit swap costs 0.8; a missing or unrelated digit costs 1.
   - Each wildcard costs a small uncertainty penalty; more than 3 wildcards never match.
-- **Province:** same province adds +0.05; unknown is neutral. A _different_ known province costs
-  −0.28, so only an otherwise perfect letters-and-number match survives. That is deliberate:
-  the same number exists in every province, but OCR can misread the province.
+- **Province:** same province adds +0.05 to the score; unknown is neutral. A _different_ known
+  province is a different plate (the same number exists in every province), never a match.
 - Car and motorcycle plates never match each other; "other" can match either.
 
 ## Sources

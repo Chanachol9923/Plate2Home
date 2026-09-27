@@ -59,7 +59,7 @@ describe('matchNewPost', () => {
   it('records only real matches, with the new post on the correct side', async () => {
     db.candidates = [
       candidate('exact', 'กข', '1234'),
-      candidate('near', 'กช', '1234'),
+      candidate('near', 'กข', '7234'),
       candidate('none', 'มท', '9876'),
     ];
     const result = await matchNewPost({ id: 'lost-1', kind: 'lost', record: lostRecord });

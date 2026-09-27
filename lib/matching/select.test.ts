@@ -22,10 +22,10 @@ describe('selectMatches', () => {
 
   it('drops non-matches and ranks exact first, then by score, then newest', () => {
     const result = selectMatches(query, [
-      cand('near-old', 'กช', '1234', '2026-09-01T00:00:00Z'),
+      cand('near-old', 'กข', '7234', '2026-09-01T00:00:00Z'),
       cand('none', 'มท', '5678', '2026-09-20T00:00:00Z'),
       cand('exact', 'กข', '1234', '2026-08-01T00:00:00Z'),
-      cand('near-new', 'กช', '1234', '2026-09-10T00:00:00Z'),
+      cand('near-new', 'กข', '7234', '2026-09-10T00:00:00Z'),
       cand('weaker', 'กข', '1235', '2026-09-15T00:00:00Z'),
     ]);
     expect(result.map((r) => r.candidate.id)).toEqual(['exact', 'near-new', 'near-old', 'weaker']);

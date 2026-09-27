@@ -27,28 +27,26 @@ const cases: Case[] = [
   // Same plate, missing information → near, never exact
   ['identical, one province unknown', p('กข 1234', BKK), p('กข 1234'), 'near'],
   ['identical, both provinces unknown', p('กข 1234'), p('กข 1234'), 'near'],
-  [
-    'identical, different province (OCR may misread it)',
-    p('กข 1234', BKK),
-    p('กข 1234', CNX),
-    'near',
-  ],
+  ['identical, different province (a different plate)', p('กข 1234', BKK), p('กข 1234', CNX), null],
 
   // One misread
-  ['ข/ช confusion', p('กข 1234', BKK), p('กช 1234', BKK), 'near'],
-  ['ด/ต confusion', p('ดก 1234'), p('ตก 1234'), 'near'],
-  ['ภ/ถ confusion', p('ภก 5555', BKK), p('ถก 5555', BKK), 'near'],
+  // Only the number may be near (D-077): any difference in the series is not a match.
+  ['ข/ช confusion', p('กข 1234', BKK), p('กช 1234', BKK), null],
+  ['ด/ต confusion', p('ดก 1234'), p('ตก 1234'), null],
+  ['ภ/ถ confusion', p('ภก 5555', BKK), p('ถก 5555', BKK), null],
   ['8/0 in the number', p('กข 1880', BKK), p('กข 1800', BKK), 'near'],
   ['1/7 in the number', p('กข 1234'), p('กข 7234'), 'near'],
-  ['weak confusion อ/ฮ', p('อก 1234', BKK), p('ฮก 1234', BKK), 'near'],
-  ['unrelated letter misread', p('กข 1234', BKK), p('ฮข 1234', BKK), 'near'],
+  ['weak confusion อ/ฮ', p('อก 1234', BKK), p('ฮก 1234', BKK), null],
+  ['unrelated letter misread', p('กข 1234', BKK), p('ฮข 1234', BKK), null],
   ['unrelated digit misread', p('กข 1234', BKK), p('กข 1235', BKK), 'near'],
   ['adjacent digits swapped', p('กข 1234', BKK), p('กข 1243', BKK), 'near'],
   ['one digit missing', p('กข 1234', BKK), p('กข 123', BKK), 'near'],
-  ['one letter missing', p('กข 1234', BKK), p('ก 1234', BKK), 'near'],
-  ['leading digit forgotten', p('1กข 1234', BKK), p('กข 1234', BKK), 'near'],
-  ['leading digit 1/7 confusion', p('1กข 1234'), p('7กข 1234'), 'near'],
-  ['leading digit misread', p('1กข 1234', BKK), p('2กข 1234', BKK), 'near'],
+  ['one letter missing', p('กข 1234', BKK), p('ก 1234', BKK), null],
+  ['leading digit forgotten', p('1กข 1234', BKK), p('กข 1234', BKK), null],
+  ['leading digit 1/7 confusion', p('1กข 1234'), p('7กข 1234'), null],
+  ['leading digit misread', p('1กข 1234', BKK), p('2กข 1234', BKK), null],
+  ['number misread, province unknown', p('กข 1234'), p('กข 1284', BKK), 'near'],
+  ['number misread, different province', p('กข 1234', BKK), p('กข 1284', CNX), null],
 
   // Wildcards
   ['wildcard digit', p('กข 12?4', BKK), p('กข 1234', BKK), 'near'],

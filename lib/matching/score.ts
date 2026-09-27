@@ -55,8 +55,9 @@ const typesCompatible = (a: Plate, b: Plate) =>
  * Similarity between two normalized plates (symmetric).
  *
  * - `exact`  → "ตรงกัน": same prefix, letters and number, no wildcards, same known province.
- * - `near`   → "อาจตรงกัน": at most ~one misread in the series and ~one in the number, and
- *              similarity >= nearThreshold. The user must compare the photo.
+ * - `near`   → "อาจตรงกัน": the same series (leading digit + letters, `?` allowed) and province
+ *              (or one unknown); only the number may differ by about one misread (D-077).
+ *              The user must compare the photo.
  */
 export function scorePlates(a: Plate, b: Plate, cfg: MatchConfig = matchConfig): MatchScore {
   const costs = plateCosts(cfg);
@@ -98,6 +99,7 @@ export function scorePlates(a: Plate, b: Plate, cfg: MatchConfig = matchConfig):
   if (isExact) return { score: 1, kind: 'exact', details };
 
   const near =
+    province !== 'mismatch' &&
     wildcards <= cfg.maxWildcards &&
     seriesCost <= cfg.maxSeriesCost &&
     numberCost <= cfg.maxNumberCost &&

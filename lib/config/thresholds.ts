@@ -16,18 +16,19 @@ export const matchConfig = {
   /** One side has the leading digit, the other doesn't (people often omit the `1` in 1กข). */
   prefixMissingCost: 0.5,
 
-  /** A near match allows at most about one misread in the series (prefix + letters)… */
-  maxSeriesCost: 1,
-  /** …and at most about one misread in the number. */
+  /**
+   * Only the number may be near (D-077): the series (leading digit + letters) must be the same,
+   * except where one side typed `?` for an unreadable character (wildcards cost 0).
+   */
+  maxSeriesCost: 0,
+  /** At most about one misread in the number. */
   maxNumberCost: 1,
 
   /** Both provinces known and equal. */
   provinceMatchBonus: 0.05,
   /**
-   * Both provinces known and different. The same letters+number exist in every province, so
-   * this is large: only an otherwise perfect match survives as "near" (OCR may have misread
-   * the province). 1 - 0.28 = 0.72 ≥ nearThreshold, but even one confusable misread
-   * (≈ -0.05) drops below it.
+   * Both provinces known and different: the same letters + number exist in every province, so
+   * it is a different plate and never a match (D-077). Kept for the score's ranking.
    */
   provinceMismatchPenalty: 0.28,
 
