@@ -278,16 +278,17 @@ export function findPlateRegions(lines: OcrWordLine[], width: number, height: nu
 }
 
 /**
- * The whole plate around its number line: side margins, a little above, and the province line
- * below (car plates). Clamped to the image.
+ * The whole plate around its number line: side margins, the top edge, and the province line
+ * below (car plates). Generous on purpose: it seeds a box the user adjusts, and cutting into
+ * the plate is worse than a little background. Clamped to the image.
  */
 export function growPlateBox(line: Box, width: number, height: number): Box {
   const h = line.y1 - line.y0;
   return {
-    x0: Math.max(0, line.x0 - h * 0.6),
-    y0: Math.max(0, line.y0 - h * 0.45),
-    x1: Math.min(width, line.x1 + h * 0.6),
-    y1: Math.min(height, line.y1 + h * 1.5),
+    x0: Math.max(0, line.x0 - h * 0.7),
+    y0: Math.max(0, line.y0 - h * 0.7),
+    x1: Math.min(width, line.x1 + h * 0.7),
+    y1: Math.min(height, line.y1 + h * 1.6),
   };
 }
 

@@ -180,7 +180,7 @@
     "fromGallery": "Choose from gallery",
     "privacyNote": "Only the cropped plate images are sent, never the full photo, and location data is removed.",
     "photoLabel": "Photo {n}",
-    "drawHint": "Drag a box around one plate at a time (drag again until it fits), then tap “Crop this plate”.",
+    "drawHint": "Drag on the photo to draw a box around a plate.",
     "useWhole": "Use the whole photo (one plate only)",
     "removePhoto": "Remove photo",
     "loadingPhoto": "Preparing photo…",
@@ -220,7 +220,12 @@
       "nearBody": "Check the letters, number and province against the real plate, then post. The owner will be asked to check whether it's theirs.",
       "none": "No one has reported this plate lost yet. Post it anyway: if the owner reports it later, they are matched automatically."
     },
-    "cropThis": "Crop this plate"
+    "cropThis": "Crop this plate",
+    "cropHint": "Drag inside the box to move it, drag a corner dot to resize, or drag outside to draw a new one. Fit it to the plate, then tap “Crop this plate”.",
+    "previewLabel": "What will be cut",
+    "suggestionLabel": "Suggested box {n} (tap to select)",
+    "boxLabel": "Crop box. Arrow keys move it; Shift and arrow keys resize it.",
+    "cropAllSuggested": "Crop all suggested boxes ({count})"
   },
   "search": {
     "title": "Search a plate number",
@@ -318,14 +323,13 @@
   "ocr": {
     "loading": "Loading the automatic plate reader {percent}% (about 5 MB the first time)",
     "scanning": "Looking for plates in the photo…",
-    "found": "{count, plural, one {Found # plate} other {Found # plates}}. Check the cards below; drag a box around any plate that was missed.",
-    "none": "No plates found automatically. Drag a box around each plate yourself.",
-    "failed": "Automatic reading didn't work. Drag a box and type the plate yourself.",
+    "found": "{count, plural, one {Suggested a box for # plate} other {Suggested boxes for # plates}}. Check and fit the box, then tap “Crop this plate” (tap a dashed box to pick another plate).",
+    "none": "No plates found automatically. Move or draw the box around a plate yourself, then tap “Crop this plate”.",
+    "failed": "Automatic finding didn't work. Move or draw the box around a plate yourself, then tap “Crop this plate”.",
     "reading": "Reading the plate…",
     "read": "Read automatically. Please check it before sending.",
     "lowConfidence": "Not very sure about this one. Check every character; unreadable ones show as ?.",
-    "unread": "Couldn't read this plate. Please type it yourself.",
-    "auto": "Found automatically"
+    "unread": "Couldn't read this plate. Please type it yourself."
   },
   "about": {
     "title": "About {brand}",

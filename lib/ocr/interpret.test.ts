@@ -143,8 +143,8 @@ describe('findPlateRegions', () => {
       960,
     );
     expect(regions).toHaveLength(1);
-    // Top follows the text (180), not the border (100).
-    expect(regions[0]!.y0).toBeGreaterThan(130);
+    // Top follows the text (180, less a margin), not the border (100).
+    expect(regions[0]!.y0).toBeGreaterThan(110);
   });
 
   it('finds a plate read as a single word, and merges duplicates', () => {
@@ -217,7 +217,7 @@ describe('growPlateBox', () => {
   it('adds margins and the province line, clamped to the image', () => {
     expect(growPlateBox({ x0: 10, y0: 100, x1: 300, y1: 140 }, 320, 200)).toEqual({
       x0: 0,
-      y0: 82,
+      y0: 72,
       x1: 320,
       y1: 200,
     });

@@ -1,16 +1,60 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useRef, useState, type PointerEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import { Button } from '@/components/ui/Button';
-import { MIN_CROP_EDGE, normalizeDrag, type LoadedPhoto, type Rect } from '@/lib/client/image';
+import {
+  anchorFor,
+  contains,
+  coveredBy,
+  defaultBox,
+  moveBox,
+  nudgeBox,
+  type Corner,
+  type Point,
+} from '@/lib/client/cropbox';
+import {
+  MIN_CROP_EDGE,
+  normalizeDrag,
+  padRect,
+  type LoadedPhoto,
+  type Rect,
+} from '@/lib/client/image';
+
+/** Margin added around the box when cutting (the preview shows exactly this). */
+export const MANUAL_CROP_PADDING = 0.02;
+
+const CORNERS: Corner[] = ['nw', 'ne', 'sw', 'se'];
+const CORNER_POS: Record<Corner, string> = {
+  nw: 'left-0 top-0 cursor-nwse-resize',
+  ne: 'left-full top-0 cursor-nesw-resize',
+  sw: 'left-0 top-full cursor-nesw-resize',
+  se: 'left-full top-full cursor-nwse-resize',
+};
+
+type Drag =
+  | { kind: 'draw'; from: Point; before: Rect | null }
+  | { kind: 'move'; offset: Point }
+  | { kind: 'resize'; anchor: Point };
+
+const usable = (b: Rect | null): b is Rect =>
+  b !== null && b.width >= MIN_CROP_EDGE && b.height >= MIN_CROP_EDGE / 2;
 
 /**
- * Draw a box around a plate on the photo (pointer events: mouse, touch, pen), redraw until it
- * fits, then "Crop this plate": exactly that box is cut (plus a small margin), never re-cropped.
- * Plates already cut (by hand or found automatically) stay outlined with their card number.
- * "Use the whole photo" covers single-plate photos and keyboard-only users. Coordinates are in
- * photo pixels.
+ * Crop plates out of a photo, always under the user's control (D-070):
+ *  - a box to move (drag inside), resize (drag a corner) or redraw (drag outside it), also with
+ *    the keyboard (arrows move, Shift+arrows resize);
+ *  - automatic finding only *suggests* boxes (dashed); the best one is placed first, tapping
+ *    another selects it, and nothing is cut until "Crop this plate" (or "Crop all suggested");
+ *  - a live preview shows exactly what will be cut;
+ *  - plates already cut stay outlined with their card number.
+ * Coordinates are in photo pixels.
  */
 export function PhotoCropper({
   photo,
@@ -19,6 +63,7 @@ export function PhotoCropper({
   onCrop,
   onRemove,
   marked = [],
+  suggestions = [],
 }: {
   photo: LoadedPhoto;
   url: string;
@@ -27,61 +72,129 @@ export function PhotoCropper({
   onRemove: () => void;
   /** Plates already cut from this photo, labelled with their card number. */
   marked?: { rect: Rect; n: number }[];
+  /** Boxes proposed by automatic finding, best first. */
+  suggestions?: Rect[];
 }) {
   const t = useTranslations('found');
   const surface = useRef<HTMLDivElement>(null);
-  const start = useRef<{ x: number; y: number } | null>(null);
-  const [box, setBoxState] = useState<Rect | null>(null);
-  // Latest box for the pointer-up handler (it may run before a re-render).
-  const boxRef = useRef<Rect | null>(null);
+  const preview = useRef<HTMLCanvasElement>(null);
+  const drag = useRef<Drag | null>(null);
+  const touched = useRef(false);
+  const [box, setBoxState] = useState<Rect | null>(() => defaultBox(photo.width, photo.height));
+  // Latest box for pointer handlers (several events can arrive before a re-render).
+  const boxRef = useRef<Rect | null>(box);
   const setBox = (b: Rect | null) => {
     boxRef.current = b;
     setBoxState(b);
   };
   const [busy, setBusy] = useState(false);
 
-  const toPhoto = (e: PointerEvent) => {
+  const isCut = (r: Rect) => marked.some((m) => coveredBy(r, m.rect) > 0.6);
+  const open = suggestions.filter((s) => !isCut(s));
+
+  // Until the user touches the box, it follows the best suggestion that isn't cut yet.
+  const firstOpen = open[0];
+  useEffect(() => {
+    if (!touched.current && firstOpen) setBox(firstOpen);
+  }, [firstOpen]);
+
+  // Live preview of exactly what will be cut.
+  useEffect(() => {
+    const canvas = preview.current;
+    if (!canvas || !usable(box)) return;
+    const r = padRect(box, photo.width, photo.height, MANUAL_CROP_PADDING);
+    const scale = Math.min(1, 480 / r.width);
+    canvas.width = Math.max(1, Math.round(r.width * scale));
+    canvas.height = Math.max(1, Math.round(r.height * scale));
+    canvas
+      .getContext('2d')
+      ?.drawImage(photo.canvas, r.x, r.y, r.width, r.height, 0, 0, canvas.width, canvas.height);
+  }, [box, photo]);
+
+  const toPhoto = (e: { clientX: number; clientY: number }): Point => {
     const r = surface.current!.getBoundingClientRect();
     return {
-      x: ((e.clientX - r.left) / r.width) * photo.width,
-      y: ((e.clientY - r.top) / r.height) * photo.height,
+      x: Math.min(photo.width, Math.max(0, ((e.clientX - r.left) / r.width) * photo.width)),
+      y: Math.min(photo.height, Math.max(0, ((e.clientY - r.top) / r.height) * photo.height)),
     };
   };
 
-  const onDown = (e: PointerEvent<HTMLDivElement>) => {
+  const onDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (busy) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    start.current = toPhoto(e);
-    setBox(null);
+    touched.current = true;
+    const p = toPhoto(e);
+    const box = boxRef.current;
+    const corner = (e.target as HTMLElement).closest<HTMLElement>('[data-corner]')?.dataset
+      .corner as Corner | undefined;
+    if (box && corner) drag.current = { kind: 'resize', anchor: anchorFor(box, corner) };
+    else if (box && contains(box, p)) {
+      drag.current = { kind: 'move', offset: { x: p.x - box.x, y: p.y - box.y } };
+    } else drag.current = { kind: 'draw', from: p, before: box };
   };
-  const onMove = (e: PointerEvent<HTMLDivElement>) => {
-    if (!start.current) return;
-    setBox(normalizeDrag(start.current, toPhoto(e), photo.width, photo.height));
+  const onMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    if (!d) return;
+    const p = toPhoto(e);
+    const box = boxRef.current;
+    if (d.kind === 'move' && box) {
+      setBox(moveBox(box, { x: p.x - d.offset.x, y: p.y - d.offset.y }, photo.width, photo.height));
+    } else if (d.kind === 'resize') {
+      setBox(normalizeDrag(d.anchor, p, photo.width, photo.height));
+    } else if (d.kind === 'draw') {
+      setBox(normalizeDrag(d.from, p, photo.width, photo.height));
+    }
   };
   const onUp = () => {
-    if (!start.current) return;
-    start.current = null;
-    // A tap or a tiny slip clears the box instead of leaving a useless one.
-    if (!usable(boxRef.current)) setBox(null);
+    const d = drag.current;
+    drag.current = null;
+    // A tap or a tiny slip keeps the box the user had.
+    if (d?.kind !== 'move' && !usable(boxRef.current)) {
+      setBox(d?.kind === 'draw' ? d.before : null);
+    }
   };
 
-  function usable(b: Rect | null): b is Rect {
-    return b !== null && b.width >= MIN_CROP_EDGE && b.height >= MIN_CROP_EDGE / 2;
-  }
+  const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (!box || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+    e.preventDefault();
+    touched.current = true;
+    const step = Math.max(1, Math.round(photo.width / 100));
+    setBox(
+      nudgeBox(
+        box,
+        e.key as 'ArrowLeft',
+        step,
+        e.shiftKey,
+        photo.width,
+        photo.height,
+        MIN_CROP_EDGE,
+      ),
+    );
+  };
 
-  const crop = async (rect: Rect) => {
+  const cut = async (rects: Rect[]) => {
     setBusy(true);
     try {
-      await onCrop(rect);
-      setBox(null);
+      for (const r of rects) await onCrop(r);
+      // Next: the next suggestion that isn't cut yet, if any.
+      const next = suggestions.find((s) => !isCut(s) && !rects.includes(s));
+      touched.current = false;
+      setBox(next ?? null);
     } finally {
       setBusy(false);
     }
   };
 
   const pct = (v: number, of: number) => `${(v / of) * 100}%`;
+  const place = (r: Rect) => ({
+    left: pct(r.x, photo.width),
+    top: pct(r.y, photo.height),
+    width: pct(r.width, photo.width),
+    height: pct(r.height, photo.height),
+  });
 
   return (
-    <figure className="space-y-2 rounded-md border-2 border-line-soft bg-surface p-2">
+    <figure className="space-y-3 rounded-md border-2 border-line-soft bg-surface p-2">
       <figcaption className="flex items-center justify-between gap-2">
         <span className="font-semibold">{label}</span>
         <button
@@ -92,7 +205,7 @@ export function PhotoCropper({
           {t('removePhoto')}
         </button>
       </figcaption>
-      <p className="text-sm text-ink-muted">{t('drawHint')}</p>
+      <p className="text-sm text-ink-muted">{box ? t('cropHint') : t('drawHint')}</p>
       <div
         ref={surface}
         onPointerDown={onDown}
@@ -105,49 +218,90 @@ export function PhotoCropper({
         <img src={url} alt="" draggable={false} className="block w-full" />
         {marked.map(({ rect, n }) => (
           <div
-            key={n}
+            key={`m${n}`}
             aria-hidden="true"
             className="pointer-events-none absolute border-[3px] border-accent"
-            style={{
-              left: pct(rect.x, photo.width),
-              top: pct(rect.y, photo.height),
-              width: pct(rect.width, photo.width),
-              height: pct(rect.height, photo.height),
-            }}
+            style={place(rect)}
           >
             <span className="absolute left-0 top-0 bg-accent px-1.5 text-sm font-bold text-on-accent">
               {n}
             </span>
           </div>
         ))}
+        {open.map((s, i) =>
+          s === box ? null : (
+            <button
+              key={`s${i}`}
+              type="button"
+              aria-label={t('suggestionLabel', { n: i + 1 })}
+              onPointerDown={(e) => {
+                // Select instead of starting a new box underneath.
+                e.stopPropagation();
+                touched.current = true;
+                setBox(s);
+              }}
+              onClick={() => setBox(s)}
+              className="absolute border-[3px] border-dashed border-accent"
+              style={place(s)}
+            />
+          ),
+        )}
         {box && (
           <div
-            aria-hidden="true"
-            className="pointer-events-none absolute border-[3px] border-accent shadow-[0_0_0_9999px_rgb(0_0_0/0.45)]"
-            style={{
-              left: pct(box.x, photo.width),
-              top: pct(box.y, photo.height),
-              width: pct(box.width, photo.width),
-              height: pct(box.height, photo.height),
-            }}
-          />
+            role="group"
+            tabIndex={0}
+            aria-label={t('boxLabel')}
+            onKeyDown={onKey}
+            className="absolute cursor-move border-[3px] border-accent shadow-[0_0_0_9999px_rgb(0_0_0/0.45)] focus-visible:outline-4"
+            style={place(box)}
+          >
+            {CORNERS.map((c) => (
+              <span
+                key={c}
+                data-corner={c}
+                aria-hidden="true"
+                className={`absolute flex size-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center ${CORNER_POS[c]}`}
+              >
+                <span className="pointer-events-none size-4 rounded-full border-2 border-ink bg-accent" />
+              </span>
+            ))}
+          </div>
         )}
       </div>
+
+      {usable(box) && (
+        <div className="space-y-1">
+          <p className="text-sm font-semibold">{t('previewLabel')}</p>
+          <canvas
+            ref={preview}
+            role="img"
+            aria-label={t('previewLabel')}
+            className="max-h-32 max-w-full rounded-sm border-2 border-line-soft"
+          />
+        </div>
+      )}
+
       <div className="grid gap-2 sm:grid-cols-2">
-        <Button
-          disabled={!usable(box)}
-          busy={busy && usable(box)}
-          onClick={() => usable(box) && crop(box)}
-        >
+        <Button disabled={!usable(box)} busy={busy} onClick={() => usable(box) && cut([box])}>
           {t('cropThis')}
         </Button>
         <Button
           variant="secondary"
           disabled={busy}
-          onClick={() => crop({ x: 0, y: 0, width: photo.width, height: photo.height })}
+          onClick={() => cut([{ x: 0, y: 0, width: photo.width, height: photo.height }])}
         >
           {t('useWhole')}
         </Button>
+        {open.length > 1 && (
+          <Button
+            variant="secondary"
+            disabled={busy}
+            onClick={() => cut(open)}
+            className="sm:col-span-2"
+          >
+            {t('cropAllSuggested', { count: open.length })}
+          </Button>
+        )}
       </div>
     </figure>
   );

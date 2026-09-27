@@ -9,7 +9,7 @@ import { PinFields } from '@/components/forms/PinFields';
 import { Turnstile, type TurnstileHandle } from '@/components/forms/Turnstile';
 import { useErrorText } from '@/components/forms/useErrorText';
 import { LostWatchHint } from '@/components/found/LostWatchHint';
-import { PhotoCropper } from '@/components/found/PhotoCropper';
+import { MANUAL_CROP_PADDING, PhotoCropper } from '@/components/found/PhotoCropper';
 import { PlateInput, type PlateFieldErrors } from '@/components/plate/PlateInput';
 import { PlateView } from '@/components/plate/PlateView';
 import { Alert } from '@/components/ui/Alert';
@@ -23,7 +23,6 @@ import { postForm, postJson } from '@/lib/client/api';
 import { rememberDevicePost } from '@/lib/client/devices';
 import { cropToBlob, loadPhoto, type LoadedPhoto, type Rect } from '@/lib/client/image';
 import { findPlates, OCR_ENABLED, onOcrLoading, readPlate } from '@/lib/client/ocr';
-import type { PlateReading } from '@/lib/ocr/interpret';
 import { plateDisplay } from '@/lib/plate/canonical';
 import { draftToInput, EMPTY_DRAFT, type PlateDraft } from '@/lib/plate/draft';
 import { normalizePlate } from '@/lib/plate/normalize';
@@ -44,6 +43,8 @@ interface Photo {
   url?: string;
   /** Automatic plate finding on this photo. */
   scan?: { state: 'scanning' } | { state: 'done'; found: number } | { state: 'failed' };
+  /** Boxes proposed by automatic finding; only cut when the user confirms (D-070). */
+  suggestions?: Rect[];
 }
 
 type UploadState =
@@ -59,8 +60,6 @@ interface PlateCard {
   draft: PlateDraft;
   errors: PlateFieldErrors;
   upload: UploadState;
-  /** Found automatically in the photo (not drawn by hand). */
-  auto: boolean;
   /** Where on which photo it was cut from (outlined on the photo). */
   source: { photoId: string; rect: Rect };
   ocr: { state: 'off' | 'reading' | 'unread' } | { state: 'read'; confidence: number };
@@ -160,14 +159,13 @@ export function FoundFlow() {
   const setScan = (id: string, scan: Photo['scan']) =>
     setPhotos((ps) => ps.map((p) => (p.id === id ? { ...p, scan } : p)));
 
-  /** Find plate-shaped text in the photo and propose a card (with a reading) for each. */
+  /** Find plates in the photo and suggest a box for each; the user adjusts and confirms. */
   async function scanPhoto(id: string, photo: LoadedPhoto) {
     setScan(id, { state: 'scanning' });
     try {
       const found = await findPlates(photo);
-      for (const f of found) {
-        await addCrop(id, photo, f.rect, { auto: true, padding: 0.1, reading: f.reading });
-      }
+      const suggestions = found.map((f) => f.rect);
+      setPhotos((ps) => ps.map((p) => (p.id === id ? { ...p, suggestions } : p)));
       setScan(id, { state: 'done', found: found.length });
     } catch {
       setScan(id, { state: 'failed' });
@@ -178,7 +176,7 @@ export function FoundFlow() {
     photoId: string,
     photo: LoadedPhoto,
     rect: Rect,
-    opts: { auto?: boolean; padding?: number; reading?: PlateReading | null } = {},
+    opts: { padding?: number } = {},
   ) {
     // Count synchronously: several crops can be added before React re-renders.
     if (cardCount.current >= MAX_PLATES_PER_BATCH) {
@@ -197,16 +195,13 @@ export function FoundFlow() {
         draft: EMPTY_DRAFT,
         errors: {},
         upload: { state: 'pending' },
-        auto: Boolean(opts.auto),
         source: { photoId, rect },
         ocr: { state: OCR_ENABLED ? 'reading' : 'off' },
       },
     ]);
     if (!OCR_ENABLED) return;
-    // What the user drew is kept as is; OCR only reads it. Found plates are shown with a wide
-    // margin but read from a snug cut, where the plate border is easy to remove.
-    const readFrom = opts.auto ? await cropToBlob(photo, rect, 0.03).catch(() => blob) : blob;
-    const reading = opts.reading ?? (await readPlate(readFrom, 'car').catch(() => null));
+    // The box the user confirmed is kept as is; OCR only reads it.
+    const reading = await readPlate(blob, 'car').catch(() => null);
     setPlates((ps) =>
       ps.map((p) => {
         if (p.id !== id) return p;
@@ -499,7 +494,8 @@ export function FoundFlow() {
                   photo={p.photo}
                   url={p.url}
                   label={t('photoLabel', { n: i + 1 })}
-                  onCrop={(rect) => addCrop(p.id, p.photo!, rect)}
+                  onCrop={(rect) => addCrop(p.id, p.photo!, rect, { padding: MANUAL_CROP_PADDING })}
+                  suggestions={p.suggestions}
                   marked={plates.flatMap((c, n) =>
                     c.source.photoId === p.id ? [{ rect: c.source.rect, n: n + 1 }] : [],
                   )}
@@ -526,14 +522,7 @@ export function FoundFlow() {
               {plates.map((p, i) => (
                 <li key={p.id} className="space-y-3 rounded-md border-2 border-line bg-surface p-3">
                   <div className="flex items-center justify-between gap-2">
-                    <h2 className="text-lg font-bold">
-                      {t('cardTitle', { n: i + 1 })}
-                      {p.auto && (
-                        <span className="ms-2 rounded-sm border-2 border-line-soft px-1.5 align-middle text-sm font-semibold">
-                          {tOcr('auto')}
-                        </span>
-                      )}
-                    </h2>
+                    <h2 className="text-lg font-bold">{t('cardTitle', { n: i + 1 })}</h2>
                     <button
                       type="button"
                       onClick={() => {

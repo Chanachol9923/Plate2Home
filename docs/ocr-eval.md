@@ -21,7 +21,7 @@ here is a benchmark; the numbers below come from synthetic test images only.
    - picks the plate line and the province line;
    - trims border noise read as extra digits ("205868" → "2058", with lower confidence);
    - turns characters read with < 35% confidence into `?`.
-4. The reading **prefills** the plate card with a note saying "please check"; low confidence
+4. Found plates are only **suggested** as boxes on the photo; the user adjusts and confirms each crop (D-070). The reading **prefills** the plate card with a note saying "please check"; low confidence
    gets a stronger warning. The user can always edit it, or draw a box by hand.
 
 ## Assets and size
