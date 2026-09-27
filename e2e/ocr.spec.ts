@@ -19,7 +19,11 @@ async function addDrawnPhoto(page: Page, plates: PlateSpec[], size = { w: 1600, 
   await page.evaluate(
     async ({ specs, size }) => {
       const family = getComputedStyle(document.body).fontFamily;
-      await document.fonts.load(`700 150px ${family}`, 'กข0123456789');
+      // Load the page's own web font only: its fallback face points at local("Arial"), which
+      // Linux CI machines don't have, and that makes the whole load reject.
+      const primary = family.split(',')[0]!;
+      await document.fonts.load(`700 150px ${primary}`, 'กข0123456789').catch(() => undefined);
+      await document.fonts.ready;
       const c = document.createElement('canvas');
       c.width = size.w;
       c.height = size.h;
