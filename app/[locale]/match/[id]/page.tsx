@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { PlateView } from '@/components/plate/PlateView';
-import { RevealContact } from '@/components/reveal/RevealContact';
+import { MatchContact } from '@/components/reveal/MatchContact';
 import { PageShell } from '@/components/site/PageShell';
 import { Alert } from '@/components/ui/Alert';
 import { getMatchView } from '@/lib/db/matches';
@@ -78,7 +78,12 @@ export default async function MatchPage({ params }: PageProps<'/[locale]/match/[
           )}
         </section>
 
-        <RevealContact postId={view.found.postId} />
+        <MatchContact
+          matchId={view.matchId}
+          foundPostId={view.found.postId}
+          foundBatchId={view.foundBatchId}
+          lostBatchId={view.lostBatchId}
+        />
       </div>
     </PageShell>
   );

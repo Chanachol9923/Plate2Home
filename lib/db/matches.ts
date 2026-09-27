@@ -54,6 +54,9 @@ export interface MatchView {
   lostPlate: Plate;
   /** The owner's note (หมายเหตุ), shown to help the finder confirm it's the right plate. */
   lostNote: string | null;
+  /** Batch ids let the page tell (from device tokens it holds) if the viewer is owner or finder. */
+  lostBatchId: string;
+  foundBatchId: string;
   found: {
     postId: string;
     plate: Plate;
@@ -84,6 +87,8 @@ interface MatchViewRow {
   found_created_at: string;
   found_handover: 'with_finder' | 'police_station' | null;
   lost_note: string | null;
+  lost_batch_id: string;
+  found_batch_id: string;
 }
 
 /** Null when the match doesn't exist or either post is no longer active. */
@@ -104,6 +109,8 @@ export async function getMatchView(matchId: string): Promise<MatchView | null> {
       provinceCode: r.lost_province_code,
     },
     lostNote: r.lost_note,
+    lostBatchId: r.lost_batch_id,
+    foundBatchId: r.found_batch_id,
     found: {
       postId: r.found_post_id,
       plate: {

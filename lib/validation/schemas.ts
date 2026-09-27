@@ -166,6 +166,16 @@ export const revealSchema = z.object({
   turnstileToken: z.string().min(1).max(2048),
 });
 export type RevealBody = z.input<typeof revealSchema>;
+
+const deviceToken = z.string().regex(/^[A-Za-z0-9_-]{43}$/);
+
+/** "My posts": the (batch id, device token) pairs stored on this phone. */
+export const myPostsSchema = z.object({
+  devices: z.array(z.object({ batchId: z.uuid(), token: deviceToken })).max(50),
+});
+
+/** The finder asks for the owner's contact, proving it with the found batch's device token. */
+export const revealOwnerSchema = z.object({ matchId: z.uuid(), token: deviceToken });
 export type SearchBody = z.input<typeof searchSchema>;
 
 /** Flatten zod issues into `{ path: code }` for the form (first issue per field wins). */

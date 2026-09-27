@@ -1,4 +1,4 @@
-# Plate2Home · ป้ายกลับบ้าน
+# Plate2Home
 
 A mobile-first web app that reunites people in Thailand with vehicle licence plates lost in
 floods. People who **lost** a plate register a watch. People who **found** plates photograph

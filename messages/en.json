@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "{brand} · Lost & found licence plates in Thailand",
-    "description": "Lost a licence plate in a flood, or found one? Post it here. We match plate numbers and alert the owner straight away. Free, no ads."
+    "description": "Lost a licence plate in a flood, or found one? Post it here and we match plate numbers straight away. Free, no ads."
   },
   "a11y": {
     "skipToContent": "Skip to content"
@@ -21,11 +21,11 @@
   },
   "home": {
     "title": "Lost a plate in the flood? Let's get it home.",
-    "lead": "People who lost a plate register the number. People who found one send a photo. We match them and tell the owner right away.",
+    "lead": "People who lost a plate register the number. People who found one send a photo. We match them straight away so you can get in touch.",
     "actionsLabel": "What would you like to do?",
     "lost": {
       "title": "I lost a plate",
-      "hint": "Register your plate. We'll alert you the moment someone finds it."
+      "hint": "Register your plate. It’s matched the moment someone finds it."
     },
     "found": {
       "title": "I found a plate",
@@ -37,7 +37,8 @@
       "step1": "Register a lost plate, or photograph one you found",
       "step2": "We match plate numbers instantly",
       "step3": "You contact each other to arrange the handover"
-    }
+    },
+    "myPosts": "My posts"
   },
   "dormant": {
     "title": "We're closed for now",
@@ -158,10 +159,10 @@
     "checking": "Checking whether someone found it…",
     "foundAlready": "Someone has found this plate!",
     "foundAlreadyBody": "Contact the finder right from the card below. Compare the photo with your plate first.",
-    "notFoundYet": "Nobody has found this plate yet. Register a watch and we'll alert you as soon as someone does.",
+    "notFoundYet": "Nobody has found this plate yet. Register a watch and it will be matched automatically when someone does.",
     "submit": "Register watch",
-    "doneTitle": "We'll alert you as soon as someone finds this plate",
-    "doneManage": "You can manage or delete this post from this device, or with your plate number and PIN from another device.",
+    "doneTitle": "Your watch is set. It will be matched automatically when someone finds this plate.",
+    "doneManage": "Check for matches under “My posts” on this device, and keep your PIN: you’ll need it with your plate number to delete or edit the post.",
     "doneMatches": "Someone may have found your plate",
     "viewMatch": "View details",
     "alsoWatch": "Also register a watch, in case more turn up"
@@ -209,7 +210,7 @@
     "ownerLookingBody": "This plate matches a lost plate that someone registered.",
     "viewMatch": "View details",
     "reviewNote": "This plate will be shown after a moderator checks it.",
-    "doneManage": "You can manage or delete your posts from this device, or with a plate number and PIN from another device."
+    "doneManage": "Check for matches under “My posts” on this device, and keep your PIN: you’ll need it with a plate number to delete or edit your posts."
   },
   "search": {
     "title": "Search a plate number",
@@ -220,25 +221,29 @@
     "near": "Possible match",
     "nearHint": "The number may differ slightly. Compare it with the photo.",
     "none": "Nobody has found this plate yet",
-    "noneBody": "Register your lost plate and we'll alert you as soon as someone finds it.",
+    "noneBody": "Register your lost plate and it will be matched automatically when someone finds it.",
     "reportLost": "Register a lost plate",
     "posted": "Found {when}",
     "cropAlt": "Photo of a found plate",
     "resultsCount": "{count, plural, one {# result} other {# results}}",
-    "contactNext": "Want to contact the finder? Register your lost plate, then open the details from the match page.",
-    "viewPost": "Details and contact"
+    "viewPost": "View details"
   },
   "match": {
     "title": "Match details",
     "exactTitle": "Match",
     "nearTitle": "Possible match",
     "nearBody": "The numbers are close. Compare the photo to make sure it's your plate.",
-    "lostLabel": "Your lost plate",
+    "lostLabel": "The lost plate",
     "foundLabel": "The plate someone found",
     "cropAlt": "Photo of the found plate",
     "foundAt": "Found {when}",
     "withFinder": "The finder has the plate",
-    "atPolice": "The plate is at a police station"
+    "atPolice": "The plate is at a police station",
+    "youAreFinder": "You found this plate",
+    "finderBody": "Contact the owner to arrange the handover. Send a photo of the plate next to a paper with the owner’s name so they can trust you.",
+    "ownerContactButton": "See the owner’s contact details",
+    "ownerContactTitle": "The owner’s contact details",
+    "youAreOwner": "This is your plate"
   },
   "reveal": {
     "button": "See contact details",
@@ -281,5 +286,22 @@
     "foundShownTo": "The owner sees this note after asking for your contact details.",
     "ownerNote": "Owner's note",
     "finderNote": "Finder's note"
+  },
+  "myPosts": {
+    "title": "My posts",
+    "intro": "Posts made on this device, with their matches.",
+    "empty": "No posts on this device yet",
+    "emptyBody": "Posts you create on this device will appear here.",
+    "lost": "Lost",
+    "found": "Found",
+    "posted": "Posted {when}",
+    "expires": "Deleted automatically {when}",
+    "matches": "{count, plural, one {# match} other {# matches}}",
+    "noMatches": "No match yet. It will be matched automatically when a matching post appears.",
+    "viewMatch": "View match",
+    "needsReview": "Waiting for a moderator before it’s shown",
+    "hidden": "Temporarily hidden",
+    "loading": "Loading…",
+    "otherDevices": "Posts from other devices don’t show here."
   }
 }

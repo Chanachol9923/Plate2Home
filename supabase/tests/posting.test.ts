@@ -364,3 +364,70 @@ describe('notes (หมายเหตุ)', () => {
     ).rejects.toThrow();
   });
 });
+
+describe('my_posts and reveal_owner_contact', () => {
+  async function matchedPair(letters: string) {
+    const lost = await createLost(letters, '4242');
+    const batch = await createFoundBatch();
+    const [found] = await addFound(batch, { letters });
+    const [m] = await db.query<{ out_match_id: string }>(
+      `select * from public.record_matches($1::jsonb)`,
+      [
+        JSON.stringify([
+          { lost_post_id: lost.out_post_id, found_post_id: found!.id, score: 1, kind: 'exact' },
+        ]),
+      ],
+    );
+    return { lost, foundBatch: batch, foundPost: found!.id, matchId: m!.out_match_id };
+  }
+
+  it('lists only posts whose device token matches, with their active matches', async () => {
+    const { lost, matchId } = await matchedPair('มย');
+    const mine = await db.query<{ post_id: string; kind: string; matches: { matchId: string }[] }>(
+      `select * from public.my_posts($1::uuid[], $2::text[])`,
+      [[lost.out_batch_id], [HEX64]],
+    );
+    expect(mine).toHaveLength(1);
+    expect(mine[0]).toMatchObject({ post_id: lost.out_post_id, kind: 'lost' });
+    expect(mine[0]!.matches.map((m) => m.matchId)).toEqual([matchId]);
+
+    const wrongToken = await db.query(`select * from public.my_posts($1::uuid[], $2::text[])`, [
+      [lost.out_batch_id],
+      ['0'.repeat(64)],
+    ]);
+    expect(wrongToken).toEqual([]);
+  });
+
+  it("lets the matched finder (device token) see the owner's contact, and logs it", async () => {
+    const { lost, matchId } = await matchedPair('รล');
+    const [contact] = await db.query<{ line_id: string }>(
+      `select * from public.reveal_owner_contact($1, $2, $3)`,
+      [matchId, HEX64, 'd'.repeat(64)],
+    );
+    expect(contact?.line_id).toBe('owner.line');
+    const logged = await db.query(
+      `select 1 from public.contact_reveals where post_id = $1 and match_id = $2`,
+      [lost.out_post_id, matchId],
+    );
+    expect(logged).toHaveLength(1);
+  });
+
+  it("refuses the owner's contact without the finder's device token", async () => {
+    const { matchId } = await matchedPair('วศ');
+    const rows = await db.query(`select * from public.reveal_owner_contact($1, $2, $3)`, [
+      matchId,
+      '1'.repeat(64),
+      'd'.repeat(64),
+    ]);
+    expect(rows).toEqual([]);
+  });
+
+  it('returns both batch ids in the match view (for role detection)', async () => {
+    const { lost, foundBatch, matchId } = await matchedPair('สห');
+    const [view] = await db.query<{ lost_batch_id: string; found_batch_id: string }>(
+      `select * from public.get_match_view($1)`,
+      [matchId],
+    );
+    expect(view).toMatchObject({ lost_batch_id: lost.out_batch_id, found_batch_id: foundBatch });
+  });
+});

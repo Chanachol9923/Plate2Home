@@ -69,6 +69,17 @@ export function PhoneIcon(props: IconProps) {
   );
 }
 
+/** Magnifier: "search a plate number". */
+export function SearchIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="10.5" cy="10.5" r="6.5" />
+      <path d="m15.5 15.5 5.5 5.5" />
+      <path d="M7.5 10.5h6" />
+    </Icon>
+  );
+}
+
 export function ArrowRightIcon(props: IconProps) {
   return (
     <Icon {...props}>

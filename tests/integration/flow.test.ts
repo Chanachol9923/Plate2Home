@@ -58,6 +58,8 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
     plate: typeof import('@/app/api/found/batch/[id]/plate/route');
     search: typeof import('@/app/api/search/route');
     reveal: typeof import('@/app/api/reveal/route');
+    revealOwner: typeof import('@/app/api/reveal-owner/route');
+    myPosts: typeof import('@/app/api/my-posts/route');
   };
   let db: typeof import('@/lib/db/server');
   let matches: typeof import('@/lib/db/matches');
@@ -69,6 +71,8 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
       plate: await import('@/app/api/found/batch/[id]/plate/route'),
       search: await import('@/app/api/search/route'),
       reveal: await import('@/app/api/reveal/route'),
+      revealOwner: await import('@/app/api/reveal-owner/route'),
+      myPosts: await import('@/app/api/my-posts/route'),
     };
     db = await import('@/lib/db/server');
     matches = await import('@/lib/db/matches');
@@ -103,6 +107,9 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
   let matchId = '';
   let foundPostId = '';
   let lostPostId = '';
+  let lostBatchId = '';
+  let lostDeviceToken = '';
+  let finderDeviceToken = '';
 
   it('creates a lost watch (no matches yet)', async () => {
     const res = await routes.lost.POST(
@@ -113,6 +120,8 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
     const body = await res.json();
     createdBatches.push(body.batchId);
     lostPostId = body.postId;
+    lostBatchId = body.batchId;
+    lostDeviceToken = body.deviceToken;
     expect(body.deviceToken).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(body.formatStatus).toBe('valid');
     lostMatchCount = body.matches.length;
@@ -157,6 +166,7 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
     const body = await res.json();
     batchId = body.batchId;
     uploadToken = body.uploadToken;
+    finderDeviceToken = body.deviceToken;
     createdBatches.push(batchId);
   });
 
@@ -288,5 +298,41 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
     );
     expect(res.status).toBe(400);
     expect((await res.json()).fields).toMatchObject({ note: 'text_account_number' });
+  });
+
+  it('lists the owner posts and their matches for this device (My posts)', async () => {
+    const res = await routes.myPosts.POST(
+      jsonRequest('/api/my-posts', { devices: [{ batchId: lostBatchId, token: lostDeviceToken }] }),
+      noParams,
+    );
+    expect(res.status).toBe(200);
+    const { posts } = await res.json();
+    expect(posts).toHaveLength(1);
+    expect(posts[0]).toMatchObject({ postId: lostPostId, kind: 'lost' });
+    expect(posts[0].matches.map((m: { matchId: string }) => m.matchId)).toContain(matchId);
+    expect(JSON.stringify(posts)).not.toContain('itest.owner');
+  });
+
+  it('shows nothing for a wrong device token', async () => {
+    const res = await routes.myPosts.POST(
+      jsonRequest('/api/my-posts', { devices: [{ batchId: lostBatchId, token: 'B'.repeat(43) }] }),
+      noParams,
+    );
+    expect((await res.json()).posts).toEqual([]);
+  });
+
+  it("gives the matched finder the owner's contact, and refuses the owner's own token", async () => {
+    const ok = await routes.revealOwner.POST(
+      jsonRequest('/api/reveal-owner', { matchId, token: finderDeviceToken }),
+      noParams,
+    );
+    expect(ok.status).toBe(200);
+    expect((await ok.json()).contact).toMatchObject({ lineId: 'itest.owner' });
+
+    const refused = await routes.revealOwner.POST(
+      jsonRequest('/api/reveal-owner', { matchId, token: lostDeviceToken }),
+      noParams,
+    );
+    expect(refused.status).toBe(404);
   });
 });

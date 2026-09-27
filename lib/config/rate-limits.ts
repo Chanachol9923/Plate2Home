@@ -10,6 +10,8 @@ export const RATE_LIMITS = {
   // Contact reveals: per IP, and per post (a scraper rotating IPs still hits the post cap).
   reveal: { windowSeconds: 60 * 60, max: 20 },
   'reveal:post': { windowSeconds: 24 * 60 * 60, max: 60 },
+  'reveal:owner': { windowSeconds: 60 * 60, max: 30 },
+  'my-posts': { windowSeconds: 10 * 60, max: 60 },
 } as const satisfies Record<string, { windowSeconds: number; max: number }>;
 
 export type RateLimitBucket = keyof typeof RATE_LIMITS;

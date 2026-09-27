@@ -49,6 +49,7 @@ interface Created {
 export function LostFlow() {
   const t = useTranslations('lost');
   const tc = useTranslations('common');
+  const tMine = useTranslations('myPosts');
   const tConsent = useTranslations('consent');
   const errorText = useErrorText();
   const locale = useLocale() as 'th' | 'en';
@@ -211,6 +212,9 @@ export function LostFlow() {
           </Alert>
         )}
         <p className="text-ink-muted">{t('doneManage')}</p>
+        <Link href="/my-posts" className={buttonClass('primary')}>
+          {tMine('title')}
+        </Link>
         <Link href="/" className={buttonClass('secondary')}>
           {tc('backHome')}
         </Link>

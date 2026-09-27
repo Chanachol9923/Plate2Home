@@ -10,7 +10,7 @@ export async function SiteFooter() {
         <p>{t('nonCommercial')}</p>
         <p>{t('privacy')}</p>
         {/* The credit always uses the international product name. */}
-        <p lang="en" className="pt-2 font-semibold text-ink">
+        <p lang="en" className="pt-3 text-center font-semibold text-ink">
           {t('credit', { brand: brand.name.en, author: brand.author })}
         </p>
       </div>

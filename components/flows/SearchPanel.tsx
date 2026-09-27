@@ -73,7 +73,6 @@ export function SearchPanel() {
             <>
               <h2 className="font-bold">{t('resultsCount', { count: results.length })}</h2>
               <FoundResults results={results} />
-              <p className="text-sm text-ink-muted">{t('contactNext')}</p>
             </>
           )}
         </section>

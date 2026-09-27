@@ -5,10 +5,11 @@ import { useRef, useState } from 'react';
 import { Turnstile, type TurnstileHandle } from '@/components/forms/Turnstile';
 import { useErrorText } from '@/components/forms/useErrorText';
 import { Alert } from '@/components/ui/Alert';
-import { Button, buttonClass } from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { Checkbox } from '@/components/ui/Field';
 import { Sheet } from '@/components/ui/Sheet';
 import { postJson } from '@/lib/client/api';
+import { ContactCard } from './ContactCard';
 
 interface Contact {
   lineId: string | null;
@@ -18,35 +19,6 @@ interface Contact {
   policeStationNote: string | null;
   district: string | null;
   note: string | null;
-}
-
-/** LINE add-friend link: personal IDs use `~id`, official accounts start with `@`. */
-function lineUrl(id: string): string {
-  return id.startsWith('@')
-    ? `https://line.me/R/ti/p/${encodeURIComponent(id)}`
-    : `https://line.me/ti/p/~${encodeURIComponent(id)}`;
-}
-
-function CopyButton({ value }: { value: string }) {
-  const t = useTranslations('reveal');
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      type="button"
-      className="min-h-11 px-2 text-sm font-semibold text-accent-ink underline decoration-2 underline-offset-4"
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(value);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        } catch {
-          // Clipboard blocked: the value is visible and selectable anyway.
-        }
-      }}
-    >
-      <span aria-live="polite">{copied ? t('copied') : t('copy')}</span>
-    </button>
-  );
 }
 
 /**
@@ -93,61 +65,18 @@ export function RevealContact({ postId }: { postId: string }) {
   }
 
   if (contact) {
-    const row = 'flex flex-wrap items-center justify-between gap-2 py-2';
     return (
-      <section
-        aria-live="polite"
-        className="space-y-2 rounded-md border-2 border-line bg-accent-soft p-4"
+      <ContactCard
+        title={t('contactTitle')}
+        lineId={contact.lineId}
+        phone={contact.phone}
+        email={contact.email}
       >
-        <h3 className="font-heading text-lg font-bold">{t('contactTitle')}</h3>
-        <dl className="divide-y-2 divide-line-soft">
-          {contact.lineId && (
-            <div className={row}>
-              <dt className="font-semibold">{t('line')}</dt>
-              <dd className="flex flex-wrap items-center gap-2">
-                <span className="font-mono text-lg">{contact.lineId}</span>
-                <CopyButton value={contact.lineId} />
-                <a
-                  href={lineUrl(contact.lineId)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={buttonClass('secondary')}
-                >
-                  {t('openLine')}
-                </a>
-              </dd>
-            </div>
-          )}
-          {contact.phone && (
-            <div className={row}>
-              <dt className="font-semibold">{t('phone')}</dt>
-              <dd className="flex flex-wrap items-center gap-2">
-                <span className="font-mono text-lg">{contact.phone}</span>
-                <CopyButton value={contact.phone} />
-                <a href={`tel:${contact.phone}`} className={buttonClass('secondary')}>
-                  {t('call')}
-                </a>
-              </dd>
-            </div>
-          )}
-          {contact.email && (
-            <div className={row}>
-              <dt className="font-semibold">{t('email')}</dt>
-              <dd className="flex flex-wrap items-center gap-2">
-                <span className="break-all">{contact.email}</span>
-                <a href={`mailto:${contact.email}`} className={buttonClass('secondary')}>
-                  {t('sendEmail')}
-                </a>
-              </dd>
-            </div>
-          )}
-          {contact.district && (
-            <div className={row}>
-              <dt className="font-semibold">{t('district')}</dt>
-              <dd>{contact.district}</dd>
-            </div>
-          )}
-        </dl>
+        {contact.district && (
+          <p>
+            <span className="font-semibold">{t('district')}</span> {contact.district}
+          </p>
+        )}
         {contact.note && (
           <div>
             <p className="font-semibold">{tn('finderNote')}</p>
@@ -161,8 +90,7 @@ export function RevealContact({ postId }: { postId: string }) {
               : t('withFinder')}
           </p>
         )}
-        <p className="font-semibold text-danger">{t('reminder')}</p>
-      </section>
+      </ContactCard>
     );
   }
 

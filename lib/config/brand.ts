@@ -4,7 +4,7 @@
  */
 export const brand = {
   name: {
-    th: 'ป้ายกลับบ้าน',
+    th: 'Plate2Home',
     en: 'Plate2Home',
   },
   /** Used where one locale-independent identifier is needed (manifest id, storage keys). */

@@ -2,8 +2,9 @@ import { expect, test, type Page } from '@playwright/test';
 import sharp from 'sharp';
 
 /**
- * Phase 3 exit criterion: with manual entry only, a lost watch and a found post for the same
- * plate are matched instantly, and both sides reach the match page.
+ * With manual entry only: a lost watch and a found post for the same plate are matched
+ * instantly, and each side reaches the other (owner via "My posts" + the anti-scam reveal,
+ * finder via the match page with its device token).
  */
 
 // Unusual letters + a random number per test run, so runs (and viewports) never collide.
@@ -35,73 +36,89 @@ async function plateImage(): Promise<Buffer> {
   return sharp(Buffer.from(svg)).jpeg().toBuffer();
 }
 
-test('lost watch, then found plate, are matched and link to the match page', async ({ page }) => {
+test('owner and finder are matched and can reach each other', async ({ page, browser }) => {
   const number = String(1000 + Math.floor(Math.random() * 8999));
-  // --- Lost: register a watch --------------------------------------------------------------
-  await page.goto('/lost');
-  await fillPlate(page, number);
-  await page.getByRole('button', { name: 'ต่อไป' }).click();
-  await expect(page).toHaveURL(/step=contact/);
+  // Roles come from device tokens, so the owner and the finder use separate browsers.
+  const owner = page;
+  const finderContext = await browser.newContext(test.info().project.use);
+  const finder = await finderContext.newPage();
 
-  await page.getByLabel('LINE ID (แนะนำ)').fill('e2e.owner');
-  await page.getByLabel(/^หมายเหตุ/).fill('ป้ายหลัง มีสติกเกอร์');
-  await page.getByRole('button', { name: 'ต่อไป' }).click();
-  await expect(page).toHaveURL(/step=confirm/);
+  // --- Owner: register a watch --------------------------------------------------------------
+  await owner.goto('/lost');
+  await fillPlate(owner, number);
+  await owner.getByRole('button', { name: 'ต่อไป' }).click();
+  await expect(owner).toHaveURL(/step=contact/);
 
-  await page.getByLabel('PIN 4–6 หลัก').fill('2580');
-  await page.getByLabel('ใส่ PIN อีกครั้ง').fill('2580');
-  await page.getByRole('checkbox').check();
-  await passTurnstile(page);
-  await page.getByRole('button', { name: 'ตั้งรับ' }).click();
-  await expect(page.getByText('เราจะแจ้งเตือนทันทีเมื่อมีคนเจอป้ายนี้')).toBeVisible();
+  await owner.getByLabel('LINE ID (แนะนำ)').fill('e2e.owner');
+  await owner.getByLabel(/^หมายเหตุ/).fill('ป้ายหลัง มีสติกเกอร์');
+  await owner.getByRole('button', { name: 'ต่อไป' }).click();
+  await expect(owner).toHaveURL(/step=confirm/);
 
-  // --- Found: photograph, crop, confirm, send ------------------------------------------------
-  await page.goto('/found');
-  await page
+  await owner.getByLabel('PIN 4–6 หลัก').fill('2580');
+  await owner.getByLabel('ใส่ PIN อีกครั้ง').fill('2580');
+  await owner.getByRole('checkbox').check();
+  await passTurnstile(owner);
+  await owner.getByRole('button', { name: 'ตั้งรับ' }).click();
+  await expect(
+    owner.getByText('ตั้งรับไว้แล้ว ระบบจะจับคู่ให้อัตโนมัติเมื่อมีคนเจอป้ายนี้'),
+  ).toBeVisible();
+
+  // --- Finder: photograph, crop, confirm, send ------------------------------------------------
+  await finder.goto('/found');
+  await finder
     .locator('input[type="file"][multiple]')
     .setInputFiles({ name: 'plate.jpg', mimeType: 'image/jpeg', buffer: await plateImage() });
-  await page.getByRole('button', { name: /ใช้ทั้งรูป/ }).click();
-  await expect(page.getByRole('heading', { name: 'ป้ายที่ 1' })).toBeVisible();
-  await fillPlate(page, number);
-  await page.getByRole('button', { name: 'ต่อไป' }).click();
-  await expect(page).toHaveURL(/step=details/);
+  await finder.getByRole('button', { name: /ใช้ทั้งรูป/ }).click();
+  await expect(finder.getByRole('heading', { name: 'ป้ายที่ 1' })).toBeVisible();
+  await fillPlate(finder, number);
+  await finder.getByRole('button', { name: 'ต่อไป' }).click();
+  await expect(finder).toHaveURL(/step=details/);
 
-  await page.getByLabel(/^หมายเหตุ/).fill('เจอใกล้วัด ทั้งป้ายหน้าและหลัง');
-  await page.getByLabel('LINE ID (แนะนำ)').fill('e2e.finder');
-  await page.getByLabel('PIN 4–6 หลัก').fill('1397');
-  await page.getByLabel('ใส่ PIN อีกครั้ง').fill('1397');
-  await page.getByRole('checkbox').check();
-  await passTurnstile(page);
-  await page.getByRole('button', { name: /^ส่ง 1 ป้าย/ }).click();
+  await finder.getByLabel(/^หมายเหตุ/).fill('เจอใกล้วัด ทั้งป้ายหน้าและหลัง');
+  await finder.getByLabel('LINE ID (แนะนำ)').fill('e2e.finder');
+  await finder.getByLabel('PIN 4–6 หลัก').fill('1397');
+  await finder.getByLabel('ใส่ PIN อีกครั้ง').fill('1397');
+  await finder.getByRole('checkbox').check();
+  await passTurnstile(finder);
+  await finder.getByRole('button', { name: /^ส่ง 1 ป้าย/ }).click();
+  await expect(finder.getByText('เจ้าของกำลังตามหาอยู่!')).toBeVisible();
 
-  await expect(page.getByText('เจ้าของกำลังตามหาอยู่!')).toBeVisible();
+  // --- Finder on the match page: sees the owner's note and contact ---------------------------
+  await finder.getByRole('link', { name: /ดูรายละเอียด/ }).click();
+  await expect(finder).toHaveURL(/\/match\/[0-9a-f-]{36}$/);
+  await expect(finder.getByText('ตรงกัน', { exact: true })).toBeVisible();
+  await expect(finder.getByText('ป้ายหลัง มีสติกเกอร์')).toBeVisible(); // owner's note
+  await expect(finder.getByText('คุณเป็นคนเจอป้ายนี้')).toBeVisible();
+  await expect(finder.getByText('e2e.owner')).toHaveCount(0);
+  await finder.getByRole('button', { name: 'ดูช่องทางติดต่อเจ้าของ' }).click();
+  await expect(finder.getByText('e2e.owner')).toBeVisible();
 
-  // --- Match page ----------------------------------------------------------------------------
-  await page.getByRole('link', { name: /ดูรายละเอียด/ }).click();
-  await expect(page).toHaveURL(/\/match\/[0-9a-f-]{36}$/);
-  await expect(page.getByText('ตรงกัน', { exact: true })).toBeVisible();
-  await expect(page.getByRole('img', { name: 'รูปป้ายที่มีคนเจอ' })).toBeVisible();
-  // No contact details on the match page (reveal flow comes in Phase 4).
-  await expect(page.getByText('e2e.finder')).toHaveCount(0);
-  await expect(page.getByText('ป้ายหลัง มีสติกเกอร์')).toBeVisible(); // owner's note
+  // --- Owner: "My posts" shows the match; checklist, then the finder's contact --------------
+  await owner.goto('/my-posts');
+  await expect(owner.getByText('จับคู่ได้ 1 รายการ')).toBeVisible();
+  await owner.getByRole('link', { name: 'ดูการจับคู่' }).click();
+  await expect(owner.getByText('คุณเป็นเจ้าของป้ายนี้')).toBeVisible();
+  await expect(owner.getByRole('img', { name: 'รูปป้ายที่มีคนเจอ' })).toBeVisible();
+  await expect(owner.getByText('e2e.finder')).toHaveCount(0);
 
-  // --- Contact reveal: safety checklist + Turnstile, then the finder's contact --------------
-  await page.getByRole('button', { name: 'ดูช่องทางติดต่อ' }).click();
-  const sheet = page.getByRole('dialog', { name: 'ก่อนติดต่อ โปรดอ่านให้จบ' });
+  await owner.getByRole('button', { name: 'ดูช่องทางติดต่อ' }).click();
+  const sheet = owner.getByRole('dialog', { name: 'ก่อนติดต่อ โปรดอ่านให้จบ' });
   await expect(sheet.getByText('ห้ามโอนเงินก่อนได้ป้ายคืน')).toBeVisible();
   await sheet.getByRole('checkbox').check();
-  await passTurnstile(page);
+  await passTurnstile(owner);
   await sheet.getByRole('button', { name: 'แสดงช่องทางติดต่อ' }).click();
-  await expect(page.getByText('e2e.finder')).toBeVisible();
-  await expect(page.getByText('เจอใกล้วัด ทั้งป้ายหน้าและหลัง')).toBeVisible(); // finder's note
-  await expect(page.getByRole('link', { name: 'เปิดใน LINE' })).toHaveAttribute(
+  await expect(owner.getByText('e2e.finder')).toBeVisible();
+  await expect(owner.getByText('เจอใกล้วัด ทั้งป้ายหน้าและหลัง')).toBeVisible(); // finder's note
+  await expect(owner.getByRole('link', { name: 'เปิดใน LINE' })).toHaveAttribute(
     'href',
     'https://line.me/ti/p/~e2e.finder',
   );
 
   // --- Search finds the found plate --------------------------------------------------------
-  await page.goto('/search');
-  await fillPlate(page, number);
-  await page.getByRole('button', { name: 'ค้นหา', exact: true }).click();
-  await expect(page.getByText('ตรงกัน', { exact: true }).first()).toBeVisible();
+  await owner.goto('/search');
+  await fillPlate(owner, number);
+  await owner.getByRole('button', { name: 'ค้นหา', exact: true }).click();
+  await expect(owner.getByText('ตรงกัน', { exact: true }).first()).toBeVisible();
+
+  await finderContext.close();
 });
