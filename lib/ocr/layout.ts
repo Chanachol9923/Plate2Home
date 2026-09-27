@@ -551,7 +551,17 @@ export function plateTextLines(rgba: ArrayLike<number>, w: number, h: number): P
   };
   const number = extent(numberBand);
   if (!number) return null;
-  return { number, province: provinceBand ? extent(provinceBand) : null };
+  let province = provinceBand ? extent(provinceBand) : null;
+  // No separate band (touching the number, or faint): take the strip right under the number.
+  if (!province && h - number.y1 >= 0.35 * nh) {
+    province = {
+      x0: number.x0,
+      y0: Math.round(number.y1 + 0.08 * nh),
+      x1: number.x1,
+      y1: Math.min(h, Math.round(number.y1 + 0.75 * nh)),
+    };
+  }
+  return { number, province };
 }
 
 /** Otsu threshold of grey values (0..255). */

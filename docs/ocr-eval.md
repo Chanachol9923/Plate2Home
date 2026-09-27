@@ -57,14 +57,28 @@ latency) against the Phase 6 trained models (YOLOX detector + fast-plate-ocr rec
 
 ## Benchmarks (2026-09-28)
 
-A private set, not in the repo: a real photo of 22 plates laid out on a patterned floor, from
-the user. Scored with local-only harnesses (`e2e/zz-*`, git-ignored).
+Two private sets, never committed; scored end to end in the browser with local-only harnesses
+(`e2e/zz-*`, git-ignored):
 
-| Step                                                   | Found (IoU ≥ 0.5) | Exact plate | Characters | Province |
-| ------------------------------------------------------ | ----------------- | ----------- | ---------- | -------- |
-| Tesseract text spotting + whole-crop OCR               | 0/22              | 3/22        | 45%        | 12/22    |
-| Layout detector (D-072) + line-by-line reading (D-073) | 15–16/22          | 5/22        | 65%        | 15/22    |
+- **Floor**: the user's photo of 22 plates laid out on a patterned floor (worn, dirty, framed,
+  yellow, green, one old "34-1974" plate).
+- **Commons**: 11 standard car-plate close-ups from the 131 freely licensed Thai plate photos on
+  Wikimedia Commons (licences and authors recorded locally; transcribed by hand).
 
-Next: 131 freely licensed Thai plate photos from Wikimedia Commons (kept locally, licences
-recorded) as a second benchmark. Then a recognizer trained on the plate font (synthetic data;
-local RTX 2080 Ti) exported to ONNX for the browser.
+| Step                                                       | Floor: found | Floor: exact / chars / province | Commons: exact / chars / province |
+| ---------------------------------------------------------- | ------------ | ------------------------------- | --------------------------------- |
+| Tesseract text spotting + whole-crop OCR                   | 0/22         | 3/22 · 45% · 12/22              | —                                 |
+| Layout detector (D-072) + line-by-line OCR (D-073)         | 15–16/22     | 5/22 · 65% · 15/22              | 6/11 · 78% · 6/10                 |
+| + trained recognizer, grammar decoding, 3-cut vote (D-074) | 15–16/22     | **16/22 · 90%** · 14/22         | **9/11 · 93%** · 6/10             |
+
+Remaining errors: the line finder cutting off the last digit (2), similar letters (ห/ท, จ/ซ),
+a faded plate, a vanity plate background (6000 → 9999) and the unsupported old "NN-NNNN"
+format. Provinces are the weakest part (about 65%).
+
+## Next
+
+- Provinces: a text recognizer for the province line, trained on text closer to the plate
+  font, or on real labelled lines.
+- The line finder: keep the last digit when a stain touches it.
+- Old and commercial "NN-NNNN" plates (yellow, green), and motorcycle plates.
+- More real photos to test with, especially mud, water and night.

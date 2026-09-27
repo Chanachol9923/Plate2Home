@@ -18,6 +18,13 @@ import {
   WORK_WIDTH,
 } from '@/lib/ocr/layout';
 import {
+  loadRecognizer,
+  recognizePlate,
+  resizeBilinear,
+  toInput,
+  type RecognizerModel,
+} from '@/lib/ocr/recognizer';
+import {
   type Box,
   findPlateRegions,
   interpretPlateLines,
@@ -35,6 +42,47 @@ export const OCR_ENABLED = process.env.NEXT_PUBLIC_FEATURE_OCR !== 'false';
 
 const ASSETS = '/tesseract';
 const WHITELIST = `${PLATE_CONSONANTS.join('')}0123456789 `;
+/** Plate-text recognizer trained on the plate font (ml/recognizer, D-074). */
+const MODEL_URL = '/models/plate-rec.bin';
+
+const models = new Map<string, Promise<RecognizerModel | null>>();
+function modelAt(url: string): Promise<RecognizerModel | null> {
+  let p = models.get(url);
+  if (!p) {
+    p = fetch(url)
+      .then((r) => (r.ok ? r.arrayBuffer() : null))
+      .then((b) => (b ? loadRecognizer(b) : null))
+      .catch(() => null);
+    models.set(url, p);
+  }
+  return p;
+}
+
+/**
+ * A text line as model input, the same way training images were made (synth.to_input): cut
+ * out with a margin, grey, Pillow-style bilinear resize to the model height, padded.
+ */
+function modelInput(
+  source: HTMLCanvasElement,
+  box: Box,
+  model: RecognizerModel,
+  margin: [number, number] = [0.15, 0.2],
+): Float32Array {
+  const bh = box.y1 - box.y0;
+  const sx = Math.max(0, Math.round(box.x0 - bh * margin[0]));
+  const sy = Math.max(0, Math.round(box.y0 - bh * margin[1]));
+  const sw = Math.max(1, Math.min(source.width, Math.round(box.x1 + bh * margin[0])) - sx);
+  const sh = Math.max(1, Math.min(source.height, Math.round(box.y1 + bh * margin[1])) - sy);
+  const d = source
+    .getContext('2d', { willReadFrequently: true })!
+    .getImageData(sx, sy, sw, sh).data;
+  const grey = new Float32Array(sw * sh);
+  for (let i = 0, j = 0; j < grey.length; i += 4, j++) {
+    grey[j] = Math.round((d[i]! * 299 + d[i + 1]! * 587 + d[i + 2]! * 114) / 1000);
+  }
+  const tw = Math.min(model.width, Math.max(1, Math.round((sw * model.height) / sh)));
+  return toInput(resizeBilinear(grey, sw, sh, tw, model.height), tw, model);
+}
 
 type TWorker = Tesseract.Worker;
 let workerPromise: Promise<TWorker> | null = null;
@@ -274,9 +322,47 @@ async function readSource(
 ): Promise<PlateReading | null> {
   const { canvas } = prepare(source, width, height, 320, 1400, true);
   const found = type === 'motorcycle' ? null : cropLines(source, width, height);
+  const model = found?.lines ? await modelAt(MODEL_URL) : null;
 
   return exclusive(async (w) => {
     const T = await import('tesseract.js');
+
+    // 0. The trained recognizer reads the number line (D-074); OCR only reads the province.
+    if (model && found?.lines) {
+      const { number, province } = found.lines;
+      // Three slightly different cuts of the line; keep the most confident reading.
+      const rec = (
+        [
+          [0.15, 0.2],
+          [0.08, 0.1],
+          [0.25, 0.32],
+        ] as [number, number][]
+      )
+        .map((m) => recognizePlate(model, modelInput(found.canvas, number, model, m)))
+        .reduce((a, b) => (b.confidence > a.confidence ? b : a));
+      let split = rec.text.length;
+      while (split > 0 && /[0-9]/.test(rec.text[split - 1]!)) split--;
+      const numberLine: OcrLine = {
+        text: `${rec.text.slice(0, split)} ${rec.text.slice(split)}`,
+        confidence: rec.confidence * 100,
+        bbox: number,
+        symbols: [...rec.text].map((c, i) => ({ text: c, confidence: rec.probs[i]! * 100 })),
+      };
+      // The province: OCR the line and snap it to the province list.
+      let provinceLine: OcrLine | null = null;
+      if (province) {
+        await w.setParameters({
+          tessedit_pageseg_mode: T.PSM.SINGLE_LINE,
+          tessedit_char_whitelist: '',
+        });
+        const res = await w.recognize(lineImage(found.canvas, province, 48), {}, { text: true });
+        provinceLine = { text: res.data.text, confidence: res.data.confidence, bbox: province };
+      }
+      const r = interpretPlateLines(provinceLine ? [numberLine, provinceLine] : [numberLine], type);
+      // Even when unsure, the trained model beats OCR on plate glyphs: unsure characters are
+      // already "?" and the low confidence is shown to the user.
+      if (r) return r;
+    }
 
     // 1. Line by line (D-073): the number line with plate characters only, at two sizes,
     //    and the province line on its own.

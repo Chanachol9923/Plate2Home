@@ -52,3 +52,10 @@ next-env.d.ts
 
 # Local-only experiment specs (use private photos from the scratchpad)
 /e2e/zz-*
+
+# ML training data and checkpoints (only exported models are committed)
+/ml/**/data/
+/ml/**/*.pt
+/ml/**/*.npz
+__pycache__/
+/lib/**/zz-*.test.ts
