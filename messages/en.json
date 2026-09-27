@@ -257,7 +257,7 @@
     "button": "See contact details",
     "sheetTitle": "Before you get in touch",
     "intro": "To protect yourself from scams, always:",
-    "tip1": "Never transfer money before you have the plate back.",
+    "tip1": "If anyone asks you to transfer money before you have the plate back, don't pay.",
     "tip2": "Ask the finder for a photo of the plate next to a paper with your name on it, to prove they have it.",
     "tip3": "At the handover, check that the name and plate number match the registration book and ID card.",
     "tip4": "Meet in a public place or at a police station.",
@@ -275,7 +275,7 @@
     "district": "District where it was found",
     "withFinder": "The finder has the plate",
     "atPolice": "The plate is at {station}",
-    "reminder": "Never transfer money before you have your plate back."
+    "reminder": "If anyone asks you to transfer money before you have the plate back, don't pay."
   },
   "post": {
     "title": "Found plate",

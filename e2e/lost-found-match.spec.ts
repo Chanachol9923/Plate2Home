@@ -105,7 +105,7 @@ test('owner and finder are matched and can reach each other', async ({ page, bro
 
   await owner.getByRole('button', { name: 'ดูช่องทางติดต่อ' }).click();
   const sheet = owner.getByRole('dialog', { name: 'ก่อนติดต่อ โปรดอ่านให้จบ' });
-  await expect(sheet.getByText('ห้ามโอนเงินก่อนได้ป้ายคืน')).toBeVisible();
+  await expect(sheet.getByText('ถ้ามีคนขอให้โอนเงินก่อนได้ป้ายคืน อย่าโอนเด็ดขาด')).toBeVisible();
   await sheet.getByRole('checkbox').check();
   await passTurnstile(owner);
   await sheet.getByRole('button', { name: 'แสดงช่องทางติดต่อ' }).click();
