@@ -107,6 +107,51 @@ export const noteSchema = z
     if (issue) ctx.addIssue({ code: 'custom', message: issue });
   });
 
+/** Free text for reports and feedback: same rules as notes, other lengths. */
+const freeText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .default('')
+    .superRefine((v, ctx) => {
+      const issue = unsafeTextIssue(v);
+      if (issue) ctx.addIssue({ code: 'custom', message: issue });
+    });
+
+export const REPORT_REASONS = [
+  'scam',
+  'inappropriate_image',
+  'still_on_vehicle',
+  'personal_data',
+  'other',
+] as const;
+
+export const reportSchema = z.object({
+  postId: z.uuid(),
+  reason: z.enum(REPORT_REASONS),
+  note: freeText(300),
+  turnstileToken: z.string().min(1).max(2048),
+});
+export type ReportBody = z.input<typeof reportSchema>;
+
+export const feedbackSchema = z.object({
+  rating: z.number().int().min(1).max(5),
+  comment: freeText(500),
+  context: z.enum(['resolved', 'general']).default('general'),
+  locale: z.enum(['th', 'en']),
+  turnstileToken: z.string().min(1).max(2048),
+});
+export type FeedbackBody = z.input<typeof feedbackSchema>;
+
+export const adminLoginSchema = z.object({ password: z.string().min(1).max(200) });
+
+export const adminActionSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.enum(['hide', 'restore', 'delete', 'dismiss']), postId: z.uuid() }),
+  z.object({ action: z.literal('mode'), mode: z.enum(['active', 'dormant']) }),
+]);
+export type AdminActionBody = z.input<typeof adminActionSchema>;
+
 export const lostCreateSchema = z.object({
   plate: plateInputSchema,
   contact: contactSchema,

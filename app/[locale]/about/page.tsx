@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getFormatter, getTranslations } from 'next-intl/server';
+import { FeedbackForm } from '@/components/feedback/FeedbackForm';
 import { PageShell } from '@/components/site/PageShell';
 import { POST_TTL_DAYS } from '@/lib/config/app';
 import { brand } from '@/lib/config/brand';
@@ -7,7 +8,7 @@ import { brand } from '@/lib/config/brand';
 /** Date shown as "last updated" for the terms and privacy sections. LEGAL-TODO(terms). */
 const UPDATED = new Date('2026-09-28T00:00:00+07:00');
 
-const SECTIONS = ['how', 'terms', 'privacy', 'contact'] as const;
+const SECTIONS = ['how', 'terms', 'privacy', 'feedback', 'contact'] as const;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('about');
@@ -93,6 +94,14 @@ export default async function AboutPage() {
           {list('privacy.share')}
           <h3 className={h3}>{t('privacy.keepTitle')}</h3>
           <p>{t('privacy.keep', vars)}</p>
+        </section>
+
+        <section aria-labelledby="feedback" className="space-y-3">
+          <h2 id="feedback" className={h2}>
+            {t('feedback.title')}
+          </h2>
+          <p>{t('feedback.intro')}</p>
+          <FeedbackForm />
         </section>
 
         <section aria-labelledby="contact" className="space-y-3">

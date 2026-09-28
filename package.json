@@ -26,7 +26,8 @@
     "test:integration": "vitest run --project integration",
     "predev": "node scripts/copy-ocr-assets.mjs",
     "prebuild": "node scripts/copy-ocr-assets.mjs",
-    "copy:ocr": "node scripts/copy-ocr-assets.mjs"
+    "copy:ocr": "node scripts/copy-ocr-assets.mjs",
+    "admin:password": "node scripts/admin-password.mjs"
   },
   "dependencies": {
     "@node-rs/argon2": "2.2.1",

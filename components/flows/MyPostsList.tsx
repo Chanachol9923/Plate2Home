@@ -28,6 +28,7 @@ export function MyPostsList() {
   const [attempt, setAttempt] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
+  const [askFeedback, setAskFeedback] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -74,6 +75,7 @@ export function MyPostsList() {
     );
     setState(posts.length ? { phase: 'ready', posts } : { phase: 'empty' });
     setNotice({ tone: 'success', text: t(`done.${action}`) });
+    setAskFeedback(action === 'resolve' && post.kind === 'lost');
   }
 
   const manageLink = (
@@ -120,6 +122,14 @@ export function MyPostsList() {
     <div className="space-y-4">
       <p className="text-ink-muted">{t('intro')}</p>
       {notice && <Alert tone={notice.tone} title={notice.text} live />}
+      {askFeedback && (
+        <p>
+          {t('feedbackAsk')}{' '}
+          <Link href="/about#feedback" className="font-semibold underline underline-offset-4">
+            {t('feedbackLink')}
+          </Link>
+        </p>
+      )}
       <ul className="space-y-3">
         {state.posts.map((p) => (
           <PostCard

@@ -61,3 +61,11 @@ Each item says **how it is verified**. ✅ = verified by an automated test or ch
 - ✅ Search never returns lost watches or contacts; match view has no contacts (integration test)
 - ✅ Upload token hashed, 30-minute expiry, plate cap enforced under a row lock (posting.test.ts)
 - ✅ Weak PINs rejected; PINs hashed with argon2id m=19 MiB, t=2, p=1 (security.test.ts)
+
+## Admin area (D-080)
+
+- ✅ Password stored only as an argon2id hash (env); session is an HMAC-signed, httpOnly, SameSite=Strict cookie, 12 h. _(lib/admin/session.test.ts)_
+- ✅ Login rate limited per IP (5/15 min) and globally (30/h); logins, failures and actions logged append-only. _(supabase/tests/admin.test.ts, tests/integration/flow.test.ts)_
+- ✅ Every admin page and action re-checks the session server-side; same-origin check on every POST.
+- ✅ Admin views never show contact details; IPs only as 8-character daily-salted hash prefixes.
+- ⏳ Consider replacing the single password with Supabase Auth + 2FA when there is more than one operator.

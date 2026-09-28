@@ -72,6 +72,10 @@ jobs:
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
       TURNSTILE_SECRET_KEY: 1x0000000000000000000000000000000AA
       IP_HASH_SECRET: ci-e2e-ip-hash-secret-000000000000
+      # Throwaway admin credentials for the admin E2E test only (not the real password).
+      E2E_ADMIN_PASSWORD: ci-e2e-admin-password
+      ADMIN_PASSWORD_HASH: '$argon2id$v=19$m=19456,t=2,p=1$TKKjhBbavtMZT/TC0/bmzg$d/5mKiixl1CnO+ZHFRyZ4zJY1yzshMsALEBhr5yPqf4'
+      ADMIN_SESSION_SECRET: ci-e2e-admin-session-secret-0000000000000000
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0

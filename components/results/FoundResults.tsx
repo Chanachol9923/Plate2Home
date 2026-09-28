@@ -2,6 +2,7 @@
 
 import { useFormatter, useTranslations } from 'next-intl';
 import { PlateView } from '@/components/plate/PlateView';
+import { ReportButton } from '@/components/report/ReportButton';
 import { RevealContact } from '@/components/reveal/RevealContact';
 import { textLink } from '@/components/ui/styles';
 import { Link } from '@/i18n/navigation';
@@ -64,12 +65,15 @@ export function FoundResults({ results }: { results: FoundResult[] }) {
           </div>
           <div className="mt-3 space-y-2">
             <RevealContact postId={r.postId} />
-            <Link
-              href={`/post/${r.postId}`}
-              className={`${textLink} inline-flex min-h-11 items-center`}
-            >
-              {t('viewPost')}
-            </Link>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Link
+                href={`/post/${r.postId}`}
+                className={`${textLink} inline-flex min-h-11 items-center`}
+              >
+                {t('viewPost')}
+              </Link>
+              <ReportButton postId={r.postId} />
+            </div>
           </div>
         </li>
       ))}

@@ -40,7 +40,7 @@ export default function proxy(request: NextRequest) {
   request.headers.set('x-nonce', nonce);
   request.headers.set('Content-Security-Policy', csp);
 
-  // TODO(phase-7): admin session + AAL2 gate (also enforced in every admin action and in RLS).
+  // Admin pages and routes check the password session themselves (D-080).
   const response = isAdmin
     ? NextResponse.next({ request: { headers: request.headers } })
     : handleI18n(request);

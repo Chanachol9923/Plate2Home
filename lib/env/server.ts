@@ -34,6 +34,11 @@ const schema = z.object({
   CRON_SECRET: secret.optional(),
   IP_HASH_SECRET: secret.optional(),
 
+  // Admin area (D-080): argon2id hash of the admin password and the session-signing key.
+  // Without both, /admin stays closed.
+  ADMIN_PASSWORD_HASH: z.string().startsWith('$argon2id$').optional(),
+  ADMIN_SESSION_SECRET: z.string().min(32).optional(),
+
   // LEGAL-TODO(access-log): enable only after legal advice; see docs/legal-todo.md.
   ACCESS_LOG_ENABLED: flag,
   ACCESS_LOG_KEY: z

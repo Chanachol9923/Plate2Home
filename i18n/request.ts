@@ -9,8 +9,10 @@ export default getRequestConfig(async ({ locale: explicitLocale }) => {
   let locale = explicitLocale;
   if (!locale) {
     const param = await rootParams.locale();
-    if (!hasLocale(routing.locales, param)) notFound();
-    locale = param;
+    // Routes outside [locale] (the admin area) have no locale param: Thai. A wrong one is a 404.
+    if (param === undefined) locale = routing.defaultLocale;
+    else if (!hasLocale(routing.locales, param)) notFound();
+    else locale = param;
   }
 
   return {

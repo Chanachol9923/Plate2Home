@@ -16,6 +16,11 @@ export const RATE_LIMITS = {
   'my-posts': { windowSeconds: 10 * 60, max: 60 },
   // Managing with plate + PIN; Postgres also locks a batch after 5 wrong PINs (D-078).
   manage: { windowSeconds: 10 * 60, max: 30 },
+  report: { windowSeconds: 60 * 60, max: 10 },
+  feedback: { windowSeconds: 60 * 60, max: 5 },
+  // Admin password: per IP, and for everyone together (a distributed guess still stops).
+  'admin:login': { windowSeconds: 15 * 60, max: 5 },
+  'admin:login-all': { windowSeconds: 60 * 60, max: 30 },
 } as const satisfies Record<string, { windowSeconds: number; max: number }>;
 
 export type RateLimitBucket = keyof typeof RATE_LIMITS;

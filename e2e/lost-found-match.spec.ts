@@ -120,5 +120,13 @@ test('owner and finder are matched and can reach each other', async ({ page, bro
   await owner.getByRole('button', { name: 'ค้นหา', exact: true }).click();
   await expect(owner.getByText('ตรงกัน', { exact: true }).first()).toBeVisible();
 
+  // --- Report a post (D-080) ------------------------------------------------------------------
+  await owner.getByRole('button', { name: 'รายงาน', exact: true }).first().click();
+  const report = owner.getByRole('dialog', { name: 'รายงานโพสต์นี้' });
+  await report.getByText('ป้ายยังติดอยู่กับรถ (ไม่ได้หาย)').click();
+  await passTurnstile(owner);
+  await report.getByRole('button', { name: 'ส่งรายงาน' }).click();
+  await expect(report.getByText('ขอบคุณที่แจ้ง')).toBeVisible();
+
   await finderContext.close();
 });

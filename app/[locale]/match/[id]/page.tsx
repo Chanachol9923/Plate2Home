@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { PlateView } from '@/components/plate/PlateView';
+import { ReportButton } from '@/components/report/ReportButton';
 import { MatchContact } from '@/components/reveal/MatchContact';
 import { PageShell } from '@/components/site/PageShell';
 import { Alert } from '@/components/ui/Alert';
@@ -84,6 +85,9 @@ export default async function MatchPage({ params }: PageProps<'/[locale]/match/[
           foundBatchId={view.foundBatchId}
           lostBatchId={view.lostBatchId}
         />
+        <div className="border-t-2 border-line-soft pt-2">
+          <ReportButton postId={view.found.postId} />
+        </div>
       </div>
     </PageShell>
   );

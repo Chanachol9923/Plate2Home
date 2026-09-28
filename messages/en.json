@@ -126,7 +126,8 @@
       "generic": "Something went wrong. Please try again.",
       "not_found": "We couldn't find this post. It may have been removed.",
       "pin_wrong": "The plate number or PIN is wrong.",
-      "pin_locked": "Too many wrong PINs. It is locked for a while; try again later."
+      "pin_locked": "Too many wrong PINs. It is locked for a while; try again later.",
+      "admin_login": "Sign in as admin first."
     }
   },
   "consent": {
@@ -343,7 +344,9 @@
       "resolve": "Saved. This post will not be matched any more.",
       "extend": "Extended.",
       "delete": "Deleted."
-    }
+    },
+    "feedbackAsk": "Plate back, congratulations! Tell us how it went?",
+    "feedbackLink": "Send feedback"
   },
   "ocr": {
     "loading": "Loading the automatic plate reader {percent}% (about 5 MB the first time)",
@@ -423,6 +426,10 @@
       "title": "Contact",
       "email": "Email",
       "repo": "Source code on GitHub"
+    },
+    "feedback": {
+      "title": "Feedback",
+      "intro": "How did it go? Anything we should improve? Tell us."
     }
   },
   "manage": {
@@ -437,5 +444,113 @@
     "forgot": "Forgot your PIN?",
     "contactUs": "Contact us",
     "plateHint": "Type it as it reads, e.g. กค7812 or 1กข1234. No province needed."
+  },
+  "report": {
+    "button": "Report",
+    "title": "Report this post",
+    "reasonLegend": "What's wrong?",
+    "reasons": {
+      "scam": "Looks like a scam / asks for money",
+      "inappropriate_image": "Inappropriate photo",
+      "still_on_vehicle": "The plate is still on a vehicle (not lost)",
+      "personal_data": "Personal data in the photo or text",
+      "other": "Something else"
+    },
+    "noteLabel": "More details",
+    "send": "Send report",
+    "thanks": "Thank you for telling us",
+    "thanksBody": "We'll take a look. If several people report it, the post is hidden until then."
+  },
+  "feedback": {
+    "title": "Send feedback",
+    "intro": "Tell us how it went. We read every message.",
+    "ratingLegend": "Your rating",
+    "ratingHint": "1 = very bad · 5 = very good",
+    "stars": "{count, plural, one {# star} other {# stars}}",
+    "commentLabel": "Comments",
+    "pickRating": "Pick a rating first.",
+    "send": "Send feedback",
+    "thanks": "Thank you for your feedback!"
+  },
+  "admin": {
+    "loginTitle": "Admin sign-in",
+    "notConfigured": "The admin password is not set (ADMIN_PASSWORD_HASH, ADMIN_SESSION_SECRET).",
+    "password": "Password",
+    "login": "Sign in",
+    "wrongPassword": "Wrong password",
+    "logout": "Sign out",
+    "title": "{brand} admin",
+    "tabsLabel": "Admin sections",
+    "tabs": {
+      "overview": "Overview",
+      "reports": "Reports",
+      "posts": "Posts",
+      "feedback": "Feedback",
+      "logs": "Logs"
+    },
+    "stats": {
+      "lostActive": "Lost (open)",
+      "foundActive": "Found (open)",
+      "matches": "Matches",
+      "resolved": "Returned",
+      "reportedPosts": "Reported posts",
+      "hidden": "Hidden",
+      "needsReview": "Needs review",
+      "feedback": "Feedback"
+    },
+    "siteMode": "Site status",
+    "modeActive": "Taking posts",
+    "modeDormant": "Paused (no flood right now)",
+    "pauseSite": "Pause the site",
+    "openSite": "Open the site",
+    "daily": "Last 14 days",
+    "col": {
+      "day": "Day",
+      "lost": "Lost",
+      "found": "Found",
+      "matches": "Matches",
+      "resolved": "Returned"
+    },
+    "noReports": "No reports yet",
+    "noPosts": "No posts found",
+    "noFeedback": "No feedback yet",
+    "noProvince": "No province",
+    "searchPlaceholder": "Search a plate, e.g. กข1234",
+    "search": "Search",
+    "kind": {
+      "lost": "Lost",
+      "found": "Found"
+    },
+    "status": {
+      "active": "Open",
+      "needs_review": "Needs review",
+      "hidden": "Hidden",
+      "resolved": "Returned"
+    },
+    "reportCount": "{count, plural, one {# report} other {# reports}}",
+    "reasons": {
+      "scam": "Looks like a scam / asks for money",
+      "inappropriate_image": "Inappropriate photo",
+      "still_on_vehicle": "The plate is still on a vehicle (not lost)",
+      "personal_data": "Personal data in the photo or text",
+      "other": "Something else"
+    },
+    "rating": "{count, plural, one {# star} other {# stars}}",
+    "context": {
+      "general": "General",
+      "resolved": "After getting the plate back"
+    },
+    "auditLog": "Admin activity",
+    "revealLog": "Contact reveals",
+    "revealLogHint": "Only a short, daily-changing IP hash is shown, never the IP.",
+    "actions": {
+      "hide": "Hide",
+      "restore": "Show again",
+      "dismiss": "Clear reports",
+      "delete": "Delete",
+      "confirmDelete": "Confirm delete",
+      "cancel": "Cancel"
+    },
+    "actionFailed": "That did not work. Try again."
   }
 }

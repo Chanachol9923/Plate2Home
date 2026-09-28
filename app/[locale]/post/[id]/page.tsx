@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { PlateView } from '@/components/plate/PlateView';
+import { ReportButton } from '@/components/report/ReportButton';
 import { RevealContact } from '@/components/reveal/RevealContact';
 import { PageShell } from '@/components/site/PageShell';
 import { getFoundPost } from '@/lib/db/found-post';
@@ -49,6 +50,9 @@ export default async function FoundPostPage({ params }: PageProps<'/[locale]/pos
         </p>
         <p>{t('compare')}</p>
         <RevealContact postId={post.postId} />
+        <div className="border-t-2 border-line-soft pt-2">
+          <ReportButton postId={post.postId} />
+        </div>
       </div>
     </PageShell>
   );

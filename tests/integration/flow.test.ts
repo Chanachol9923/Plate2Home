@@ -4,6 +4,7 @@
  * Skipped unless NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY are set.
  */
 import { randomBytes } from 'node:crypto';
+import { hashSync } from '@node-rs/argon2';
 import sharp from 'sharp';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
@@ -13,6 +14,14 @@ const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.S
 process.env.TURNSTILE_SECRET_KEY ??= '1x0000000000000000000000000000000AA';
 process.env.IP_HASH_SECRET ??= randomBytes(32).toString('base64url');
 delete process.env.APP_ORIGIN;
+// Admin area (D-080): a test password, hashed like npm run admin:password does.
+const ADMIN_PASSWORD = 'itest-admin-password-123';
+process.env.ADMIN_SESSION_SECRET = randomBytes(32).toString('hex');
+process.env.ADMIN_PASSWORD_HASH = hashSync(ADMIN_PASSWORD, {
+  memoryCost: 19456,
+  timeCost: 2,
+  parallelism: 1,
+});
 
 const ORIGIN = 'http://localhost:3000';
 const IP = `10.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}.7`;
@@ -62,6 +71,10 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
     revealOwner: typeof import('@/app/api/reveal-owner/route');
     myPosts: typeof import('@/app/api/my-posts/route');
     manage: typeof import('@/app/api/manage/route');
+    report: typeof import('@/app/api/report/route');
+    feedback: typeof import('@/app/api/feedback/route');
+    adminLogin: typeof import('@/app/api/admin/login/route');
+    adminAction: typeof import('@/app/api/admin/action/route');
   };
   let db: typeof import('@/lib/db/server');
   let matches: typeof import('@/lib/db/matches');
@@ -77,6 +90,10 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
       revealOwner: await import('@/app/api/reveal-owner/route'),
       myPosts: await import('@/app/api/my-posts/route'),
       manage: await import('@/app/api/manage/route'),
+      report: await import('@/app/api/report/route'),
+      feedback: await import('@/app/api/feedback/route'),
+      adminLogin: await import('@/app/api/admin/login/route'),
+      adminAction: await import('@/app/api/admin/action/route'),
     };
     db = await import('@/lib/db/server');
     matches = await import('@/lib/db/matches');
@@ -353,6 +370,80 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
       noParams,
     );
     expect(refused.status).toBe(404);
+  });
+
+  // --- Reports, feedback, admin (D-080) -------------------------------------------------------
+  it('takes a report on the found post (once per IP) and needs Turnstile', async () => {
+    const send = (turnstileToken = 'XXXX.DUMMY.TOKEN.XXXX') =>
+      routes.report.POST(
+        jsonRequest('/api/report', {
+          postId: foundPostId,
+          reason: 'other',
+          note: 'itest report',
+          turnstileToken,
+        }),
+        noParams,
+      );
+    expect((await send()).status).toBe(200);
+    expect((await send()).status).toBe(200); // a repeat is accepted but not counted twice
+    turnstileOk = false;
+    const refused = await send();
+    turnstileOk = true;
+    expect(refused.status).toBe(403);
+  });
+
+  it('stores feedback and validates the rating', async () => {
+    const ok = await routes.feedback.POST(
+      jsonRequest('/api/feedback', {
+        rating: 4,
+        comment: 'itest feedback',
+        locale: 'th',
+        turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
+      }),
+      noParams,
+    );
+    expect(ok.status).toBe(201);
+    const bad = await routes.feedback.POST(
+      jsonRequest('/api/feedback', { rating: 9, locale: 'th', turnstileToken: 'x' }),
+      noParams,
+    );
+    expect(bad.status).toBe(400);
+  });
+
+  it('keeps admin actions behind the password session', async () => {
+    const act = (cookie?: string) =>
+      routes.adminAction.POST(
+        jsonRequest(
+          '/api/admin/action',
+          { action: 'hide', postId: foundPostId },
+          cookie ? { cookie } : {},
+        ),
+        noParams,
+      );
+    expect((await act()).status).toBe(401);
+    expect((await act('p2h_admin=1.2.3')).status).toBe(401);
+
+    const wrong = await routes.adminLogin.POST(
+      jsonRequest('/api/admin/login', { password: 'nope' }),
+      noParams,
+    );
+    expect(wrong.status).toBe(403);
+
+    const login = await routes.adminLogin.POST(
+      jsonRequest('/api/admin/login', { password: ADMIN_PASSWORD }),
+      noParams,
+    );
+    expect(login.status).toBe(200);
+    const setCookie = login.headers.get('set-cookie') ?? '';
+    expect(setCookie).toContain('HttpOnly');
+    const cookie = setCookie.split(';')[0]!;
+
+    expect((await act(cookie)).status).toBe(200);
+    const restore = await routes.adminAction.POST(
+      jsonRequest('/api/admin/action', { action: 'restore', postId: foundPostId }, { cookie }),
+      noParams,
+    );
+    expect(restore.status).toBe(200);
   });
 
   // --- Manage (D-078) -------------------------------------------------------------------------
