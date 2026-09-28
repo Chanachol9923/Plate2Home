@@ -30,7 +30,6 @@ import {
   contactSchema,
   fieldErrors,
   foundBatchSchema,
-  pinSchema,
   plateInputSchema,
 } from '@/lib/validation/schemas';
 
@@ -91,7 +90,6 @@ export function FoundFlow() {
   const [note, setNote] = useState('');
   const [contact, setContact] = useState<ContactDraft>(EMPTY_CONTACT);
   const [pin, setPin] = useState('');
-  const [pinConfirm, setPinConfirm] = useState('');
   const [consent, setConsent] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const turnstile = useRef<TurnstileHandle>(null);
@@ -299,8 +297,6 @@ export function FoundFlow() {
       errs['contact.contact'] = errorText('contact_required');
       delete errs['contact.lineId'];
     }
-    if (pinSchema.safeParse(pin).success && pin !== pinConfirm)
-      errs.confirm = errorText('pin_mismatch');
     if (!token) errs.turnstile = errorText('turnstile_required');
     setErrors(errs);
     if (Object.keys(errs).length) return;
@@ -327,7 +323,6 @@ export function FoundFlow() {
       createdAt: new Date().toISOString(),
     });
     setPin('');
-    setPinConfirm('');
     setBatch(created);
     await uploadPlates(created, plates);
     setSubmitting(false);
@@ -434,13 +429,18 @@ export function FoundFlow() {
 
       {step === 'plates' && (
         <div className="space-y-5">
-          <p>{t('intro')}</p>
-          <div className="grid grid-cols-2 gap-3">
-            <Button onClick={() => cameraInput.current?.click()}>{t('takePhoto')}</Button>
-            <Button variant="secondary" onClick={() => galleryInput.current?.click()}>
-              {t('fromGallery')}
-            </Button>
-          </div>
+          {photos.length === 0 && (
+            <>
+              <p>{t('intro')}</p>
+              <div className="grid grid-cols-2 gap-3">
+                <Button onClick={() => cameraInput.current?.click()}>{t('takePhoto')}</Button>
+                <Button variant="secondary" onClick={() => galleryInput.current?.click()}>
+                  {t('fromGallery')}
+                </Button>
+              </div>
+              <p className="text-sm text-ink-muted">{t('privacyNote')}</p>
+            </>
+          )}
           <input
             ref={cameraInput}
             type="file"
@@ -467,8 +467,6 @@ export function FoundFlow() {
               e.target.value = '';
             }}
           />
-          <p className="text-sm text-ink-muted">{t('privacyNote')}</p>
-
           {ocrLoading !== null && (
             <p className="inline-flex items-center gap-2 text-sm" aria-live="polite">
               <Spinner /> {tOcr('loading', { percent: ocrLoading })}
@@ -477,20 +475,24 @@ export function FoundFlow() {
 
           {photos.map((p, i) =>
             p.status === 'ready' && p.photo && p.url ? (
-              <div key={p.id} className="space-y-2">
-                {p.scan && (
-                  <p className="text-sm font-semibold" aria-live="polite">
-                    {p.scan.state === 'scanning' && (
-                      <span className="inline-flex items-center gap-2">
-                        <Spinner /> {tOcr('scanning')}
-                      </span>
-                    )}
-                    {p.scan.state === 'done' &&
-                      (p.scan.found > 0 ? tOcr('found', { count: p.scan.found }) : tOcr('none'))}
-                    {p.scan.state === 'failed' && tOcr('failed')}
-                  </p>
-                )}
+              <div key={p.id}>
                 <PhotoCropper
+                  status={
+                    p.scan && (
+                      <p className="text-sm font-semibold" aria-live="polite">
+                        {p.scan.state === 'scanning' && (
+                          <span className="inline-flex items-center gap-2">
+                            <Spinner /> {tOcr('scanning')}
+                          </span>
+                        )}
+                        {p.scan.state === 'done' &&
+                          (p.scan.found > 0
+                            ? tOcr('found', { count: p.scan.found })
+                            : tOcr('none'))}
+                        {p.scan.state === 'failed' && tOcr('failed')}
+                      </p>
+                    )
+                  }
                   photo={p.photo}
                   url={p.url}
                   label={t('photoLabel', { n: i + 1 })}
@@ -515,58 +517,67 @@ export function FoundFlow() {
             ),
           )}
 
-          {plates.length === 0 ? (
-            <p className="text-ink-muted">{t('noPlatesYet')}</p>
-          ) : (
-            <ol className="space-y-4">
-              {plates.map((p, i) => (
-                <li key={p.id} className="space-y-3 rounded-md border-2 border-line bg-surface p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <h2 className="text-lg font-bold">{t('cardTitle', { n: i + 1 })}</h2>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        cardCount.current--;
-                        setPlates((ps) => ps.filter((x) => x.id !== p.id));
-                      }}
-                      className="min-h-11 px-2 text-sm font-semibold text-danger underline decoration-2 underline-offset-4"
-                    >
-                      {t('removePlate')}
-                    </button>
-                  </div>
-                  {/* eslint-disable-next-line @next/next/no-img-element -- local blob: URL of the crop */}
-                  <img
-                    src={p.url}
-                    alt={t('cropAlt', { n: i + 1 })}
-                    className="max-h-40 w-full rounded-sm border-2 border-line-soft object-contain"
-                  />
-                  {p.ocr.state === 'reading' && (
-                    <p className="inline-flex items-center gap-2 text-sm" aria-live="polite">
-                      <Spinner /> {tOcr('reading')}
-                    </p>
-                  )}
-                  {p.ocr.state === 'read' && (
-                    <p
-                      className={`text-sm font-semibold ${p.ocr.confidence < 0.6 ? 'text-danger' : 'text-success'}`}
-                    >
-                      {p.ocr.confidence < 0.6 ? tOcr('lowConfidence') : tOcr('read')}
-                    </p>
-                  )}
-                  {p.ocr.state === 'unread' && <p className="text-sm">{tOcr('unread')}</p>}
-                  <PlateInput
-                    value={p.draft}
-                    onChange={(draft) => updatePlate(p.id, { draft })}
-                    errors={p.errors}
-                  />
-                  <LostWatchHint draft={p.draft} />
-                </li>
-              ))}
-            </ol>
+          {photos.length > 0 && (
+            <Button variant="secondary" onClick={() => galleryInput.current?.click()}>
+              {t('addPhoto')}
+            </Button>
           )}
 
-          <Button block onClick={checkPlates}>
-            {tc('next')}
-          </Button>
+          {plates.length > 0 && (
+            <section className="space-y-3">
+              <h2 className="text-xl font-bold">{t('checkTitle')}</h2>
+              <p className="text-sm text-ink-muted">{t('checkIntro')}</p>
+              <ol className="space-y-4">
+                {plates.map((p, i) => (
+                  <li
+                    key={p.id}
+                    className="space-y-3 rounded-md border-2 border-line bg-surface p-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <h2 className="text-lg font-bold">{t('cardTitle', { n: i + 1 })}</h2>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          cardCount.current--;
+                          setPlates((ps) => ps.filter((x) => x.id !== p.id));
+                        }}
+                        className="min-h-11 px-2 text-sm font-semibold text-danger underline decoration-2 underline-offset-4"
+                      >
+                        {t('removePlate')}
+                      </button>
+                    </div>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- local blob: URL of the crop */}
+                    <img
+                      src={p.url}
+                      alt={t('cropAlt', { n: i + 1 })}
+                      className="max-h-40 w-full rounded-sm border-2 border-line-soft object-contain"
+                    />
+                    {p.ocr.state === 'reading' && (
+                      <p className="inline-flex items-center gap-2 text-sm" aria-live="polite">
+                        <Spinner /> {tOcr('reading')}
+                      </p>
+                    )}
+                    {p.ocr.state === 'read' && p.ocr.confidence < 0.6 && (
+                      <p className="text-sm font-semibold text-danger">{tOcr('lowConfidence')}</p>
+                    )}
+                    {p.ocr.state === 'unread' && <p className="text-sm">{tOcr('unread')}</p>}
+                    <PlateInput
+                      value={p.draft}
+                      onChange={(draft) => updatePlate(p.id, { draft })}
+                      errors={p.errors}
+                    />
+                    <LostWatchHint draft={p.draft} />
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+
+          {plates.length > 0 && (
+            <Button block onClick={checkPlates}>
+              {t('nextToDetails')}
+            </Button>
+          )}
         </div>
       )}
 
@@ -636,15 +647,7 @@ export function FoundFlow() {
             )}
           />
 
-          <PinFields
-            pin={pin}
-            confirm={pinConfirm}
-            onChange={(p, c) => {
-              setPin(p);
-              setPinConfirm(c);
-            }}
-            errors={{ pin: errors.pin, confirm: errors.confirm }}
-          />
+          <PinFields pin={pin} onChange={setPin} error={errors.pin} />
 
           <Checkbox
             label={tConsent('label')}

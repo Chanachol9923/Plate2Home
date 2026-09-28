@@ -17,14 +17,43 @@ export function Choice<T extends string>({
   value,
   onChange,
   columns = options.length,
+  pills = false,
 }: {
   legend: string;
   options: readonly Option<T>[];
   value: T;
   onChange: (value: T) => void;
   columns?: number;
+  /** A small inline row of pills (a secondary choice with a sensible default). */
+  pills?: boolean;
 }) {
   const name = useId();
+  if (pills) {
+    return (
+      <fieldset className="flex flex-wrap items-center gap-2">
+        <legend className="sr-only">{legend}</legend>
+        <span aria-hidden="true" className="text-sm font-semibold">
+          {legend}
+        </span>
+        {options.map((o) => (
+          <label
+            key={o.value}
+            className="inline-flex min-h-11 cursor-pointer items-center rounded-full border-2 border-line-soft bg-surface px-3 text-sm font-semibold has-[:checked]:border-line has-[:checked]:bg-accent-soft has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-focus"
+          >
+            <input
+              type="radio"
+              name={name}
+              value={o.value}
+              checked={value === o.value}
+              onChange={() => onChange(o.value)}
+              className="sr-only"
+            />
+            {o.label}
+          </label>
+        ))}
+      </fieldset>
+    );
+  }
   // Three narrow columns on a phone: stack the radio above the label so the text fits.
   const compact = columns >= 3;
   return (

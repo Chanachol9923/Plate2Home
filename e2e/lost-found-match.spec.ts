@@ -55,7 +55,6 @@ test('owner and finder are matched and can reach each other', async ({ page, bro
   await expect(owner).toHaveURL(/step=confirm/);
 
   await owner.getByLabel('PIN 4–6 หลัก').fill('2580');
-  await owner.getByLabel('ใส่ PIN อีกครั้ง').fill('2580');
   await owner.getByRole('checkbox').check();
   await passTurnstile(owner);
   await owner.getByRole('button', { name: 'แจ้งป้ายหาย', exact: true }).click();
@@ -79,7 +78,6 @@ test('owner and finder are matched and can reach each other', async ({ page, bro
   await finder.getByLabel(/^หมายเหตุ/).fill('เจอใกล้วัด ทั้งป้ายหน้าและหลัง');
   await finder.getByLabel('LINE ID (แนะนำ)').fill('e2e.finder');
   await finder.getByLabel('PIN 4–6 หลัก').fill('1397');
-  await finder.getByLabel('ใส่ PIN อีกครั้ง').fill('1397');
   await finder.getByRole('checkbox').check();
   await passTurnstile(finder);
   await finder.getByRole('button', { name: /^ส่ง 1 ป้าย/ }).click();

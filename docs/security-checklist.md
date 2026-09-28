@@ -51,7 +51,7 @@ Each item says **how it is verified**. ✅ = verified by an automated test or ch
 
 - ✅ zod on every input; free-text anti-scam checks (URLs, ID/account numbers, digits in district) (validation.test.ts)
 - ✅ sharp re-validation of uploads: real format, pixel limit, min size, EXIF/GPS stripped, WebP ≤ 300 KB (crop.test.ts)
-- ⏳ PIN lockout and backoff (Phase 4)
+- ✅ PIN lockout and backoff: 5 wrong PINs within an hour lock the batch for 15 min, doubling per lockout (max 16 h); per-IP limit on `/api/manage`; Turnstile on the first lookup; the same error for an unknown plate and a wrong PIN, with a dummy argon2 check to keep timing similar. _(supabase/tests/manage.test.ts, tests/integration/flow.test.ts)_
 - ⏳ IP hashing with rotating salt (Phase 4)
 - ✅ Signed URLs ≤ 5 minutes; plain `<img>`, never the image optimizer cache (D-051)
 - ✅ No PII in logs: `logError` records scope and error kind only (route.test.ts asserts it)

@@ -55,17 +55,6 @@ export function PlateInput({
 
   return (
     <div className="space-y-3">
-      <Choice<PlateType>
-        legend={t('typeLegend')}
-        value={value.type}
-        onChange={(type) => set({ type })}
-        options={[
-          { value: 'car', label: t('car') },
-          { value: 'motorcycle', label: t('motorcycle') },
-          { value: 'other', label: t('other') },
-        ]}
-      />
-
       <p id={`${id}-instructions`} className="text-sm text-ink-muted">
         {t('instructions')}
       </p>
@@ -129,6 +118,18 @@ export function PlateInput({
         </button>
         <p className="flex-1 text-sm text-ink-muted">{t('wildcardHint')}</p>
       </div>
+
+      <Choice<PlateType>
+        pills
+        legend={t('typeLegend')}
+        value={value.type}
+        onChange={(type) => set({ type })}
+        options={[
+          { value: 'car', label: t('car') },
+          { value: 'motorcycle', label: t('motorcycle') },
+          { value: 'other', label: t('other') },
+        ]}
+      />
 
       {textError && (
         <p id={`${id}-text-error`} role="alert" className="text-sm font-semibold text-danger">

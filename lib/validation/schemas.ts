@@ -174,6 +174,25 @@ export const myPostsSchema = z.object({
   devices: z.array(z.object({ batchId: z.uuid(), token: deviceToken })).max(50),
 });
 
+/**
+ * Manage a post (D-078): prove ownership with a plate number of the post and its PIN (any
+ * device; Turnstile for the first lookup), or with this device's token (My posts).
+ */
+export const manageSchema = z.object({
+  auth: z.discriminatedUnion('kind', [
+    z.object({
+      kind: z.literal('pin'),
+      plate: plateInputSchema,
+      pin: z.string().regex(/^\d{4,6}$/, 'pin_format'),
+      turnstileToken: z.string().max(2048).optional(),
+    }),
+    z.object({ kind: z.literal('device'), batchId: z.uuid(), token: deviceToken }),
+  ]),
+  action: z.enum(['list', 'resolve', 'extend', 'delete']),
+  postId: z.uuid().nullish(),
+});
+export type ManageBody = z.input<typeof manageSchema>;
+
 /** The finder asks for the owner's contact, proving it with the found batch's device token. */
 export const revealOwnerSchema = z.object({ matchId: z.uuid(), token: deviceToken });
 export type SearchBody = z.input<typeof searchSchema>;

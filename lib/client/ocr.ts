@@ -10,6 +10,7 @@
  */
 import type Tesseract from 'tesseract.js';
 import {
+  dedupe,
   downscale,
   findPlatesInLayout,
   LINE_WORK_WIDTH,
@@ -463,7 +464,7 @@ export interface FoundPlate {
   rect: Rect;
 }
 
-/** Width for close-ups, tried only when the normal width finds nothing (text too big). */
+/** Width for close-ups, where text is too big for the normal width. */
 const CLOSE_UP_WIDTH = 450;
 /** Margin added around a detected plate face (its border and frame are left outside). */
 const SUGGESTION_MARGIN = 0.04;
@@ -477,11 +478,19 @@ const SUGGESTION_MARGIN = 0.04;
 export async function findPlates(photo: LoadedPhoto): Promise<FoundPlate[]> {
   // Let the "looking for plates" status paint before the synchronous pass runs.
   await new Promise((r) => setTimeout(r, 0));
-  let rects = await verified(photo, layoutPass(photo, WORK_WIDTH));
-  if (rects.length === 0) rects = await verified(photo, layoutPass(photo, CLOSE_UP_WIDTH));
+  // Both scales: the small one sees whole plates in close-ups, where the big one may only see
+  // half a plate. Overlapping boxes keep the bigger one (a whole plate beats part of it).
+  const found = [
+    ...(await verified(photo, layoutPass(photo, WORK_WIDTH))),
+    ...(await verified(photo, layoutPass(photo, CLOSE_UP_WIDTH))),
+  ];
+  let rects = dedupe(found.map(toBox)).map(fromBox);
   if (rects.length === 0) rects = await spotPlates(photo);
   return readingOrder(rects).map((rect) => ({ rect }));
 }
+
+const toBox = (r: Rect): Box => ({ x0: r.x, y0: r.y, x1: r.x + r.width, y1: r.y + r.height });
+const fromBox = (b: Box): Rect => ({ x: b.x0, y: b.y0, width: b.x1 - b.x0, height: b.y1 - b.y0 });
 
 /** Suggestions whose reading is at least this sure (mean character probability) are kept. */
 const SUGGESTION_MIN_SCORE = 0.6;

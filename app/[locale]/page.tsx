@@ -88,6 +88,11 @@ export default async function HomePage() {
         <span className="flex-1">{t('myPosts')}</span>
         <ArrowRightIcon size={24} />
       </Link>
+      <p className="mt-3 text-center text-sm">
+        <Link href="/manage" className="font-semibold underline underline-offset-4">
+          {t('manage')}
+        </Link>
+      </p>
 
       <section aria-labelledby="how-title" className="mt-10 border-t-2 border-line-soft pt-6">
         <h2 id="how-title" className="text-lg font-bold">

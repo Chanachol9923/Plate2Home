@@ -59,7 +59,6 @@ export function LostFlow() {
   const [contact, setContact] = useState<ContactDraft>(EMPTY_CONTACT);
   const [note, setNote] = useState('');
   const [pin, setPin] = useState('');
-  const [pinConfirm, setPinConfirm] = useState('');
   const [consent, setConsent] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const turnstile = useRef<TurnstileHandle>(null);
@@ -141,7 +140,6 @@ export function LostFlow() {
     const errs: Record<string, string | null> = {};
     const pinParsed = pinSchema.safeParse(pin);
     if (!pinParsed.success) errs.pin = errorText(pinParsed.error.issues[0]?.message);
-    else if (pin !== pinConfirm) errs.confirm = errorText('pin_mismatch');
     if (!consent) errs.consent = errorText('consent_required');
     if (!token) errs.turnstile = errorText('turnstile_required');
     setConfirmErrors(errs);
@@ -189,7 +187,6 @@ export function LostFlow() {
     });
     writeDraft(DRAFT_KEY, null);
     setPin('');
-    setPinConfirm('');
     setCreated(res.data);
   }
 
@@ -283,15 +280,7 @@ export function LostFlow() {
 
       {step === 'confirm' && (
         <div className="space-y-5">
-          <PinFields
-            pin={pin}
-            confirm={pinConfirm}
-            onChange={(p, c) => {
-              setPin(p);
-              setPinConfirm(c);
-            }}
-            errors={confirmErrors}
-          />
+          <PinFields pin={pin} onChange={setPin} error={confirmErrors.pin} />
           <Checkbox
             label={tConsent('label')}
             checked={consent}

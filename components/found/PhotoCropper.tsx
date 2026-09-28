@@ -7,6 +7,7 @@ import {
   useState,
   type KeyboardEvent,
   type PointerEvent as ReactPointerEvent,
+  type ReactNode,
 } from 'react';
 import { Button } from '@/components/ui/Button';
 import {
@@ -64,6 +65,7 @@ export function PhotoCropper({
   onRemove,
   marked = [],
   suggestions = [],
+  status,
 }: {
   photo: LoadedPhoto;
   url: string;
@@ -74,6 +76,8 @@ export function PhotoCropper({
   marked?: { rect: Rect; n: number }[];
   /** Boxes proposed by automatic finding, best first. */
   suggestions?: Rect[];
+  /** Automatic-finding progress/result line, shown in the card. */
+  status?: ReactNode;
 }) {
   const t = useTranslations('found');
   const surface = useRef<HTMLDivElement>(null);
@@ -88,6 +92,8 @@ export function PhotoCropper({
     setBoxState(b);
   };
   const [busy, setBusy] = useState(false);
+  // Folded once its plates are added and nothing is left to suggest; unfolds on request.
+  const [expanded, setExpanded] = useState(false);
 
   const isCut = (r: Rect) => marked.some((m) => coveredBy(r, m.rect) > 0.6);
   const open = suggestions.filter((s) => !isCut(s));
@@ -180,6 +186,7 @@ export function PhotoCropper({
       const next = suggestions.find((s) => !isCut(s) && !rects.includes(s));
       touched.current = false;
       setBox(next ?? null);
+      if (!next) setExpanded(false);
     } finally {
       setBusy(false);
     }
@@ -193,19 +200,64 @@ export function PhotoCropper({
     height: pct(r.height, photo.height),
   });
 
+  const caption = (
+    <figcaption className="flex items-center justify-between gap-2">
+      <span className="font-semibold">{label}</span>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="min-h-11 px-2 text-sm font-semibold text-danger underline decoration-2 underline-offset-4"
+      >
+        {t('removePhoto')}
+      </button>
+    </figcaption>
+  );
+
+  if (marked.length > 0 && open.length === 0 && !expanded && !busy) {
+    return (
+      <figure className="space-y-2 rounded-md border-2 border-line-soft bg-surface p-2">
+        {caption}
+        <div className="flex items-center gap-3">
+          <div className="relative w-28 shrink-0 overflow-hidden rounded-sm">
+            {/* eslint-disable-next-line @next/next/no-img-element -- local blob: URL of the user's own photo */}
+            <img src={url} alt="" className="block w-full" />
+            {marked.map(({ rect, n }) => (
+              <div
+                key={`m${n}`}
+                aria-hidden="true"
+                className="absolute border-2 border-accent"
+                style={place(rect)}
+              />
+            ))}
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-success">
+              {t('addedFromPhoto', { count: marked.length })}
+            </p>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setExpanded(true);
+                touched.current = false;
+                setBox(defaultBox(photo.width, photo.height));
+              }}
+            >
+              {t('addMoreFromPhoto')}
+            </Button>
+          </div>
+        </div>
+      </figure>
+    );
+  }
+
   return (
     <figure className="space-y-3 rounded-md border-2 border-line-soft bg-surface p-2">
-      <figcaption className="flex items-center justify-between gap-2">
-        <span className="font-semibold">{label}</span>
-        <button
-          type="button"
-          onClick={onRemove}
-          className="min-h-11 px-2 text-sm font-semibold text-danger underline decoration-2 underline-offset-4"
-        >
-          {t('removePhoto')}
-        </button>
-      </figcaption>
-      <p className="text-sm text-ink-muted">{box ? t('cropHint') : t('drawHint')}</p>
+      {caption}
+      {status}
+      <p className="text-sm text-ink-muted">
+        {box ? t('cropHint') : t('drawHint')}
+        {open.length > 1 && ` ${t('pickAnother')}`}
+      </p>
       <div
         ref={surface}
         onPointerDown={onDown}

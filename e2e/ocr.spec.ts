@@ -80,12 +80,12 @@ test('suggests a box for each plate; nothing is cut until the user confirms', as
     { x: 720, y: 720, text: '1กข 1234', province: 'กรุงเทพมหานคร' },
   ]);
 
-  await expect(page.getByText(/ระบบเสนอกรอบให้ 2 ป้าย/)).toBeVisible({ timeout: 150_000 });
+  await expect(page.getByText(/ระบบหาเจอ 2 ป้าย/)).toBeVisible({ timeout: 150_000 });
   // Suggestions only: no cards yet, and a preview of what would be cut.
   await expect(page.getByRole('heading', { name: 'ป้ายที่ 1' })).toHaveCount(0);
-  await expect(page.getByRole('img', { name: 'ส่วนที่จะตัด' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'ป้ายที่จะเพิ่ม' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'ตัดทุกกรอบที่ระบบเสนอ (2)' }).click();
+  await page.getByRole('button', { name: 'เพิ่มทุกป้ายที่ระบบหาเจอ (2)' }).click();
   await expect(page.getByRole('heading', { name: 'ป้ายที่ 2' })).toBeVisible();
   // The crops hold the whole plate (the plates are 760×340, ratio 2.2).
   for (const n of [1, 2]) {
@@ -112,22 +112,25 @@ test('manual cropping: draw a box, resize it by a corner, then crop exactly that
   test.setTimeout(180_000);
   await page.goto('/found');
   await addDrawnPhoto(page, [{ x: 120, y: 140, text: 'กท 2058', province: 'ฉะเชิงเทรา' }]);
-  await expect(page.getByText(/ระบบเสนอกรอบให้ 1 ป้าย/)).toBeVisible({ timeout: 150_000 });
+  await expect(page.getByText(/ระบบหาเจอ 1 ป้าย/)).toBeVisible({ timeout: 150_000 });
 
   // Take the suggested box as is.
-  await page.getByRole('button', { name: 'ตัดป้ายนี้' }).click();
+  await page.getByRole('button', { name: 'เพิ่มป้ายในกรอบนี้' }).click();
   await expect(page.getByRole('heading', { name: 'ป้ายที่ 1' })).toBeVisible();
   await expect(page.getByText(/^อ่านได้เป็น หมวด กท · เลข 20\d\d/)).toBeVisible({
     timeout: 60_000,
   });
 
-  // No suggestions left: draw a box by hand, then drag its bottom-right corner.
+  // The photo folds away once its plates are added; open it again to add another by hand.
+  await expect(page.getByText('เพิ่มจากรูปนี้แล้ว 1 ป้าย')).toBeVisible();
+  await page.getByRole('button', { name: 'เพิ่มป้ายอื่นจากรูปนี้' }).click();
+  // Draw a new box by hand (outside the starting box), then drag its bottom-right corner.
   const at = await photoPoint(page, { w: 1600, h: 1200 });
   await drag(page, at(100, 120), at(900, 500));
-  await expect(page.getByRole('img', { name: 'ส่วนที่จะตัด' })).toBeVisible();
+  await expect(page.getByRole('img', { name: 'ป้ายที่จะเพิ่ม' })).toBeVisible();
   await drag(page, at(900, 500), at(1000, 560));
   await expect(page.getByRole('heading', { name: 'ป้ายที่ 2' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'ตัดป้ายนี้' }).click();
+  await page.getByRole('button', { name: 'เพิ่มป้ายในกรอบนี้' }).click();
 
   await expect(page.getByRole('heading', { name: 'ป้ายที่ 2' })).toBeVisible();
   await expect(page.getByText(/^อ่านได้เป็น หมวด กท · เลข 20\d\d/)).toHaveCount(2, {
@@ -149,8 +152,8 @@ test('suggests a small plate in a large photo', async ({ page }) => {
     [{ x: 1300, y: 950, text: 'กท 2058', province: 'ฉะเชิงเทรา', scale: 0.4 }],
     { w: 2048, h: 1536 },
   );
-  await expect(page.getByText(/ระบบเสนอกรอบให้ 1 ป้าย/)).toBeVisible({ timeout: 150_000 });
-  await page.getByRole('button', { name: 'ตัดป้ายนี้' }).click();
+  await expect(page.getByText(/ระบบหาเจอ 1 ป้าย/)).toBeVisible({ timeout: 150_000 });
+  await page.getByRole('button', { name: 'เพิ่มป้ายในกรอบนี้' }).click();
   // Read too (a small plate may lose a character; the user always checks it).
   await expect(page.getByText(/^อ่านได้เป็น หมวด กท · เลข 20\d\d/)).toBeVisible({
     timeout: 60_000,

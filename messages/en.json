@@ -38,7 +38,8 @@
       "step2": "We match plate numbers instantly",
       "step3": "The owner and the finder contact each other to arrange the handover"
     },
-    "myPosts": "My posts"
+    "myPosts": "My posts",
+    "manage": "New phone? Manage your post with plate number and PIN"
   },
   "dormant": {
     "title": "We're closed for now",
@@ -103,7 +104,6 @@
     "contact_required": "Add at least one way to contact you.",
     "pin_format": "The PIN must be 4–6 digits.",
     "pin_weak": "That PIN is too easy to guess. Try another.",
-    "pin_mismatch": "The two PINs don't match.",
     "consent_required": "Please read and agree before sending.",
     "text_url": "Links aren't allowed here, to protect people from scams.",
     "text_id_number": "Please don't enter an ID card number.",
@@ -124,7 +124,9 @@
       "too_large": "The image is too large.",
       "network": "Can't connect. Check your signal and try again.",
       "generic": "Something went wrong. Please try again.",
-      "not_found": "We couldn't find this post. It may have been removed."
+      "not_found": "We couldn't find this post. It may have been removed.",
+      "pin_wrong": "The plate number or PIN is wrong.",
+      "pin_locked": "Too many wrong PINs. It is locked for a while; try again later."
     }
   },
   "consent": {
@@ -144,11 +146,12 @@
     "introFound": "Only the plate's owner sees this, and only once there is a match. Add at least one."
   },
   "pin": {
-    "title": "Set a PIN",
-    "intro": "Use the PIN with your plate number to edit or delete your post from another device.",
+    "title": "PIN to manage your post",
+    "intro": "Use this PIN with the plate number to manage your post from any device: mark the plate as returned, extend or delete it on the “Manage a post” page.",
     "label": "4–6 digit PIN",
-    "confirm": "Enter the PIN again",
-    "hint": "Keep it safe. We can't see or recover your PIN."
+    "hint": "Write it down: we can't see your PIN. No simple sequences or repeats like 1234 or 1111.",
+    "show": "Show",
+    "hide": "Hide"
   },
   "lost": {
     "title": "I lost a plate",
@@ -164,7 +167,7 @@
     "notFoundYet": "Nobody has found this plate yet. Report it lost and it will be matched automatically when someone does.",
     "submit": "Report lost plate",
     "doneTitle": "Your lost plate is reported. It will be matched automatically when someone finds it.",
-    "doneManage": "Check for matches under “My posts” on this device, and keep your PIN: you’ll need it with your plate number to delete or edit the post.",
+    "doneManage": "Check matches and manage the post under “My posts” on this device. On another device, use the plate number and your PIN on “Manage a post”.",
     "doneMatches": "Someone may have found your plate",
     "viewMatch": "View details",
     "alsoWatch": "Report it lost too, in case more turn up"
@@ -180,7 +183,7 @@
     "fromGallery": "Choose from gallery",
     "privacyNote": "Only the cropped plate images are sent, never the full photo, and location data is removed.",
     "photoLabel": "Photo {n}",
-    "drawHint": "Drag on the photo to draw a box around a plate.",
+    "drawHint": "Drag on the photo to draw a box around a plate not added yet.",
     "useWhole": "Use the whole photo (one plate only)",
     "removePhoto": "Remove photo",
     "loadingPhoto": "Preparing photo…",
@@ -188,7 +191,6 @@
     "cardTitle": "Plate {n}",
     "removePlate": "Remove this plate",
     "cropAlt": "Plate image {n}",
-    "noPlatesYet": "No plates yet. Take or choose a photo first.",
     "tooMany": "You can send up to {max} plates at a time.",
     "needPlates": "Add at least one plate first.",
     "whereTitle": "Where is the plate now?",
@@ -211,7 +213,7 @@
     "ownerLookingBody": "This plate matches one its owner reported lost. Open it to contact the owner.",
     "viewMatch": "View details",
     "reviewNote": "This plate will be shown after a moderator checks it.",
-    "doneManage": "Check for matches under “My posts” on this device, and keep your PIN: you’ll need it with a plate number to delete or edit your posts.",
+    "doneManage": "Check matches and manage the post under “My posts” on this device. On another device, use any plate number from this post and your PIN on “Manage a post”.",
     "lostCheck": {
       "checking": "Checking whether anyone is looking for this plate…",
       "exactTitle": "Someone is looking for this plate!",
@@ -220,12 +222,19 @@
       "nearBody": "Check the letters, number and province against the real plate, then post. The owner will be asked to check whether it's theirs.",
       "none": "No one has reported this plate lost yet. Post it anyway: if the owner reports it later, they are matched automatically."
     },
-    "cropThis": "Crop this plate",
-    "cropHint": "Drag inside the box to move it, drag a corner dot to resize, or drag outside to draw a new one. Fit it to the plate, then tap “Crop this plate”.",
-    "previewLabel": "What will be cut",
+    "cropThis": "Add the plate in this box",
+    "cropHint": "Drag inside the box to move it and drag a corner dot to resize it until it fits the plate, then tap “Add the plate in this box”.",
+    "previewLabel": "Plate to add",
     "suggestionLabel": "Suggested box {n} (tap to select)",
     "boxLabel": "Crop box. Arrow keys move it; Shift and arrow keys resize it.",
-    "cropAllSuggested": "Crop all suggested boxes ({count})"
+    "cropAllSuggested": "Add all plates found ({count})",
+    "addPhoto": "+ Add another photo",
+    "checkTitle": "Check the plate numbers",
+    "checkIntro": "Read automatically. Check the letters, number and province against the real plate and fix anything that is wrong.",
+    "nextToDetails": "Next: contact details",
+    "addedFromPhoto": "{count, plural, one {# plate added from this photo} other {# plates added from this photo}}",
+    "addMoreFromPhoto": "Add another plate from this photo",
+    "pickAnother": "Tap a dashed box to pick another plate."
   },
   "search": {
     "title": "Search a plate number",
@@ -305,7 +314,7 @@
   },
   "myPosts": {
     "title": "My posts",
-    "intro": "Posts made on this device, with their matches.",
+    "intro": "Posts made on this device, with their matches. You can manage them here.",
     "empty": "No posts on this device yet",
     "emptyBody": "Posts you create on this device will appear here.",
     "lost": "Lost (my plate)",
@@ -318,16 +327,30 @@
     "needsReview": "Waiting for a moderator before it’s shown",
     "hidden": "Temporarily hidden",
     "loading": "Loading…",
-    "otherDevices": "Posts from other devices don’t show here."
+    "otherDevices": "Posts from other devices don't show here.",
+    "manageWithPin": "Manage with plate number and PIN",
+    "resolveLost": "I got my plate back",
+    "resolveFound": "Returned to the owner",
+    "resolvedLost": "Plate back",
+    "resolvedFound": "Returned",
+    "extend": "Extend 30 days",
+    "delete": "Delete post",
+    "deleteConfirm": "Delete this post? This can't be undone.",
+    "deleteYes": "Delete",
+    "cancel": "Cancel",
+    "done": {
+      "resolve": "Saved. This post will not be matched any more.",
+      "extend": "Extended.",
+      "delete": "Deleted."
+    }
   },
   "ocr": {
     "loading": "Loading the automatic plate reader {percent}% (about 5 MB the first time)",
     "scanning": "Looking for plates in the photo…",
-    "found": "{count, plural, one {Suggested a box for # plate} other {Suggested boxes for # plates}}. Check and fit the box, then tap “Crop this plate” (tap a dashed box to pick another plate).",
-    "none": "No plates found automatically. Move or draw the box around a plate yourself, then tap “Crop this plate”.",
-    "failed": "Automatic finding didn't work. Move or draw the box around a plate yourself, then tap “Crop this plate”.",
+    "found": "{count, plural, one {Found # plate} other {Found # plates}}",
+    "none": "No plates found automatically. Draw a box around a plate yourself.",
+    "failed": "Automatic finding didn't work. Draw a box around a plate yourself.",
     "reading": "Reading the plate…",
-    "read": "Read automatically. Please check it before sending.",
     "lowConfidence": "Not very sure about this one. Check every character; unreadable ones show as ?.",
     "unread": "Couldn't read this plate. Please type it yourself."
   },
@@ -400,5 +423,17 @@
       "email": "Email",
       "repo": "Source code on GitHub"
     }
+  },
+  "manage": {
+    "title": "Manage a post",
+    "intro": "Enter a plate number from your post (any plate in it) and the PIN you set when posting. Then you can mark the plate as returned, extend or delete the post from this device.",
+    "pinLabel": "Post PIN",
+    "pinHint": "The 4–6 digit PIN you set when posting",
+    "open": "Open post",
+    "found": "{count, plural, one {This post has # plate} other {This post has # plates}}",
+    "allDeleted": "This post has been deleted.",
+    "another": "Manage another post",
+    "forgot": "Forgot your PIN?",
+    "contactUs": "Contact us"
   }
 }

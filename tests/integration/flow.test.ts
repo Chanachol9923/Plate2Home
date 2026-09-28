@@ -61,6 +61,7 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
     reveal: typeof import('@/app/api/reveal/route');
     revealOwner: typeof import('@/app/api/reveal-owner/route');
     myPosts: typeof import('@/app/api/my-posts/route');
+    manage: typeof import('@/app/api/manage/route');
   };
   let db: typeof import('@/lib/db/server');
   let matches: typeof import('@/lib/db/matches');
@@ -75,6 +76,7 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
       reveal: await import('@/app/api/reveal/route'),
       revealOwner: await import('@/app/api/reveal-owner/route'),
       myPosts: await import('@/app/api/my-posts/route'),
+      manage: await import('@/app/api/manage/route'),
     };
     db = await import('@/lib/db/server');
     matches = await import('@/lib/db/matches');
@@ -351,5 +353,88 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
       noParams,
     );
     expect(refused.status).toBe(404);
+  });
+
+  // --- Manage (D-078) -------------------------------------------------------------------------
+  const manage = (body: object) => routes.manage.POST(jsonRequest('/api/manage', body), noParams);
+  const pinAuth = (pin: string) => ({ kind: 'pin', plate, pin });
+
+  it('refuses a wrong PIN and an unknown plate with the same answer', async () => {
+    const wrong = await manage({
+      auth: { ...pinAuth('9999'), turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX' },
+      action: 'list',
+    });
+    expect(wrong.status).toBe(403);
+    expect(await wrong.json()).toEqual({ code: 'pin_wrong' });
+    const unknown = await manage({
+      auth: {
+        kind: 'pin',
+        plate: { ...plate, number: '9' },
+        pin: base.pin,
+        turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
+      },
+      action: 'list',
+    });
+    expect(unknown.status).toBe(403);
+    expect(await unknown.json()).toEqual({ code: 'pin_wrong' });
+  });
+
+  it('needs Turnstile to open a post with plate + PIN', async () => {
+    turnstileOk = false;
+    const res = await manage({
+      auth: { ...pinAuth(base.pin), turnstileToken: 'x' },
+      action: 'list',
+    });
+    turnstileOk = true;
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({ code: 'turnstile_failed' });
+  });
+
+  it('opens the post with plate + PIN, without contact details', async () => {
+    const res = await manage({
+      auth: { ...pinAuth(base.pin), turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX' },
+      action: 'list',
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.batchId).toBe(lostBatchId);
+    expect(body.posts).toEqual([expect.objectContaining({ postId: lostPostId, status: 'active' })]);
+    expect(JSON.stringify(body)).not.toContain('itest.owner');
+  });
+
+  it('extends and resolves with the PIN, and refuses a wrong device token', async () => {
+    const extended = await manage({
+      auth: pinAuth(base.pin),
+      action: 'extend',
+      postId: lostPostId,
+    });
+    const [post] = (await extended.json()).posts;
+    expect(Date.parse(post.expiresAt) - Date.parse(post.createdAt)).toBeGreaterThan(
+      89 * 86_400_000,
+    );
+
+    const bad = await manage({
+      auth: { kind: 'device', batchId: lostBatchId, token: 'B'.repeat(43) },
+      action: 'resolve',
+    });
+    expect(bad.status).toBe(404);
+
+    const resolved = await manage({
+      auth: { kind: 'device', batchId: lostBatchId, token: lostDeviceToken },
+      action: 'resolve',
+      postId: lostPostId,
+    });
+    expect((await resolved.json()).posts[0].status).toBe('resolved');
+  });
+
+  it("deletes the finder's plate with their device token", async () => {
+    const res = await manage({
+      auth: { kind: 'device', batchId, token: finderDeviceToken },
+      action: 'delete',
+      postId: foundPostId,
+    });
+    expect(res.status).toBe(200);
+    const left = (await res.json()).posts.map((p: { postId: string }) => p.postId);
+    expect(left).not.toContain(foundPostId);
   });
 });

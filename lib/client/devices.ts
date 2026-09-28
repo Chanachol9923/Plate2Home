@@ -33,3 +33,13 @@ export function rememberDevicePost(post: DevicePost): void {
     // Without storage the user can still manage the post with plate + PIN.
   }
 }
+
+/** The batch was deleted: stop listing it under "My posts". */
+export function forgetDevicePost(batchId: string): void {
+  try {
+    const rest = readDevicePosts().filter((p) => p.batchId !== batchId);
+    localStorage.setItem(KEY, JSON.stringify(rest));
+  } catch {
+    // Nothing stored, nothing to forget.
+  }
+}
