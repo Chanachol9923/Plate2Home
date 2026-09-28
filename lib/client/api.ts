@@ -68,6 +68,9 @@ const API_CODES = new Set([
   'too_large',
   'network',
   'not_found',
+  'pin_wrong',
+  'pin_locked',
+  'admin_login',
 ]);
 
 /** Message key (under `errors`) for an API failure code. */
