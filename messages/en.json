@@ -435,6 +435,7 @@
     "allDeleted": "This post has been deleted.",
     "another": "Manage another post",
     "forgot": "Forgot your PIN?",
-    "contactUs": "Contact us"
+    "contactUs": "Contact us",
+    "plateHint": "Type it as it reads, e.g. กค7812 or 1กข1234. No province needed."
   }
 }

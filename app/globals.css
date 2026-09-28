@@ -158,3 +158,9 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* PIN fields have their own show/hide button; hide Edge's built-in reveal icon. */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}

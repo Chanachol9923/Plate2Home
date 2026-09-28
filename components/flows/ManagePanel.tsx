@@ -2,18 +2,16 @@
 
 import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
-import { plateErrorsFrom } from '@/components/forms/flow';
 import { Turnstile, type TurnstileHandle } from '@/components/forms/Turnstile';
 import { useErrorText } from '@/components/forms/useErrorText';
 import { PostCard, type OwnPost, type PostAction } from '@/components/manage/PostCard';
-import { PlateInput, type PlateFieldErrors } from '@/components/plate/PlateInput';
 import { Alert } from '@/components/ui/Alert';
 import { Button } from '@/components/ui/Button';
 import { Field, TextInput } from '@/components/ui/Field';
 import { Link } from '@/i18n/navigation';
 import { postJson } from '@/lib/client/api';
 import { forgetDevicePost } from '@/lib/client/devices';
-import { draftToInput, EMPTY_DRAFT, type PlateDraft } from '@/lib/plate/draft';
+import { draftToInput, EMPTY_DRAFT, splitPlateText, type PlateDraft } from '@/lib/plate/draft';
 import { fieldErrors, plateInputSchema } from '@/lib/validation/schemas';
 
 /**
@@ -25,10 +23,11 @@ export function ManagePanel() {
   const t = useTranslations('manage');
   const tMine = useTranslations('myPosts');
   const tPin = useTranslations('pin');
+  const tPlate = useTranslations('plate');
   const tc = useTranslations('common');
   const errorText = useErrorText();
   const [plate, setPlate] = useState<PlateDraft>(EMPTY_DRAFT);
-  const [plateErrors, setPlateErrors] = useState<PlateFieldErrors>({});
+  const [plateError, setPlateError] = useState<string | null>(null);
   const [pin, setPin] = useState('');
   const [shown, setShown] = useState(false);
   const [token, setToken] = useState<string | null>(null);
@@ -44,10 +43,10 @@ export function ManagePanel() {
     setError(null);
     const parsed = plateInputSchema.safeParse(draftToInput(plate));
     if (!parsed.success) {
-      setPlateErrors(plateErrorsFrom(fieldErrors(parsed.error), errorText));
+      setPlateError(errorText(Object.values(fieldErrors(parsed.error))[0] ?? 'invalid'));
       return;
     }
-    setPlateErrors({});
+    setPlateError(null);
     if (!/^\d{4,6}$/.test(pin)) {
       setError(errorText('pin_format'));
       return;
@@ -136,7 +135,33 @@ export function ManagePanel() {
       }}
     >
       <p>{t('intro')}</p>
-      <PlateInput value={plate} onChange={setPlate} errors={plateErrors} />
+      {/* Only the letters and number identify the post; province and type don't matter here. */}
+      <Field label={tPlate('textLabel')} hint={t('plateHint')} error={plateError}>
+        {({ inputId, describedBy, invalid }) => (
+          <TextInput
+            id={inputId}
+            aria-describedby={describedBy}
+            aria-invalid={invalid || undefined}
+            value={plate.text}
+            onChange={(e) => setPlate({ ...plate, text: e.target.value })}
+            placeholder={tPlate('textPlaceholder')}
+            lang="th"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            maxLength={12}
+            className="max-w-[16rem] text-xl font-bold"
+          />
+        )}
+      </Field>
+      {plate.text.trim() && (
+        <p className="-mt-3 text-sm text-ink-muted">
+          {tPlate('parsed', {
+            series: splitPlateText(plate.text, plate.type).series || '—',
+            number: splitPlateText(plate.text, plate.type).number || '—',
+          })}
+        </p>
+      )}
       <Field label={t('pinLabel')} hint={t('pinHint')}>
         {({ inputId, describedBy }) => (
           <div className="flex items-center gap-2">
