@@ -355,6 +355,7 @@ export function PhotoCropper({
           </Button>
         )}
       </div>
+      <p className="text-sm text-ink-muted">{t('useWholeHint')}</p>
     </figure>
   );
 }

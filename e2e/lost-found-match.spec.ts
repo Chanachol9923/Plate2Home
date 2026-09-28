@@ -67,7 +67,7 @@ test('owner and finder are matched and can reach each other', async ({ page, bro
   await finder
     .locator('input[type="file"][multiple]')
     .setInputFiles({ name: 'plate.jpg', mimeType: 'image/jpeg', buffer: await plateImage() });
-  await finder.getByRole('button', { name: /ใช้ทั้งรูป/ }).click();
+  await finder.getByRole('button', { name: /เพิ่มทั้งรูปเป็น 1 ป้าย/ }).click();
   await expect(finder.getByRole('heading', { name: 'ป้ายที่ 1' })).toBeVisible();
   await fillPlate(finder, number);
   // Step 1 already says someone is looking for this plate, before anything is posted.

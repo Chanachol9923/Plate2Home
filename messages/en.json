@@ -184,7 +184,7 @@
     "privacyNote": "Only the cropped plate images are sent, never the full photo, and location data is removed.",
     "photoLabel": "Photo {n}",
     "drawHint": "Drag on the photo to draw a box around a plate not added yet.",
-    "useWhole": "Use the whole photo (one plate only)",
+    "useWhole": "Add the whole photo as 1 plate",
     "removePhoto": "Remove photo",
     "loadingPhoto": "Preparing photo…",
     "photoError": "We couldn't open this photo. Try another one.",
@@ -234,7 +234,8 @@
     "nextToDetails": "Next: contact details",
     "addedFromPhoto": "{count, plural, one {# plate added from this photo} other {# plates added from this photo}}",
     "addMoreFromPhoto": "Add another plate from this photo",
-    "pickAnother": "Tap a dashed box to pick another plate."
+    "pickAnother": "Tap a dashed box to pick another plate.",
+    "useWholeHint": "“Add the whole photo as 1 plate” is for a close-up where one plate fills the photo: no box needed."
   },
   "search": {
     "title": "Search a plate number",
