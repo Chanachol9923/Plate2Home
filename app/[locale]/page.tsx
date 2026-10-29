@@ -9,6 +9,7 @@ import {
   MatchIcon,
   PhoneIcon,
 } from '@/components/icons';
+import { HomeAccountHint } from '@/components/auth/HomeAccountHint';
 import { Phrased } from '@/components/ui/Phrased';
 import { actionTile, bigLink } from '@/components/ui/styles';
 import { Link } from '@/i18n/navigation';
@@ -88,11 +89,7 @@ export default async function HomePage() {
         <span className="flex-1">{t('myPosts')}</span>
         <ArrowRightIcon size={24} />
       </Link>
-      <p className="mt-3 text-center text-sm">
-        <Link href="/my-posts" className="font-semibold underline underline-offset-4">
-          {t('manage')}
-        </Link>
-      </p>
+      <HomeAccountHint />
 
       <section aria-labelledby="how-title" className="mt-10 border-t-2 border-line-soft pt-6">
         <h2 id="how-title" className="text-lg font-bold">

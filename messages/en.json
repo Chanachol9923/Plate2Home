@@ -39,7 +39,11 @@
       "step3": "You get each other's contact details and arrange the return."
     },
     "myPosts": "My posts",
-    "manage": "New phone? Sign in with Google under “My posts”"
+    "account": {
+      "signedIn": "Signed in. Your posts are on every device.",
+      "deviceOnly": "Want these posts on your other devices too? Sign in with Google under “My posts”.",
+      "elsewhere": "Posted from another device? Sign in with Google under “My posts” to see it."
+    }
   },
   "dormant": {
     "title": "We're closed for now",
