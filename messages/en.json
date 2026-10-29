@@ -49,7 +49,9 @@
     "nonCommercial": "No ads. Not for profit in any way.",
     "privacy": "No GPS tracking. Posts are deleted automatically when they expire.",
     "credit": "{brand} By an {author}",
-    "about": "About · Terms · Privacy"
+    "about": "About",
+    "terms": "Terms of Service",
+    "privacyLink": "Privacy Policy"
   },
   "notFound": {
     "title": "Page not found",
@@ -382,7 +384,8 @@
         "d": "Finders should return plates to their owners or hand them to the police.",
         "e": "Automatic plate reading can be wrong; check before sending. The service is provided as is and may pause at times.",
         "f": "We may hide or remove posts that break these terms, and may update the terms; the date of the last update is shown on this page."
-      }
+      },
+      "readFull": "Read the full Terms of Service"
     },
     "privacy": {
       "title": "Privacy",
@@ -408,7 +411,8 @@
         "c": "Services we use: Supabase (database and photo storage), Vercel (website), Cloudflare Turnstile (bot protection)"
       },
       "keepTitle": "How long we keep it",
-      "keep": "Posts and photos are deleted automatically within {days} days. To have yours deleted sooner, or for any privacy question, email us below."
+      "keep": "Posts and photos are deleted automatically within {days} days. To have yours deleted sooner, or for any privacy question, email us below.",
+      "readFull": "Read the full Privacy Policy"
     },
     "contact": {
       "title": "Contact",
@@ -546,5 +550,221 @@
     "failedTitle": "Signing in didn’t work",
     "failedBody": "Close this page and try again, or carry on without signing in.",
     "close": "Close this page"
+  },
+  "legal": {
+    "lastUpdated": "Last updated {date}",
+    "otherTerms": "Read the Privacy Policy",
+    "otherPrivacy": "Read the Terms of Service",
+    "tocLabel": "Contents",
+    "contactLink": "Email us",
+    "terms": {
+      "title": "Terms of Service",
+      "intro": "These terms apply to your use of the {brand} website and every part of its service. Please read them before you start. By posting, searching or otherwise using the service, you confirm that you have read, understood and agreed to these terms. If you do not agree with any part of them, please do not use the service.",
+      "sections": {
+        "s1": {
+          "title": "1. Definitions",
+          "items": {
+            "a": "1.1 “We”, “us” or “the operator” means the developer and maintainer of {brand}, operating as {operator}.",
+            "b": "1.2 “The service” means the {brand} website and the system that matches licence plates reported lost with plates that someone has found.",
+            "c": "1.3 “You” or “user” means anyone who uses the service, whether signed in or not, including owners who report a plate lost and people who find one.",
+            "d": "1.4 “Post” means information a user submits to the service, such as a plate number, province, plate photo, note and contact details."
+          }
+        },
+        "s2": {
+          "title": "2. What the service is",
+          "items": {
+            "a": "2.1 {brand} is a free, non-profit public-interest service. It exists to help licence plates that come loose, particularly during floods, find their way back to their owners.",
+            "b": "2.2 We only match plate numbers and let matched users see each other’s contact details. We never take in, store, transport or deliver plates on anyone’s behalf.",
+            "c": "2.3 The service is not owned or run by, or in partnership with, the Department of Land Transport, the Royal Thai Police or any other government body. For replacement plates or any registration matter, please contact the relevant authority directly."
+          }
+        },
+        "s3": {
+          "title": "3. Using the service and accounts",
+          "items": {
+            "a": "3.1 You can use the service without registering. Signing in with a Google account is optional and lets you view and manage your posts from other devices.",
+            "b": "3.2 If you post without signing in, the right to manage that post is tied to the device and browser you posted from. If you clear your browser data or change devices, you may no longer be able to manage it.",
+            "c": "3.3 You are responsible for your Google account and your devices. Anything done through your account or device is treated as done by you.",
+            "d": "3.4 Minors should have a parent’s or guardian’s consent before using the service."
+          }
+        },
+        "s4": {
+          "title": "4. Information you submit",
+          "items": {
+            "a": "4.1 You confirm that what you submit is true and concerns a licence plate you have actually lost or found.",
+            "b": "4.2 Any contact details you enter must be your own, or belong to someone who has allowed you to use them.",
+            "c": "4.3 You keep ownership of what you submit, and you allow us to store, process and display it as far as the service needs. This includes showing plate photos to people who search for that plate number and showing contact details to matched users, as described in the Privacy Policy.",
+            "d": "4.4 Plate numbers are read from photos automatically and may be read wrongly. You must check the number and province every time before you send. We do not guarantee that matches will be correct or complete."
+          }
+        },
+        "s5": {
+          "title": "5. What you must not do",
+          "items": {
+            "a": "You must not use the service to:",
+            "b": "5.1 post false information, or claim a plate that is not yours;",
+            "c": "5.2 ask for money, a reward or any other benefit as a condition for returning a plate, or deceive other users in any way;",
+            "d": "5.3 use another user’s contact details for anything other than returning a plate, such as advertising, selling or harassment;",
+            "e": "5.4 enter anyone else’s personal data without permission, or data that is not needed, such as national ID or bank account numbers;",
+            "f": "5.5 submit content that is unlawful, abusive or infringes anyone’s rights;",
+            "g": "5.6 use bots, scripts or other automated means to collect or submit data in bulk, or try to break into, disrupt or get around the security of the service."
+          }
+        },
+        "s6": {
+          "title": "6. Contact and handing over plates",
+          "items": {
+            "a": "6.1 We do not verify who users are. Contacting each other, arranging to meet and handing over a plate are matters between users, and each party must use their own judgement and care.",
+            "b": "6.2 We recommend that owners show the vehicle registration book and their national ID card before receiving a plate, that you meet in a public place or at a police station, and that you never transfer money to anyone before you have the plate back.",
+            "c": "6.3 Anyone who finds a licence plate remains bound by the Civil and Commercial Code provisions on lost property, which require the finder to return it to the owner or a person entitled to receive it, or to hand it to the police. Using this service does not release anyone from that duty."
+          }
+        },
+        "s7": {
+          "title": "7. Moderation and suspension",
+          "items": {
+            "a": "7.1 We may hide or remove posts that have been reported, that break these terms, or that we believe may harm others, without prior notice.",
+            "b": "7.2 We may limit or block access to the service from devices, networks or accounts that break these terms.",
+            "c": "7.3 If you see a suspicious post, use the “Report” button on it or email us at {email}."
+          }
+        },
+        "s8": {
+          "title": "8. Availability",
+          "items": {
+            "a": "8.1 The service is provided as is and as available. We try to keep it running, but we cannot promise it will be free of errors or interruptions.",
+            "b": "8.2 We may improve, change, or suspend all or part of the service, temporarily or permanently. If we decide to close it, we will give reasonable notice on the website."
+          }
+        },
+        "s9": {
+          "title": "9. Limitation of liability",
+          "items": {
+            "a": "9.1 To the extent permitted by law, we are not liable for any loss or damage arising from contact, meetings or handovers between users, from information users submit, or from the service failing or producing an incorrect match.",
+            "b": "9.2 This limitation does not apply to loss or damage caused by our wilful misconduct or gross negligence."
+          }
+        },
+        "s10": {
+          "title": "10. Intellectual property",
+          "items": {
+            "a": "The {brand} name, design and source code belong to the operator unless stated otherwise. The source code being viewable on GitHub does not grant permission to reuse it unless a licence says so."
+          }
+        },
+        "s11": {
+          "title": "11. Changes to these terms",
+          "items": {
+            "a": "We may update these terms from time to time. The current version shows its last-updated date on this page. For material changes, we will give notice on the website before the new terms take effect. Continuing to use the service after that means you accept the updated terms."
+          }
+        },
+        "s12": {
+          "title": "12. Governing law",
+          "items": {
+            "a": "These terms are governed by and interpreted under Thai law. If the Thai and English versions conflict, the Thai version prevails."
+          }
+        },
+        "s13": {
+          "title": "13. Contact us",
+          "items": {
+            "a": "If you have questions about these terms, email us at {email}."
+          }
+        }
+      }
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "intro": "{brand} collects only the personal data it needs to get licence plates back to their owners. This policy explains what we collect, why, who can see it, how long we keep it, and your rights under Thailand’s Personal Data Protection Act B.E. 2562 (2019).",
+      "sections": {
+        "s1": {
+          "title": "1. Data controller",
+          "items": {
+            "a": "The data controller under this policy is the operator of {brand}, operating as {operator}. You can reach us at {email}."
+          }
+        },
+        "s2": {
+          "title": "2. What we collect",
+          "items": {
+            "a": "2.1 What you enter when posting: the plate number, province, plate type, a note, and any contact details you choose to give (LINE ID, phone number or email).",
+            "b": "2.2 Plate photos. A finder’s photo is cropped to the plate on their own device before it is sent, so we only ever receive the cropped plate, never the full photo. Data embedded in the photo, such as GPS location, is removed.",
+            "c": "2.3 Google account details, only if you choose to sign in: your account ID and email address. We never receive your password and do not ask for access to anything else in your account.",
+            "d": "2.4 Technical data. Your IP address is turned into a code that changes every day before it is stored; we never store the IP address itself. The code is used to limit unusually frequent submissions, prevent spam, and record when contact details are viewed.",
+            "e": "2.5 Feedback and reports: the rating and comments you send through the feedback form, and the reason you give when reporting a post.",
+            "f": "2.6 We do not collect your name, national ID number, bank account number or location, and our forms will not accept them."
+          }
+        },
+        "s3": {
+          "title": "3. Why we use it, and on what legal basis",
+          "items": {
+            "a": "3.1 To match plates reported lost with plates that have been found, and to let matched users contact each other, based on the consent you give before posting.",
+            "b": "3.2 To let you manage your own posts (extend, close or delete them) and link them to your Google account when you sign in, as part of providing the service you asked for.",
+            "c": "3.3 To prevent misuse, spam and scams and to keep the system secure, based on our legitimate interests and those of other users.",
+            "d": "3.4 To improve the service using feedback and aggregated usage statistics that do not identify anyone.",
+            "e": "3.5 To comply with the law or with orders from authorities empowered by law."
+          }
+        },
+        "s4": {
+          "title": "4. Who can see your data",
+          "items": {
+            "a": "4.1 Your contact details are shown only to users the system matches with your post, and only after they confirm they have read our scam warning.",
+            "b": "4.2 Lost-plate posts never appear in search results. Photos of found plates are shown to people who search for that plate number, without any contact details.",
+            "c": "4.3 We rely on outside providers, who can access data only as far as their role requires: Supabase (database, photo storage and user accounts), Vercel (website hosting), Cloudflare Turnstile (bot protection) and Google (sign-in).",
+            "d": "4.4 We do not sell, rent or trade your personal data, and we do not use it for advertising.",
+            "e": "4.5 We may disclose data where the law requires it or under an order from a court or competent authority."
+          }
+        },
+        "s5": {
+          "title": "5. Transfers outside Thailand",
+          "items": {
+            "a": "The servers of the providers listed in 4.3 may be located outside Thailand, so your data may be stored or processed abroad. We choose providers with internationally recognised data protection measures, and any transfer abroad is made under the conditions set by the Personal Data Protection Act."
+          }
+        },
+        "s6": {
+          "title": "6. How long we keep data",
+          "items": {
+            "a": "6.1 Posts, contact details and plate photos last {days} days from the day they are posted. The owner of a post can extend it by {extendDays} days at a time, up to {maxDays} days in total. When a post expires or you delete it, this data is deleted from the system.",
+            "b": "6.2 Records of contact details being viewed: 30 days.",
+            "c": "6.3 Feedback sent through the form: up to 1 year.",
+            "d": "6.4 Data used to limit frequent submissions: up to 2 days.",
+            "e": "6.5 Google account details: until you ask us to delete your account.",
+            "f": "6.6 Where the law requires us to keep some data for longer, we keep it only as long as the law requires."
+          }
+        },
+        "s7": {
+          "title": "7. Cookies and browser storage",
+          "items": {
+            "a": "7.1 We only use the cookies and browser storage the service needs to work. There are no advertising cookies and no third-party tracking cookies.",
+            "b": "7.2 These are: a cookie remembering the language you chose, sign-in cookies (only while you are signed in), and browser storage that remembers which posts were made from this device, the colour theme you picked, and anything you have half-filled in a form.",
+            "c": "7.3 Cloudflare Turnstile may process technical data from your browser to tell real people from bots.",
+            "d": "7.4 If you delete cookies or browser data, you will be signed out and may no longer be able to manage posts you made without signing in."
+          }
+        },
+        "s8": {
+          "title": "8. Security",
+          "items": {
+            "a": "We take reasonable measures to prevent unauthorised access, use or disclosure, including HTTPS encryption, restricted database access, keeping photos in private storage that can only be opened through short-lived links, and converting IP addresses before storing them. No system is completely secure, however. If a personal data breach occurs, we will act on it and notify as the law requires."
+          }
+        },
+        "s9": {
+          "title": "9. Your rights",
+          "items": {
+            "a": "9.1 Under the Personal Data Protection Act B.E. 2562, you have the right to access and obtain a copy of your data, to have it corrected, to have it deleted or destroyed, to restrict its use, to object to its processing, to have it transferred, and to withdraw your consent at any time.",
+            "b": "9.2 Withdrawing consent does not affect processing already carried out. Once you withdraw it, we delete your posts and stop showing your contact details, which means the system can no longer match your plate.",
+            "c": "9.3 You can delete or close your own posts straight away on the “My posts” page. For any other request, including deleting your account, email {email}. We will reply within 30 days of receiving your request and may ask for more information to confirm the data is yours.",
+            "d": "9.4 If you believe we have not complied with personal data protection law, you have the right to complain to the Office of the Personal Data Protection Committee."
+          }
+        },
+        "s10": {
+          "title": "10. Minors",
+          "items": {
+            "a": "The service is not aimed at collecting data from minors. Minors who wish to use it should first have a parent’s or guardian’s consent. If a parent or guardian finds that a minor has submitted data without consent, let us know and we will delete it."
+          }
+        },
+        "s11": {
+          "title": "11. Changes to this policy",
+          "items": {
+            "a": "We may update this policy as the service and the law change. The last-updated date is shown on this page. For material changes, especially using data for a new purpose, we will give notice on the website and ask for your consent again where the law requires."
+          }
+        },
+        "s12": {
+          "title": "12. Contact us",
+          "items": {
+            "a": "Send any question or request about your personal data to {email}."
+          }
+        }
+      }
+    }
   }
 }

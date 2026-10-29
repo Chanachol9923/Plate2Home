@@ -5,6 +5,9 @@ export const CONSENT_VERSION = '2026-09-v1';
 
 /** Posts expire after this many days (mirrors the posts.expires_at default). */
 export const POST_TTL_DAYS = 60;
+/** Each extension adds this many days, up to POST_MAX_DAYS after posting (manage_post SQL). */
+export const POST_EXTEND_DAYS = 30;
+export const POST_MAX_DAYS = 90;
 
 export const MAX_PLATES_PER_BATCH = 20;
 

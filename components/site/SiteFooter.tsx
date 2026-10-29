@@ -10,14 +10,24 @@ export async function SiteFooter() {
       <div className="mx-auto max-w-2xl space-y-1 px-4 py-6 text-center text-sm text-ink-muted">
         <p>{t('nonCommercial')}</p>
         <p>{t('privacy')}</p>
-        <p className="pt-2">
-          <Link
-            href="/about"
-            className="inline-flex min-h-11 items-center font-semibold text-ink underline underline-offset-4"
-          >
-            {t('about')}
-          </Link>
-        </p>
+        <ul className="flex flex-wrap justify-center gap-x-4 pt-2">
+          {(
+            [
+              ['/about', 'about'],
+              ['/terms', 'terms'],
+              ['/privacy', 'privacyLink'],
+            ] as const
+          ).map(([href, key]) => (
+            <li key={href}>
+              <Link
+                href={href}
+                className="inline-flex min-h-11 items-center font-semibold text-ink underline underline-offset-4"
+              >
+                {t(key)}
+              </Link>
+            </li>
+          ))}
+        </ul>
         {/* The credit always uses the international product name. */}
         <p lang="en" className="pt-3 font-semibold text-ink">
           {t('credit', { brand: brand.name.en, author: brand.author })}

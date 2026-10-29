@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { FeedbackForm } from '@/components/feedback/FeedbackForm';
+import { LEGAL_UPDATED } from '@/components/legal/LegalDocument';
 import { PageShell } from '@/components/site/PageShell';
+import { Link } from '@/i18n/navigation';
 import { POST_TTL_DAYS } from '@/lib/config/app';
 import { brand } from '@/lib/config/brand';
 
-/** Date shown as "last updated" for the terms and privacy sections. LEGAL-TODO(terms). */
-const UPDATED = new Date('2026-09-28T00:00:00+07:00');
+/** The summaries here follow the full documents, so they share their date. */
+const UPDATED = LEGAL_UPDATED;
 
 const SECTIONS = ['how', 'terms', 'privacy', 'feedback', 'contact'] as const;
 
@@ -42,6 +44,7 @@ export default async function AboutPage() {
   };
   const h2 = 'scroll-mt-4 pt-2 text-xl font-bold';
   const h3 = 'font-heading font-bold';
+  const readFull = 'inline-flex min-h-11 items-center font-semibold underline underline-offset-4';
 
   return (
     <PageShell title={t('title', vars)}>
@@ -83,6 +86,9 @@ export default async function AboutPage() {
             {t('updated', { date: format.dateTime(UPDATED, { dateStyle: 'long' }) })}
           </p>
           {list('terms.items', true)}
+          <Link href="/terms" className={readFull}>
+            {t('terms.readFull')}
+          </Link>
         </section>
 
         <section aria-labelledby="privacy" className="space-y-4">
@@ -97,6 +103,9 @@ export default async function AboutPage() {
           {list('privacy.share')}
           <h3 className={h3}>{t('privacy.keepTitle')}</h3>
           <p>{t('privacy.keep', vars)}</p>
+          <Link href="/privacy" className={readFull}>
+            {t('privacy.readFull')}
+          </Link>
         </section>
 
         <section aria-labelledby="feedback" className="space-y-3">
