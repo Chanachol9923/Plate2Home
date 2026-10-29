@@ -66,6 +66,7 @@ export function PhotoCropper({
   marked = [],
   suggestions = [],
   status,
+  overlay,
 }: {
   photo: LoadedPhoto;
   url: string;
@@ -78,12 +79,20 @@ export function PhotoCropper({
   suggestions?: Rect[];
   /** Automatic-finding progress/result line, shown in the card. */
   status?: ReactNode;
+  /** Shown over the photo itself, e.g. while plates are being looked for. */
+  overlay?: ReactNode;
 }) {
   const t = useTranslations('found');
   const surface = useRef<HTMLDivElement>(null);
   const preview = useRef<HTMLCanvasElement>(null);
   const drag = useRef<Drag | null>(null);
   const touched = useRef(false);
+  // The same, for rendering: whether the user has placed a box themselves.
+  const [touchedBox, setTouchedState] = useState(false);
+  const setTouched = (v: boolean) => {
+    touched.current = v;
+    setTouchedState(v);
+  };
   const [box, setBoxState] = useState<Rect | null>(() => defaultBox(photo.width, photo.height));
   // Latest box for pointer handlers (several events can arrive before a re-render).
   const boxRef = useRef<Rect | null>(box);
@@ -128,7 +137,7 @@ export function PhotoCropper({
   const onDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (busy) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    touched.current = true;
+    setTouched(true);
     const p = toPhoto(e);
     const box = boxRef.current;
     const corner = (e.target as HTMLElement).closest<HTMLElement>('[data-corner]')?.dataset
@@ -163,7 +172,7 @@ export function PhotoCropper({
   const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
     if (!box || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
     e.preventDefault();
-    touched.current = true;
+    setTouched(true);
     const step = Math.max(1, Math.round(photo.width / 100));
     setBox(
       nudgeBox(
@@ -184,7 +193,7 @@ export function PhotoCropper({
       for (const r of rects) await onCrop(r);
       // Next: the next suggestion that isn't cut yet, if any.
       const next = suggestions.find((s) => !isCut(s) && !rects.includes(s));
-      touched.current = false;
+      setTouched(false);
       setBox(next ?? null);
       if (!next) setExpanded(false);
     } finally {
@@ -238,7 +247,7 @@ export function PhotoCropper({
               variant="secondary"
               onClick={() => {
                 setExpanded(true);
-                touched.current = false;
+                setTouched(false);
                 setBox(defaultBox(photo.width, photo.height));
               }}
             >
@@ -250,12 +259,16 @@ export function PhotoCropper({
     );
   }
 
+  // While plates are looked for, the default box would only be a guess: the photo stays
+  // clear under the overlay until a suggestion arrives or the user draws one (D-098).
+  const shown = overlay && !touchedBox ? null : box;
+
   return (
     <figure className="space-y-3 rounded-md border-2 border-line-soft bg-surface p-2">
       {caption}
       {status}
       <p className="text-sm text-ink-muted">
-        {box ? t('cropHint') : t('drawHint')}
+        {shown ? t('cropHint') : t('drawHint')}
         {open.length > 1 && ` ${t('pickAnother')}`}
       </p>
       <div
@@ -289,7 +302,7 @@ export function PhotoCropper({
               onPointerDown={(e) => {
                 // Select instead of starting a new box underneath.
                 e.stopPropagation();
-                touched.current = true;
+                setTouched(true);
                 setBox(s);
               }}
               onClick={() => setBox(s)}
@@ -298,14 +311,14 @@ export function PhotoCropper({
             />
           ),
         )}
-        {box && (
+        {shown && (
           <div
             role="group"
             tabIndex={0}
             aria-label={t('boxLabel')}
             onKeyDown={onKey}
             className="absolute cursor-move border-[3px] border-accent shadow-[0_0_0_9999px_rgb(0_0_0/0.45)] focus-visible:outline-4"
-            style={place(box)}
+            style={place(shown)}
           >
             {CORNERS.map((c) => (
               <span
@@ -319,9 +332,10 @@ export function PhotoCropper({
             ))}
           </div>
         )}
+        {overlay}
       </div>
 
-      {usable(box) && (
+      {usable(shown) && (
         <div className="space-y-1">
           <p className="text-sm font-semibold">{t('previewLabel')}</p>
           <canvas
@@ -334,7 +348,7 @@ export function PhotoCropper({
       )}
 
       {/* One main action: all found plates when there are several, else this box (D-084). */}
-      <div className="grid gap-2">
+      <div className={overlay && !shown ? 'hidden' : 'grid gap-2'}>
         {open.length > 1 ? (
           <>
             <Button busy={busy} onClick={() => cut(open)}>

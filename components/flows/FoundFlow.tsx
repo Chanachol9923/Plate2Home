@@ -11,6 +11,7 @@ import { useErrorText } from '@/components/forms/useErrorText';
 import { LostWatchHint } from '@/components/found/LostWatchHint';
 import { OwnPostNotice } from '@/components/own/OwnPostNotice';
 import { MANUAL_CROP_PADDING, PhotoCropper } from '@/components/found/PhotoCropper';
+import { ScanOverlay } from '@/components/found/ScanOverlay';
 import { PlateInput, type PlateFieldErrors } from '@/components/plate/PlateInput';
 import { PlateView } from '@/components/plate/PlateView';
 import { Alert } from '@/components/ui/Alert';
@@ -476,7 +477,8 @@ export function FoundFlow() {
               e.target.value = '';
             }}
           />
-          {ocrLoading !== null && (
+          {/* While a photo is scanned, its overlay shows the download instead. */}
+          {ocrLoading !== null && !photos.some((p) => p.scan?.state === 'scanning') && (
             <p className="inline-flex items-center gap-2 text-sm" aria-live="polite">
               <Spinner /> {tOcr('loading', { percent: ocrLoading })}
             </p>
@@ -487,19 +489,25 @@ export function FoundFlow() {
               <div key={p.id}>
                 <PhotoCropper
                   status={
-                    p.scan && (
+                    p.scan &&
+                    p.scan.state !== 'scanning' && (
                       <p className="text-sm font-semibold" aria-live="polite">
-                        {p.scan.state === 'scanning' && (
-                          <span className="inline-flex items-center gap-2">
-                            <Spinner /> {tOcr('scanning')}
-                          </span>
-                        )}
                         {p.scan.state === 'done' &&
                           (p.scan.found > 0
                             ? tOcr('found', { count: p.scan.found })
                             : tOcr('none'))}
                         {p.scan.state === 'failed' && tOcr('failed')}
                       </p>
+                    )
+                  }
+                  overlay={
+                    p.scan?.state === 'scanning' && (
+                      <ScanOverlay
+                        text={tOcr('scanning')}
+                        detail={
+                          ocrLoading !== null ? tOcr('loading', { percent: ocrLoading }) : null
+                        }
+                      />
                     )
                   }
                   photo={p.photo}

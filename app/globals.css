@@ -83,6 +83,17 @@
   --shadow-*: initial;
   --shadow-sign: 0 3px 0 0 var(--p-line);
   --shadow-sign-pressed: 0 1px 0 0 var(--p-line);
+
+  /* A line sweeping over a photo while plates are being looked for. */
+  --animate-scan: scan 1.6s ease-in-out infinite alternate;
+  @keyframes scan {
+    from {
+      top: 0%;
+    }
+    to {
+      top: 100%;
+    }
+  }
 }
 
 @theme inline {
