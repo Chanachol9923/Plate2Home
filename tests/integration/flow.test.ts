@@ -7,6 +7,7 @@ import { randomBytes } from 'node:crypto';
 import { hashSync } from '@node-rs/argon2';
 import sharp from 'sharp';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { CONSENT_VERSION } from '@/lib/config/app';
 
 const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SECRET_KEY);
 
@@ -26,6 +27,13 @@ process.env.ADMIN_PASSWORD_HASH = hashSync(ADMIN_PASSWORD, {
 const ORIGIN = 'http://localhost:3000';
 const IP = `10.${Math.floor(Math.random() * 250)}.${Math.floor(Math.random() * 250)}.7`;
 let turnstileOk = true;
+
+// Google sign-in (D-085) reads the request's cookies, which only exist inside Next. These
+// tests post signed out, like most users; accounts are covered by supabase/tests.
+vi.mock('@/lib/auth/session', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/auth/session')>()),
+  currentUser: async () => null,
+}));
 
 const realFetch = globalThis.fetch;
 vi.stubGlobal('fetch', (input: RequestInfo | URL, init?: RequestInit) => {
@@ -115,9 +123,8 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
 
   const contact = { lineId: 'itest.owner' };
   const base = {
-    pin: '2580',
     consent: true,
-    consentVersion: '2026-09-v1',
+    consentVersion: CONSENT_VERSION,
     locale: 'th',
     turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
   };
@@ -177,19 +184,18 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
 
   it('rejects invalid input with field codes', async () => {
     const res = await routes.lost.POST(
-      jsonRequest('/api/lost', { ...base, plate, contact: { phone: '123' }, pin: '1111' }),
+      jsonRequest('/api/lost', { ...base, plate, contact: { phone: '123' } }),
       noParams,
     );
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.fields).toMatchObject({ 'contact.phone': 'phone_invalid', pin: 'pin_weak' });
+    expect(body.fields).toMatchObject({ 'contact.phone': 'phone_invalid' });
   });
 
   it('opens a found batch', async () => {
     const res = await routes.batch.POST(
       jsonRequest('/api/found/batch', {
         ...base,
-        pin: '1397',
         contact: { phone: '0812345678' },
         handover: 'police_station',
         policeStationNote: 'สภ.ทดสอบ',
@@ -446,46 +452,27 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
     expect(restore.status).toBe(200);
   });
 
-  // --- Manage (D-078) -------------------------------------------------------------------------
+  it('refuses terms the user has not seen (an outdated consent version)', async () => {
+    const res = await routes.lost.POST(
+      jsonRequest('/api/lost', { ...base, consentVersion: '2000-01-v0', plate, contact }),
+      noParams,
+    );
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ code: 'consent_outdated' });
+  });
+
+  // --- Manage (D-078, D-085) ------------------------------------------------------------------
   const manage = (body: object) => routes.manage.POST(jsonRequest('/api/manage', body), noParams);
-  const pinAuth = (pin: string) => ({ kind: 'pin', plate, pin });
+  const ownerDevice = () => ({ kind: 'device', batchId: lostBatchId, token: lostDeviceToken });
 
-  it('refuses a wrong PIN and an unknown plate with the same answer', async () => {
-    const wrong = await manage({
-      auth: { ...pinAuth('9999'), turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX' },
-      action: 'list',
-    });
-    expect(wrong.status).toBe(403);
-    expect(await wrong.json()).toEqual({ code: 'pin_wrong' });
-    const unknown = await manage({
-      auth: {
-        kind: 'pin',
-        plate: { ...plate, number: '9' },
-        pin: base.pin,
-        turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
-      },
-      action: 'list',
-    });
-    expect(unknown.status).toBe(403);
-    expect(await unknown.json()).toEqual({ code: 'pin_wrong' });
+  it('asks a signed-out user to sign in to manage by account', async () => {
+    const res = await manage({ auth: { kind: 'account', batchId: lostBatchId }, action: 'list' });
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ code: 'signed_out' });
   });
 
-  it('needs Turnstile to open a post with plate + PIN', async () => {
-    turnstileOk = false;
-    const res = await manage({
-      auth: { ...pinAuth(base.pin), turnstileToken: 'x' },
-      action: 'list',
-    });
-    turnstileOk = true;
-    expect(res.status).toBe(403);
-    expect(await res.json()).toEqual({ code: 'turnstile_failed' });
-  });
-
-  it('opens the post with plate + PIN, without contact details', async () => {
-    const res = await manage({
-      auth: { ...pinAuth(base.pin), turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX' },
-      action: 'list',
-    });
+  it('opens the post with the device token, without contact details', async () => {
+    const res = await manage({ auth: ownerDevice(), action: 'list' });
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.batchId).toBe(lostBatchId);
@@ -493,12 +480,8 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
     expect(JSON.stringify(body)).not.toContain('itest.owner');
   });
 
-  it('extends and resolves with the PIN, and refuses a wrong device token', async () => {
-    const extended = await manage({
-      auth: pinAuth(base.pin),
-      action: 'extend',
-      postId: lostPostId,
-    });
+  it('extends and resolves with the device token, and refuses a wrong one', async () => {
+    const extended = await manage({ auth: ownerDevice(), action: 'extend', postId: lostPostId });
     const [post] = (await extended.json()).posts;
     expect(Date.parse(post.expiresAt) - Date.parse(post.createdAt)).toBeGreaterThan(
       89 * 86_400_000,
@@ -510,11 +493,7 @@ describe.skipIf(!configured)('lost → found → match (real Supabase)', () => {
     });
     expect(bad.status).toBe(404);
 
-    const resolved = await manage({
-      auth: { kind: 'device', batchId: lostBatchId, token: lostDeviceToken },
-      action: 'resolve',
-      postId: lostPostId,
-    });
+    const resolved = await manage({ auth: ownerDevice(), action: 'resolve', postId: lostPostId });
     expect((await resolved.json()).posts[0].status).toBe('resolved');
   });
 

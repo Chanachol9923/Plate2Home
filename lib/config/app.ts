@@ -1,7 +1,7 @@
 /** Product-level constants. Retention values are LEGAL-TODO(retention); see docs/legal-todo.md. */
 
 /** Recorded with every post. Bump when the consent text changes. LEGAL-TODO(consent) */
-export const CONSENT_VERSION = '2026-09-v1';
+export const CONSENT_VERSION = '2026-10-v2';
 
 /** Posts expire after this many days (mirrors the posts.expires_at default). */
 export const POST_TTL_DAYS = 60;

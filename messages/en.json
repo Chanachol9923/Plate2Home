@@ -130,7 +130,8 @@
     }
   },
   "consent": {
-    "label": "I agree that my plate number and contact details are stored to match plates, and that the other person sees my contact details when there's a match. Everything is deleted automatically within 60 days."
+    "label": "I agree that my plate number, contact details and plate photo (if any) are stored to match plates, and that the owner or finder I am matched with can see my contact details. Everything is deleted automatically when the post expires: within {days} days, or at most {maxDays} days if I extend it.",
+    "policyLink": "Read the Privacy Policy"
   },
   "turnstile": {
     "missingKey": "Bot protection isn't configured."

@@ -15,7 +15,8 @@ import { PlateView } from '@/components/plate/PlateView';
 import { Alert } from '@/components/ui/Alert';
 import { Button, buttonClass, Spinner } from '@/components/ui/Button';
 import { Choice } from '@/components/ui/Choice';
-import { Checkbox, Field, TextInput } from '@/components/ui/Field';
+import { ConsentField } from '@/components/forms/ConsentField';
+import { Field, TextInput } from '@/components/ui/Field';
 import { Stepper } from '@/components/ui/Stepper';
 import { Link } from '@/i18n/navigation';
 import { CONSENT_VERSION, MAX_PLATES_PER_BATCH } from '@/lib/config/app';
@@ -77,7 +78,6 @@ export function FoundFlow() {
   const tc = useTranslations('common');
   const tMine = useTranslations('myPosts');
   const tOcr = useTranslations('ocr');
-  const tConsent = useTranslations('consent');
   const errorText = useErrorText();
   const locale = useLocale() as 'th' | 'en';
   const [step, go] = useStep(STEPS);
@@ -645,12 +645,7 @@ export function FoundFlow() {
             )}
           />
 
-          <Checkbox
-            label={tConsent('label')}
-            checked={consent}
-            onChange={setConsent}
-            error={errors.consent}
-          />
+          <ConsentField checked={consent} onChange={setConsent} error={errors.consent} />
 
           <div>
             <Turnstile ref={turnstile} action="found_batch" onToken={setToken} />

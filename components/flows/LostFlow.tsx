@@ -19,7 +19,7 @@ import { PlateView } from '@/components/plate/PlateView';
 import { FoundResults, type FoundResult } from '@/components/results/FoundResults';
 import { Alert } from '@/components/ui/Alert';
 import { Button, buttonClass } from '@/components/ui/Button';
-import { Checkbox } from '@/components/ui/Field';
+import { ConsentField } from '@/components/forms/ConsentField';
 import { Stepper } from '@/components/ui/Stepper';
 import { Link } from '@/i18n/navigation';
 import { CONSENT_VERSION } from '@/lib/config/app';
@@ -44,7 +44,6 @@ export function LostFlow() {
   const t = useTranslations('lost');
   const tc = useTranslations('common');
   const tMine = useTranslations('myPosts');
-  const tConsent = useTranslations('consent');
   const errorText = useErrorText();
   const locale = useLocale() as 'th' | 'en';
   const [step, go] = useStep(STEPS);
@@ -269,12 +268,7 @@ export function LostFlow() {
 
       {step === 'confirm' && (
         <div className="space-y-5">
-          <Checkbox
-            label={tConsent('label')}
-            checked={consent}
-            onChange={setConsent}
-            error={confirmErrors.consent}
-          />
+          <ConsentField checked={consent} onChange={setConsent} error={confirmErrors.consent} />
           <div>
             <Turnstile ref={turnstile} action="lost_create" onToken={setToken} />
             {confirmErrors.turnstile && !token && (
