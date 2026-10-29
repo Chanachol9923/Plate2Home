@@ -6,10 +6,9 @@ import {
   SearchIcon,
   CameraIcon,
   LostPlateIcon,
-  MatchIcon,
-  PhoneIcon,
 } from '@/components/icons';
 import { HomeAccountHint } from '@/components/auth/HomeAccountHint';
+import { HowItWorks } from '@/components/home/HowItWorks';
 import { Phrased } from '@/components/ui/Phrased';
 import { actionTile, bigLink } from '@/components/ui/styles';
 import { Link } from '@/i18n/navigation';
@@ -31,24 +30,6 @@ function ActionTile({
       <span className="font-heading text-xl font-bold">{title}</span>
       <span className="text-sm text-ink-muted">{hint}</span>
     </Link>
-  );
-}
-
-function Step({ n, icon, children }: { n: number; icon: ReactNode; children: ReactNode }) {
-  return (
-    <li className="flex items-start gap-3">
-      {/* Numbered like a road-sign panel. */}
-      <span
-        aria-hidden="true"
-        className="mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-sm bg-accent font-heading font-bold text-on-accent"
-      >
-        {n}
-      </span>
-      <span className="flex flex-1 items-start justify-between gap-3 pt-0.5">
-        <span>{children}</span>
-        <span className="shrink-0 text-ink-muted">{icon}</span>
-      </span>
-    </li>
   );
 }
 
@@ -91,22 +72,7 @@ export default async function HomePage() {
       </Link>
       <HomeAccountHint />
 
-      <section aria-labelledby="how-title" className="mt-10 border-t-2 border-line-soft pt-6">
-        <h2 id="how-title" className="text-lg font-bold">
-          {t('how.title')}
-        </h2>
-        <ol className="mt-3 space-y-3">
-          <Step n={1} icon={<CameraIcon />}>
-            {t('how.step1')}
-          </Step>
-          <Step n={2} icon={<MatchIcon />}>
-            {t('how.step2')}
-          </Step>
-          <Step n={3} icon={<PhoneIcon />}>
-            {t('how.step3')}
-          </Step>
-        </ol>
-      </section>
+      <HowItWorks />
     </div>
   );
 }

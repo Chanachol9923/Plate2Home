@@ -34,9 +34,14 @@
     "search": "Search a plate number",
     "how": {
       "title": "How it works",
-      "step1": "Lost a plate? Enter its number. Found one? Take a photo.",
-      "step2": "We match the numbers for you.",
-      "step3": "You get each other's contact details and arrange the return."
+      "lostTitle": "Lost a plate",
+      "lostDo": "Type the number",
+      "foundTitle": "Found one",
+      "foundDo": "Take a photo",
+      "matchTitle": "Same number",
+      "matchDo": "We match you right away",
+      "contactTitle": "Get in touch and return it",
+      "contactDo": "You see each other’s contact details"
     },
     "myPosts": "My posts",
     "account": {

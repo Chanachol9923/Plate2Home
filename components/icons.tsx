@@ -99,3 +99,22 @@ export function ArrowRightIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function ArrowDownIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 5v14" />
+      <path d="m6 13 6 6 6-6" />
+    </Icon>
+  );
+}
+
+/** A tick in a circle: "it matches". */
+export function CheckIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8 12.5 2.5 2.5L16 9.5" />
+    </Icon>
+  );
+}

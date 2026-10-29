@@ -5,9 +5,10 @@ import { provinceName } from '@/lib/plate/provinces';
 import type { Plate } from '@/lib/plate/types';
 import { plateFont } from './font';
 
-type Size = 'sm' | 'md' | 'lg';
+type Size = 'xs' | 'sm' | 'md' | 'lg';
 
 const SIZES: Record<Size, { frame: string; main: string; province: string }> = {
+  xs: { frame: 'w-32 p-0.5', main: 'text-[1.3rem]', province: 'text-[0.7rem]' },
   sm: { frame: 'w-44 p-0.5', main: 'text-[1.7rem]', province: 'text-xs' },
   md: { frame: 'w-60 p-1', main: 'text-[2.3rem]', province: 'text-sm' },
   lg: { frame: 'w-full max-w-[22rem] p-1', main: 'text-[2.9rem]', province: 'text-base' },
