@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useSyncExternalStore } from 'react';
+import { postJson } from '@/lib/client/api';
+import { markDevicePostsLinked, unlinkedDevicePosts } from '@/lib/client/devices';
 
 /**
  * Optional Google sign-in on the client (D-085). The session itself is an httpOnly cookie;
@@ -21,6 +23,28 @@ let inflight: Promise<void> | null = null;
 function set(next: Session) {
   session = next;
   for (const l of listeners) l();
+  if (next.status === 'signed-in') void linkDevicePosts();
+}
+
+let linking = false;
+
+/**
+ * Signed in: link the posts made on this device while signed out to the account (D-085,
+ * D-094), whichever page the sign-in happened on, so they show on other devices without
+ * opening "My posts" here first. "My posts" links them too; doing it twice is harmless.
+ */
+async function linkDevicePosts() {
+  const pending = unlinkedDevicePosts();
+  if (pending.length === 0 || linking) return;
+  linking = true;
+  const res = await postJson<{ signedIn: boolean }>(
+    '/api/my-posts',
+    { devices: pending.map((p) => ({ batchId: p.batchId, token: p.token })) },
+    0,
+  );
+  linking = false;
+  // Only a signed-in answer means the server linked them; otherwise try again next time.
+  if (res.ok && res.data.signedIn) markDevicePostsLinked(pending.map((p) => p.batchId));
 }
 
 export function refreshSession(): Promise<void> {
