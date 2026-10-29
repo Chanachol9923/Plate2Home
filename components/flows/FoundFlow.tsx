@@ -9,6 +9,7 @@ import { NoteField } from '@/components/forms/NoteField';
 import { Turnstile, type TurnstileHandle } from '@/components/forms/Turnstile';
 import { useErrorText } from '@/components/forms/useErrorText';
 import { LostWatchHint } from '@/components/found/LostWatchHint';
+import { OwnPostNotice } from '@/components/own/OwnPostNotice';
 import { MANUAL_CROP_PADDING, PhotoCropper } from '@/components/found/PhotoCropper';
 import { PlateInput, type PlateFieldErrors } from '@/components/plate/PlateInput';
 import { PlateView } from '@/components/plate/PlateView';
@@ -21,6 +22,8 @@ import { Stepper } from '@/components/ui/Stepper';
 import { Link } from '@/i18n/navigation';
 import { CONSENT_VERSION, MAX_PLATES_PER_BATCH } from '@/lib/config/app';
 import { postForm, postJson } from '@/lib/client/api';
+import { ownPostsFor, ownPostsReady, useOwnPosts } from '@/lib/client/own-posts';
+import { samePlate } from '@/lib/plate/same';
 import { rememberDevicePost } from '@/lib/client/devices';
 import { cropToBlob, loadPhoto, type LoadedPhoto, type Rect } from '@/lib/client/image';
 import { findPlates, OCR_ENABLED, onOcrLoading, readPlate } from '@/lib/client/ocr';
@@ -99,6 +102,8 @@ export function FoundFlow() {
   const [submitting, setSubmitting] = useState(false);
   const [ocrLoading, setOcrLoading] = useState<number | null>(null);
   const cardCount = useRef(0);
+  const own = useOwnPosts();
+  const tOwn = useTranslations('own');
   const cameraInput = useRef<HTMLInputElement>(null);
   const galleryInput = useRef<HTMLInputElement>(null);
 
@@ -219,7 +224,7 @@ export function FoundFlow() {
   const updatePlate = (id: string, patch: Partial<PlateCard>) =>
     setPlates((ps) => ps.map((p) => (p.id === id ? { ...p, ...patch } : p)));
 
-  function checkPlates() {
+  async function checkPlates() {
     setFormError(null);
     if (plates.length === 0) {
       setFormError(t('needPlates'));
@@ -232,9 +237,16 @@ export function FoundFlow() {
         : { ...p, errors: plateErrorsFrom(fieldErrors(parsed.error), errorText) };
     });
     setPlates(checked);
-    if (checked.every((p) => !p.errors.number && !p.errors.series && !p.errors.provinceCode)) {
-      go('details');
+    if (!checked.every((p) => !p.errors.number && !p.errors.series && !p.errors.provinceCode)) {
+      return;
     }
+    // A plate the user reported lost themselves is not "found" by someone else (D-091).
+    const ownNow = await ownPostsReady();
+    if (plates.some((p) => ownPostsFor(ownNow, draftToInput(p.draft), 'lost').length > 0)) {
+      setFormError(tOwn('removeOwnLost'));
+      return;
+    }
+    go('details');
   }
 
   async function uploadPlates(target: Batch, list: PlateCard[]) {
@@ -563,7 +575,28 @@ export function FoundFlow() {
                       onChange={(draft) => updatePlate(p.id, { draft })}
                       errors={p.errors}
                     />
-                    <LostWatchHint draft={p.draft} />
+                    {(() => {
+                      const input = draftToInput(p.draft);
+                      if (!plateInputSchema.safeParse(input).success) return null;
+                      const mineLost = ownPostsFor(own, input, 'lost')[0];
+                      if (mineLost) return <OwnPostNotice post={mineLost} variant="ownLost" />;
+                      const mineFound = ownPostsFor(own, input, 'found')[0];
+                      const plate = normalizePlate(input);
+                      const twin = plates
+                        .slice(0, i)
+                        .findIndex((o) => samePlate(normalizePlate(draftToInput(o.draft)), plate));
+                      return (
+                        <>
+                          {mineFound && <OwnPostNotice post={mineFound} variant="foundAgain" />}
+                          {twin >= 0 && (
+                            <p className="text-sm text-ink-muted">
+                              {tOwn('sameInBatch', { n: twin + 1 })}
+                            </p>
+                          )}
+                          <LostWatchHint draft={p.draft} />
+                        </>
+                      );
+                    })()}
                   </li>
                 ))}
               </ol>
@@ -571,7 +604,7 @@ export function FoundFlow() {
           )}
 
           {plates.length > 0 && (
-            <Button block onClick={checkPlates}>
+            <Button block onClick={() => void checkPlates()}>
               {t('nextToDetails')}
             </Button>
           )}

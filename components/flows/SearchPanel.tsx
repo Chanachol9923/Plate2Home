@@ -5,12 +5,15 @@ import { useState } from 'react';
 import { plateErrorsFrom } from '@/components/forms/flow';
 import { useErrorText } from '@/components/forms/useErrorText';
 import { PlateInput, type PlateFieldErrors } from '@/components/plate/PlateInput';
+import { OwnPostNotice } from '@/components/own/OwnPostNotice';
 import { FoundResults, type FoundResult } from '@/components/results/FoundResults';
 import { Alert } from '@/components/ui/Alert';
 import { Button, buttonClass } from '@/components/ui/Button';
 import { Link } from '@/i18n/navigation';
 import { postJson } from '@/lib/client/api';
+import { ownFoundIds, ownPostsFor, useOwnPosts } from '@/lib/client/own-posts';
 import { draftToInput, EMPTY_DRAFT, type PlateDraft } from '@/lib/plate/draft';
+import type { PlateInput as PlateInputValue } from '@/lib/plate/types';
 import { fieldErrors, plateInputSchema } from '@/lib/validation/schemas';
 
 /** Search found plates. No browsable list: results only for an entered plate (spec §3.4). */
@@ -22,6 +25,10 @@ export function SearchPanel() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<FoundResult[] | null>(null);
+  const [searched, setSearched] = useState<PlateInputValue | null>(null);
+  const own = useOwnPosts();
+  // Searching for a plate the user reported lost themselves (D-091).
+  const mineLost = searched ? ownPostsFor(own, searched, 'lost')[0] : undefined;
 
   async function search() {
     setError(null);
@@ -39,6 +46,7 @@ export function SearchPanel() {
       setError(errorText(res.code));
       return;
     }
+    setSearched(input);
     setResults(res.data.results);
   }
 
@@ -62,17 +70,20 @@ export function SearchPanel() {
 
       {results && (
         <section aria-live="polite" className="space-y-3">
+          {mineLost && <OwnPostNotice post={mineLost} variant="ownLost" />}
           {results.length === 0 ? (
-            <Alert tone="info" title={t('none')}>
-              <p>{t('noneBody')}</p>
-              <Link href="/lost" className={`${buttonClass('primary')} mt-3`}>
-                {t('reportLost')}
-              </Link>
-            </Alert>
+            mineLost ? null : (
+              <Alert tone="info" title={t('none')}>
+                <p>{t('noneBody')}</p>
+                <Link href="/lost" className={`${buttonClass('primary')} mt-3`}>
+                  {t('reportLost')}
+                </Link>
+              </Alert>
+            )
           ) : (
             <>
               <h2 className="font-bold">{t('resultsCount', { count: results.length })}</h2>
-              <FoundResults results={results} />
+              <FoundResults results={results} ownIds={ownFoundIds(own)} />
             </>
           )}
         </section>

@@ -4,7 +4,8 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useErrorText } from '@/components/forms/useErrorText';
 import { Alert } from '@/components/ui/Alert';
-import { Button } from '@/components/ui/Button';
+import { Button, buttonClass } from '@/components/ui/Button';
+import { Link } from '@/i18n/navigation';
 import { postJson } from '@/lib/client/api';
 import { readDevicePosts } from '@/lib/client/devices';
 import { useSession } from '@/lib/client/session';
@@ -38,6 +39,7 @@ export function MatchContact({
 }) {
   const t = useTranslations('match');
   const tc = useTranslations('common');
+  const tMine = useTranslations('myPosts');
   const errorText = useErrorText();
   // Read on the client only; the server render shows the default (owner) view.
   const finderToken = useSyncExternalStore(
@@ -69,6 +71,19 @@ export function MatchContact({
   const [contact, setContact] = useState<OwnerContact | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Both posts are this person's (testing, or a plate they found themselves): there is nobody
+  // to contact (D-091).
+  if (isFinder && (isOwner || (signedIn && roles.owner))) {
+    return (
+      <Alert tone="info" title={t('bothYoursTitle')}>
+        <p>{t('bothYoursBody')}</p>
+        <Link href="/my-posts" className={`${buttonClass('primary')} mt-3`}>
+          {tMine('title')}
+        </Link>
+      </Alert>
+    );
+  }
 
   if (isFinder) {
     if (contact) {

@@ -69,6 +69,7 @@ const API_CODES = new Set([
   'network',
   'not_found',
   'signed_out',
+  'already_reported',
   'admin_login',
 ]);
 

@@ -12,6 +12,7 @@ import {
   writeDraft,
 } from '@/components/forms/flow';
 import { NoteField } from '@/components/forms/NoteField';
+import { OwnPostNotice } from '@/components/own/OwnPostNotice';
 import { Turnstile, type TurnstileHandle } from '@/components/forms/Turnstile';
 import { useErrorText } from '@/components/forms/useErrorText';
 import { PlateInput, type PlateFieldErrors } from '@/components/plate/PlateInput';
@@ -25,6 +26,13 @@ import { Link } from '@/i18n/navigation';
 import { CONSENT_VERSION } from '@/lib/config/app';
 import { postJson } from '@/lib/client/api';
 import { rememberDevicePost } from '@/lib/client/devices';
+import {
+  ownFoundIds,
+  ownPostsFor,
+  ownPostsReady,
+  useOwnPosts,
+  type OwnPost,
+} from '@/lib/client/own-posts';
 import { plateDisplay } from '@/lib/plate/canonical';
 import { draftToInput, EMPTY_DRAFT, type PlateDraft } from '@/lib/plate/draft';
 import { normalizePlate } from '@/lib/plate/normalize';
@@ -66,6 +74,10 @@ export function LostFlow() {
     failed: boolean;
   } | null>(null);
   const [created, setCreated] = useState<Created | null>(null);
+  // The user already reported this plate lost (D-091): no second report, show theirs.
+  const [already, setAlready] = useState<{ for: string; post: OwnPost } | null>(null);
+  // Start loading the user's posts now, so the check on "next" rarely has to wait.
+  useOwnPosts();
   const [restored, setRestored] = useState(false);
 
   // Restore the draft after a reload or navigation.
@@ -104,10 +116,20 @@ export function LostFlow() {
     }
     setPlateErrors({});
     setBusy(true);
+    const ownNow = await ownPostsReady();
+    const mine = ownPostsFor(ownNow, plateInput, 'lost')[0];
+    if (mine) {
+      setBusy(false);
+      setAlready({ for: plateKey, post: mine });
+      return;
+    }
+    setAlready(null);
     const res = await postJson<{ results: FoundResult[] }>('/api/search', { plate: plateInput });
     setBusy(false);
     // A failed search must not block registering a watch (matching runs again on submit).
-    const results = res.ok ? res.data.results : [];
+    // The user's own found posts are not "someone found it".
+    const mineFound = ownFoundIds(ownNow);
+    const results = res.ok ? res.data.results.filter((r) => !mineFound.has(r.postId)) : [];
     setSearch({ for: plateKey, results, failed: !res.ok });
     if (results.length === 0) go('contact');
   }
@@ -226,7 +248,9 @@ export function LostFlow() {
         <div className="space-y-5">
           <p>{t('plateIntro')}</p>
           <PlateInput value={plate} onChange={setPlate} errors={plateErrors} />
-          {searchedThis && search.results.length > 0 ? (
+          {already?.for === plateKey ? (
+            <OwnPostNotice post={already.post} variant="lostAgain" />
+          ) : searchedThis && search.results.length > 0 ? (
             <div className="space-y-4">
               <Alert tone="highlight" title={t('foundAlready')} live>
                 <p>{t('foundAlreadyBody')}</p>

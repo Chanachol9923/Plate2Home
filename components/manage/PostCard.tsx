@@ -5,18 +5,9 @@ import { useState } from 'react';
 import { PlateView } from '@/components/plate/PlateView';
 import { Button, buttonClass } from '@/components/ui/Button';
 import { Link } from '@/i18n/navigation';
-import type { Plate } from '@/lib/plate/types';
+import type { OwnPost } from '@/lib/client/own-posts';
 
-export interface OwnPost {
-  batchId: string;
-  postId: string;
-  kind: 'lost' | 'found';
-  plate: Plate;
-  status: 'active' | 'needs_review' | 'hidden' | 'resolved';
-  createdAt: string;
-  expiresAt: string;
-  matches: { matchId: string; kind: 'exact' | 'near'; createdAt: string }[];
-}
+export type { OwnPost };
 
 export type PostAction = 'resolve' | 'extend' | 'delete';
 

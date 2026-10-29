@@ -21,7 +21,15 @@ export interface FoundResult {
  * Found plates matching a search: photo, plate, match strength, how long ago, and the
  * contact-reveal checkpoint right on the card (people who found their plate act immediately).
  */
-export function FoundResults({ results }: { results: FoundResult[] }) {
+export function FoundResults({
+  results,
+  ownIds,
+}: {
+  results: FoundResult[];
+  /** The user's own found posts: marked, and no offer to contact themselves (D-091). */
+  ownIds?: Set<string>;
+}) {
+  const tOwn = useTranslations('own');
   const t = useTranslations('search');
   const tp = useTranslations('plate');
   const format = useFormatter();
@@ -44,6 +52,11 @@ export function FoundResults({ results }: { results: FoundResult[] }) {
                 {tp('unverified')}
               </span>
             )}
+            {ownIds?.has(r.postId) && (
+              <span className="rounded-sm border-2 border-line px-2 py-0.5 text-sm font-bold">
+                {tOwn('yourPost')}
+              </span>
+            )}
             <span className="ms-auto text-sm text-ink-muted">
               {t('posted', { when: format.relativeTime(new Date(r.createdAt), now) })}
             </span>
@@ -64,7 +77,13 @@ export function FoundResults({ results }: { results: FoundResult[] }) {
             <PlateView plate={r.plate} size="sm" />
           </div>
           <div className="mt-3 space-y-2">
-            <RevealContact postId={r.postId} />
+            {ownIds?.has(r.postId) ? (
+              <Link href="/my-posts" className={`${textLink} inline-flex min-h-11 items-center`}>
+                {tOwn('manageYours')}
+              </Link>
+            ) : (
+              <RevealContact postId={r.postId} />
+            )}
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Link
                 href={`/post/${r.postId}`}
@@ -72,7 +91,7 @@ export function FoundResults({ results }: { results: FoundResult[] }) {
               >
                 {t('viewPost')}
               </Link>
-              <ReportButton postId={r.postId} />
+              {!ownIds?.has(r.postId) && <ReportButton postId={r.postId} />}
             </div>
           </div>
         </li>

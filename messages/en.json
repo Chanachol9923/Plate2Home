@@ -126,7 +126,8 @@
       "generic": "Something went wrong. Please try again.",
       "not_found": "We couldn't find this post. It may have been removed.",
       "admin_login": "Sign in as admin first.",
-      "signed_out": "Please sign in first, then try again."
+      "signed_out": "Please sign in first, then try again.",
+      "already_reported": "You have already reported this plate lost. See “My posts”."
     }
   },
   "consent": {
@@ -263,7 +264,9 @@
     "ownerContactButton": "See the owner's contact details",
     "ownerContactTitle": "The owner's contact details",
     "youAreOwner": "This is your plate. Contact the finder with the button below.",
-    "finderReminder": "If you haven't seen a registration book and ID card showing they own it, don't hand the plate over yet."
+    "finderReminder": "If you haven't seen a registration book and ID card showing they own it, don't hand the plate over yet.",
+    "bothYoursTitle": "Both posts in this match are yours",
+    "bothYoursBody": "You reported this plate lost and also posted it as found, so there is nobody else to contact. If you have the plate back, close your posts in “My posts”."
   },
   "reveal": {
     "button": "See the finder's contact details",
@@ -767,5 +770,18 @@
         }
       }
     }
+  },
+  "own": {
+    "lostAgainTitle": "You have already reported this plate lost",
+    "lostAgainBody": "You reported it on {when}. We are still watching for it and will match it as soon as someone reports finding it, so there is no need to report it again.",
+    "foundAgainTitle": "You have already posted this plate as found",
+    "foundAgainBody": "You posted it on {when}. If this is the same plate, remove it from the list. If it is the other one (front and back plates), send it as usual.",
+    "ownLostTitle": "This is the plate you reported lost",
+    "ownLostBody": "You reported it on {when}. If you have it back, tap “Got my plate back” on your post and we will stop matching it. There is no need to post your own plate as found.",
+    "matchesWaiting": "{count, plural, one {# possible match is} other {# possible matches are}} waiting for you",
+    "yourPost": "Your post",
+    "manageYours": "Manage it in “My posts”",
+    "sameInBatch": "Same number as plate {n}. If it is the same plate photographed twice, remove one. Front and back plates can both be sent.",
+    "removeOwnLost": "The list includes a plate you reported lost yourself. Remove it to continue."
   }
 }
