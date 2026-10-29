@@ -20,8 +20,8 @@
     "toLightLabel": "Switch to light theme"
   },
   "home": {
-    "title": "Lost a plate in the flood? Let's get it home.",
-    "lead": "People who lost a plate register the number. People who found one send a photo. We match them straight away so you can get in touch.",
+    "title": "Lost or found a licence plate?",
+    "lead": "Post the plate number or a photo, and we'll match owners with finders.",
     "actionsLabel": "What would you like to do?",
     "lost": {
       "title": "I lost a plate",
