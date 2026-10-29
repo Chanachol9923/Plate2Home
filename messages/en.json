@@ -1,0 +1,550 @@
+{
+  "meta": {
+    "title": "{brand} · Lost & found licence plates in Thailand",
+    "description": "Lost a licence plate in a flood, or found one? Post it here and we match plate numbers straight away. Free, no ads."
+  },
+  "a11y": {
+    "skipToContent": "Skip to content"
+  },
+  "header": {
+    "homeLabel": "{brand} home"
+  },
+  "language": {
+    "switchTo": "ภาษาไทย",
+    "switchToLabel": "เปลี่ยนเป็นภาษาไทย"
+  },
+  "theme": {
+    "toDark": "Dark",
+    "toLight": "Light",
+    "toDarkLabel": "Switch to dark theme",
+    "toLightLabel": "Switch to light theme"
+  },
+  "home": {
+    "title": "Lost a plate in the flood? Let's get it home.",
+    "lead": "People who lost a plate register the number. People who found one send a photo. We match them straight away so you can get in touch.",
+    "actionsLabel": "What would you like to do?",
+    "lost": {
+      "title": "I lost a plate",
+      "hint": "Register your plate. It’s matched the moment someone finds it."
+    },
+    "found": {
+      "title": "I found a plate",
+      "hint": "Take a photo of it and we'll help find the owner."
+    },
+    "search": "Search a plate number",
+    "how": {
+      "title": "How it works",
+      "step1": "Register a lost plate, or photograph one you found",
+      "step2": "We match plate numbers instantly",
+      "step3": "The owner and the finder contact each other to arrange the handover"
+    },
+    "myPosts": "My posts",
+    "manage": "New phone? Sign in with Google under “My posts”"
+  },
+  "dormant": {
+    "title": "We're closed for now",
+    "body": "We'll reopen when floods return. Stay safe."
+  },
+  "footer": {
+    "nonCommercial": "No ads. Not for profit in any way.",
+    "privacy": "No GPS tracking. Posts are deleted automatically when they expire.",
+    "credit": "{brand} By an {author}",
+    "about": "About · Terms · Privacy"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The link may be wrong, or the post has been removed.",
+    "home": "Back to home"
+  },
+  "common": {
+    "back": "Back",
+    "next": "Next",
+    "close": "Close",
+    "optional": "(optional)",
+    "retry": "Try again",
+    "step": "Step {current} of {total}",
+    "sending": "Sending…",
+    "unknownChar": "unknown",
+    "backHome": "Back to home"
+  },
+  "plate": {
+    "typeLegend": "Plate type",
+    "car": "Car",
+    "motorcycle": "Motorcycle",
+    "other": "Other",
+    "instructions": "Type the plate in one go, e.g. กค7812 or 1กข 1234, then tap to choose the province.",
+    "provinceLabel": "Province",
+    "provinceChoose": "Tap to choose a province",
+    "provinceUnknown": "Not sure",
+    "provinceSheetTitle": "Choose a province",
+    "provinceSearch": "Type a province name",
+    "provinceNone": "No province matches. Try another spelling.",
+    "lettersButton": "ก–ฮ",
+    "lettersButtonLabel": "Pick Thai letters",
+    "lettersSheetTitle": "Pick letters",
+    "lettersDelete": "Delete",
+    "lettersDone": "Done",
+    "wildcardButton": "Add ?",
+    "wildcardButtonLabel": "Add ? for a character you can't read",
+    "wildcardHint": "Can't read a character? Put ? in its place.",
+    "viewLabel": "Licence plate {plate} {province}",
+    "unverified": "Unverified",
+    "unverifiedHint": "This doesn't look like a standard plate. It may have a typo; please check it.",
+    "textLabel": "Plate number",
+    "textPlaceholder": "กค7812",
+    "parsed": "Read as: letters {series} · number {number}"
+  },
+  "errors": {
+    "invalid": "Something isn't right. Please check and try again.",
+    "plate_number_required": "Enter the number. Use ? for digits you can't read.",
+    "province_invalid": "Choose a province from the list.",
+    "line_id_invalid": "LINE IDs have 4–20 characters: letters, digits, . - or _",
+    "phone_invalid": "Enter a 9–10 digit Thai number, e.g. 0812345678",
+    "email_invalid": "That email address doesn't look right.",
+    "contact_required": "Add at least one way to contact you.",
+    "consent_required": "Please read and agree before sending.",
+    "text_url": "Links aren't allowed here, to protect people from scams.",
+    "text_id_number": "Please don't enter an ID card number.",
+    "text_account_number": "Bank or PromptPay numbers aren't allowed here, to protect people from scams.",
+    "district_invalid": "Just the district name, please. No house numbers.",
+    "police_note_required": "Enter the police station's name.",
+    "turnstile_required": "Please wait for the bot check to finish, then send again.",
+    "api": {
+      "turnstile_failed": "The bot check failed. Please send again.",
+      "rate_limited": "Too many attempts. Please wait a moment and try again.",
+      "dormant": "We're not accepting posts right now.",
+      "consent_outdated": "Our terms have changed. Please reload the page.",
+      "upload_token_invalid": "The upload window has expired. Please start again.",
+      "batch_full": "You can send up to 20 plates at a time.",
+      "image_too_small": "The plate image is too small. Draw a bigger box.",
+      "image_type": "This file isn't a supported image.",
+      "image_unreadable": "We couldn't open this image. Try another one.",
+      "too_large": "The image is too large.",
+      "network": "Can't connect. Check your signal and try again.",
+      "generic": "Something went wrong. Please try again.",
+      "not_found": "We couldn't find this post. It may have been removed.",
+      "admin_login": "Sign in as admin first.",
+      "signed_out": "Please sign in first, then try again."
+    }
+  },
+  "consent": {
+    "label": "I agree that my plate number and contact details are stored to match plates, and that the other person sees my contact details when there's a match. Everything is deleted automatically within 60 days."
+  },
+  "turnstile": {
+    "missingKey": "Bot protection isn't configured."
+  },
+  "contact": {
+    "title": "How to reach you",
+    "lineId": "LINE ID (recommended)",
+    "lineIdHint": "e.g. somchai.p",
+    "phone": "Phone number",
+    "email": "Email",
+    "showEmail": "Show this email too",
+    "introLost": "Only the person who found your plate sees this, and only once there is a match. Add at least one.",
+    "introFound": "Only the plate's owner sees this, and only once there is a match. Add at least one."
+  },
+  "lost": {
+    "title": "I lost a plate",
+    "steps": {
+      "plate": "Lost plate number",
+      "contact": "How to reach you",
+      "confirm": "Confirm and send"
+    },
+    "plateIntro": "Enter the number of the lost plate. We'll check right away whether someone has found it.",
+    "checking": "Checking whether someone found it…",
+    "foundAlready": "Someone has found this plate!",
+    "foundAlreadyBody": "Compare the photo with your plate first. If it is yours, get the finder’s contact details from the card below.",
+    "notFoundYet": "Nobody has found this plate yet. Report it lost and it will be matched automatically when someone does.",
+    "submit": "Report lost plate",
+    "doneTitle": "Your lost plate is reported. It will be matched automatically when someone finds it.",
+    "doneManage": "Check matches and manage the post under “My posts” on this device, or on any device if you sign in with Google.",
+    "doneMatches": "Someone may have found your plate",
+    "viewMatch": "View details",
+    "alsoWatch": "Report it lost too, in case more turn up"
+  },
+  "found": {
+    "title": "I found a plate",
+    "steps": {
+      "plates": "Photos and numbers",
+      "details": "How to reach you"
+    },
+    "intro": "Take a photo of the plates you found and we'll help find their owners. One photo can contain several plates.",
+    "takePhoto": "Take a photo",
+    "fromGallery": "Choose from gallery",
+    "privacyNote": "Only the cropped plate images are sent, never the full photo, and location data is removed.",
+    "photoLabel": "Photo {n}",
+    "drawHint": "Drag on the photo to draw a box around a plate not added yet.",
+    "useWhole": "Use the whole photo",
+    "removePhoto": "Remove photo",
+    "loadingPhoto": "Preparing photo…",
+    "photoError": "We couldn't open this photo. Try another one.",
+    "cardTitle": "Plate {n}",
+    "removePlate": "Remove this plate",
+    "cropAlt": "Plate image {n}",
+    "tooMany": "You can send up to {max} plates at a time.",
+    "needPlates": "Add at least one plate first.",
+    "whereTitle": "Where is the plate now?",
+    "withFinder": "With me",
+    "atPolice": "Left at a police station",
+    "policeNote": "Police station name",
+    "policeNoteHint": "e.g. Mueang Chiang Mai Police Station",
+    "legalNote": "Finders should return plates to their owners or hand them to the police.",
+    "district": "District where you found it",
+    "districtHint": "Just the district, no address. The owner sees it after asking for your contact details.",
+    "submit": "Send {count, plural, one {# plate} other {# plates}}",
+    "uploading": "Sending {done} of {total} plates",
+    "plateUploading": "Sending…",
+    "plateDone": "Sent",
+    "plateFailed": "Not sent",
+    "retryFailed": "Retry the plates that failed",
+    "doneTitle": "Thank you for helping!",
+    "doneBody": "We'll match these plates with owners who reported them lost, and keep matching as new reports come in.",
+    "ownerLooking": "The plate's owner is looking for it!",
+    "ownerLookingBody": "This plate matches one its owner reported lost. Open it to contact the owner.",
+    "viewMatch": "View details",
+    "reviewNote": "This plate will be shown after a moderator checks it.",
+    "doneManage": "Check matches and manage the post under “My posts” on this device, or on any device if you sign in with Google.",
+    "lostCheck": {
+      "checking": "Checking whether anyone is looking for this plate…",
+      "exactTitle": "Someone is looking for this plate!",
+      "exactBody": "Finish posting (step 2) and you and the owner will each see the other’s contact details.",
+      "nearTitle": "Someone is looking for a similar plate",
+      "nearBody": "Check the letters, number and province against the real plate, then post. The owner will be asked to check whether it's theirs.",
+      "none": "No one has reported this plate lost yet. Post it anyway: if the owner reports it later, they are matched automatically."
+    },
+    "cropThis": "Add this plate",
+    "cropHint": "Drag inside the box to move it and drag a corner dot to resize it to fit the plate.",
+    "previewLabel": "Plate to add",
+    "suggestionLabel": "Suggested box {n} (tap to select)",
+    "boxLabel": "Crop box. Arrow keys move it; Shift and arrow keys resize it.",
+    "cropAllSuggested": "Add all {count} plates found",
+    "cropSelected": "Add only the selected box",
+    "addPhoto": "+ Add another photo",
+    "checkTitle": "Check the plate numbers",
+    "checkIntro": "Read automatically. Check the letters, number and province against the real plate and fix anything that is wrong.",
+    "nextToDetails": "Next: contact details",
+    "addedFromPhoto": "{count, plural, one {# plate added from this photo} other {# plates added from this photo}}",
+    "addMoreFromPhoto": "Add another plate from this photo",
+    "pickAnother": "Tap a dashed box to pick another plate.",
+    "useWholeHint": "Plate fills the whole photo?"
+  },
+  "search": {
+    "title": "Search a plate number",
+    "intro": "Search plates that people have found and posted.",
+    "submit": "Search",
+    "searching": "Searching…",
+    "exact": "Match",
+    "near": "Possible match",
+    "nearHint": "The number may differ slightly. Compare it with the photo.",
+    "none": "Nobody has found this plate yet",
+    "noneBody": "Register your lost plate and it will be matched automatically when someone finds it.",
+    "reportLost": "Register a lost plate",
+    "posted": "Found {when}",
+    "cropAlt": "Photo of a found plate",
+    "resultsCount": "{count, plural, one {# result} other {# results}}",
+    "viewPost": "View details and contact the finder"
+  },
+  "match": {
+    "title": "Match details",
+    "exactTitle": "Match",
+    "nearTitle": "Possible match",
+    "nearBody": "The numbers are close. The owner should compare the photo before arranging a handover.",
+    "lostLabel": "The plate the owner lost",
+    "foundLabel": "The plate someone found",
+    "cropAlt": "Photo of the found plate",
+    "foundAt": "Found {when}",
+    "withFinder": "The finder has the plate",
+    "atPolice": "The plate is at a police station",
+    "youAreFinder": "You found this plate",
+    "finderBody": "Contact the owner to arrange the handover. At the handover, ask to see their registration book and ID card, and check the name and plate number match.",
+    "ownerContactButton": "See the owner's contact details",
+    "ownerContactTitle": "The owner's contact details",
+    "youAreOwner": "This is your plate. Contact the finder with the button below.",
+    "finderReminder": "If you haven't seen a registration book and ID card showing they own it, don't hand the plate over yet."
+  },
+  "reveal": {
+    "button": "See the finder's contact details",
+    "sheetTitle": "Before you contact the finder",
+    "intro": "To protect yourself from scams, always:",
+    "tip1": "If anyone asks you to transfer money before you have the plate back, don't pay.",
+    "tip2": "Ask the finder for a photo of the plate next to a paper with your name on it, to prove they have it.",
+    "tip3": "Bring your registration book and ID card to the handover, to show the plate is yours.",
+    "tip4": "Meet in a public place or at a police station.",
+    "acknowledge": "I've read this and will follow it",
+    "confirm": "Show contact details",
+    "contactTitle": "The finder's contact details",
+    "line": "LINE",
+    "phone": "Phone",
+    "email": "Email",
+    "openLine": "Open in LINE",
+    "call": "Call",
+    "sendEmail": "Send email",
+    "copy": "Copy",
+    "copied": "Copied",
+    "district": "District where it was found",
+    "withFinder": "The finder has the plate",
+    "atPolice": "The plate is at {station}",
+    "reminder": "If anyone asks you to transfer money before you have the plate back, don't pay."
+  },
+  "post": {
+    "title": "Found plate",
+    "cropAlt": "Photo of the found plate",
+    "foundAt": "Found {when}",
+    "withFinder": "The finder has the plate",
+    "atPolice": "The plate is at a police station",
+    "compare": "If you're the owner, compare the photo with your plate before getting in touch."
+  },
+  "note": {
+    "label": "Note",
+    "lostHint": "e.g. front or rear plate, marks on the plate, where it was lost",
+    "foundHint": "e.g. both front and rear plates, marks, where you found them",
+    "rule": "No links, bank account or ID card numbers.",
+    "lostShownTo": "The finder sees this note when there is a match.",
+    "foundShownTo": "The owner sees this note after asking for your contact details.",
+    "ownerNote": "Owner's note",
+    "finderNote": "Finder's note"
+  },
+  "myPosts": {
+    "title": "My posts",
+    "intro": "Posts made on this device and by the Google account you are signed in with, with their matches. You can manage them here.",
+    "empty": "No posts yet",
+    "emptyBody": "Posts you create will appear here.",
+    "lost": "Lost (my plate)",
+    "found": "Found by me",
+    "posted": "Posted {when}",
+    "expires": "Deleted automatically {when}",
+    "matches": "{count, plural, one {# match} other {# matches}}",
+    "noMatches": "No match yet. It will be matched automatically when a matching post appears.",
+    "viewMatch": "View match",
+    "needsReview": "Waiting for a moderator before it’s shown",
+    "hidden": "Temporarily hidden",
+    "loading": "Loading…",
+    "resolveLost": "I got my plate back",
+    "resolveFound": "Returned to the owner",
+    "resolvedLost": "Plate back",
+    "resolvedFound": "Returned",
+    "extend": "Extend 30 days",
+    "delete": "Delete post",
+    "deleteConfirm": "Delete this post? This can't be undone.",
+    "deleteYes": "Delete",
+    "cancel": "Cancel",
+    "done": {
+      "resolve": "Saved. This post will not be matched any more.",
+      "extend": "Extended.",
+      "delete": "Deleted."
+    },
+    "feedbackAsk": "Plate back, congratulations! Tell us how it went?",
+    "feedbackLink": "Send feedback"
+  },
+  "ocr": {
+    "loading": "Loading the automatic plate reader {percent}% (about 5 MB the first time)",
+    "scanning": "Looking for plates in the photo…",
+    "found": "{count, plural, one {Found # plate} other {Found # plates}}",
+    "none": "No plates found automatically. Draw a box around a plate yourself.",
+    "failed": "Automatic finding didn't work. Draw a box around a plate yourself.",
+    "reading": "Reading the plate…",
+    "lowConfidence": "Not very sure about this one. Check every character; unreadable ones show as ?.",
+    "unread": "Couldn't read this plate. Please type it yourself."
+  },
+  "about": {
+    "title": "About {brand}",
+    "lead": "{brand} helps licence plates lost in floods get back to their owners. Owners register the plate number, finders send a photo, and we match them. Free, with no ads.",
+    "tocLabel": "On this page",
+    "updated": "Last updated {date}",
+    "how": {
+      "title": "How to use it",
+      "ownerTitle": "If you lost a plate",
+      "owner": {
+        "a": "Tap “I lost a plate”, type the plate number and choose the province.",
+        "b": "If someone has already found it, you see it straight away. Compare the photo with your plate, then get the finder’s contact details.",
+        "c": "If not, add your contact details and report it lost. When someone finds it, it is matched automatically. Check “My posts” for matches (sign in with Google to see them on another device)."
+      },
+      "finderTitle": "If you found a plate",
+      "finder": {
+        "a": "Tap “I found a plate” and take a photo. One photo can hold several plates.",
+        "b": "Plates are found and read automatically. If one is missed, drag a box around it and tap “Add this plate”. Always check the number and province.",
+        "c": "Add your contact details and send. If the owner has reported it lost, you see the owner’s contact details.",
+        "d": "Return the plate yourself, or hand it in at a police station."
+      },
+      "handoverTitle": "At the handover",
+      "handover": {
+        "a": "If anyone asks you to transfer money before you have the plate back, don’t pay.",
+        "b": "Owners bring the registration book and ID card; finders ask to see them before handing over.",
+        "c": "Meet in a public place or at a police station."
+      }
+    },
+    "terms": {
+      "title": "Terms of use",
+      "items": {
+        "a": "{brand} is a free, non-profit service that only matches plate numbers. We never hold, collect or deliver plates.",
+        "b": "We do not verify who users are. Check for yourself before meeting or handing over a plate. We are not liable for loss or harm from contact or handovers between users.",
+        "c": "Post only true details of a plate you lost or found. No false posts, scams, demands for money, or using someone’s contact details for anything else.",
+        "d": "Finders should return plates to their owners or hand them to the police.",
+        "e": "Automatic plate reading can be wrong; check before sending. The service is provided as is and may pause at times.",
+        "f": "We may hide or remove posts that break these terms, and may update the terms; the date of the last update is shown on this page."
+      }
+    },
+    "privacy": {
+      "title": "Privacy",
+      "collectTitle": "What we keep",
+      "collect": {
+        "a": "The plate number, province and note you enter",
+        "b": "The contact details you enter (LINE ID, phone, email)",
+        "c": "Cropped plate photos only (from finders)",
+        "d": "If you sign in with Google (optional): your account id and email, to link your posts to you. We never see your Google password and never post anything to your account. Your email is shown to the other side only if you choose it as a contact.",
+        "e": "Your IP address, turned into a code that changes daily, used only against spam and abuse"
+      },
+      "notTitle": "What we don’t keep",
+      "not": {
+        "a": "Full photos: photos are cropped on your device and only the plate is sent",
+        "b": "GPS location or other data embedded in photos",
+        "c": "Names, ID card or bank account numbers (the forms reject them)",
+        "d": "No ads, no trackers, and we never sell data"
+      },
+      "shareTitle": "Who sees your details",
+      "share": {
+        "a": "Contact details: only the matched person, after reading the scam warning",
+        "b": "Lost plates never appear in search, so scammers cannot browse them",
+        "c": "Services we use: Supabase (database and photo storage), Vercel (website), Cloudflare Turnstile (bot protection)"
+      },
+      "keepTitle": "How long we keep it",
+      "keep": "Posts and photos are deleted automatically within {days} days. To have yours deleted sooner, or for any privacy question, email us below."
+    },
+    "contact": {
+      "title": "Contact",
+      "email": "Email",
+      "repo": "Source code on GitHub"
+    },
+    "feedback": {
+      "title": "Feedback",
+      "intro": "How did it go? Anything we should improve? Tell us."
+    }
+  },
+  "report": {
+    "button": "Report",
+    "title": "Report this post",
+    "reasonLegend": "What's wrong?",
+    "reasons": {
+      "scam": "Looks like a scam / asks for money",
+      "inappropriate_image": "Inappropriate photo",
+      "still_on_vehicle": "The plate is still on a vehicle (not lost)",
+      "personal_data": "Personal data in the photo or text",
+      "other": "Something else"
+    },
+    "noteLabel": "More details",
+    "send": "Send report",
+    "thanks": "Thank you for telling us",
+    "thanksBody": "We'll take a look. If several people report it, the post is hidden until then."
+  },
+  "feedback": {
+    "title": "Send feedback",
+    "intro": "Tell us how it went. We read every message.",
+    "ratingLegend": "Your rating",
+    "ratingHint": "1 = very bad · 5 = very good",
+    "stars": "{count, plural, one {# star} other {# stars}}",
+    "commentLabel": "Comments",
+    "pickRating": "Pick a rating first.",
+    "send": "Send feedback",
+    "thanks": "Thank you for your feedback!"
+  },
+  "admin": {
+    "loginTitle": "Admin sign-in",
+    "notConfigured": "The admin password is not set (ADMIN_PASSWORD_HASH, ADMIN_SESSION_SECRET).",
+    "password": "Password",
+    "login": "Sign in",
+    "wrongPassword": "Wrong password",
+    "logout": "Sign out",
+    "title": "{brand} admin",
+    "tabsLabel": "Admin sections",
+    "tabs": {
+      "overview": "Overview",
+      "reports": "Reports",
+      "posts": "Posts",
+      "feedback": "Feedback",
+      "logs": "Logs"
+    },
+    "stats": {
+      "lostActive": "Lost (open)",
+      "foundActive": "Found (open)",
+      "matches": "Matches",
+      "resolved": "Returned",
+      "reportedPosts": "Reported posts",
+      "hidden": "Hidden",
+      "needsReview": "Needs review",
+      "feedback": "Feedback"
+    },
+    "siteMode": "Site status",
+    "modeActive": "Taking posts",
+    "modeDormant": "Paused (no flood right now)",
+    "pauseSite": "Pause the site",
+    "openSite": "Open the site",
+    "daily": "Last 14 days",
+    "col": {
+      "day": "Day",
+      "lost": "Lost",
+      "found": "Found",
+      "matches": "Matches",
+      "resolved": "Returned"
+    },
+    "noReports": "No reports yet",
+    "noPosts": "No posts found",
+    "noFeedback": "No feedback yet",
+    "noProvince": "No province",
+    "searchPlaceholder": "Search a plate, e.g. กข1234",
+    "search": "Search",
+    "kind": {
+      "lost": "Lost",
+      "found": "Found"
+    },
+    "status": {
+      "active": "Open",
+      "needs_review": "Needs review",
+      "hidden": "Hidden",
+      "resolved": "Returned"
+    },
+    "reportCount": "{count, plural, one {# report} other {# reports}}",
+    "reasons": {
+      "scam": "Looks like a scam / asks for money",
+      "inappropriate_image": "Inappropriate photo",
+      "still_on_vehicle": "The plate is still on a vehicle (not lost)",
+      "personal_data": "Personal data in the photo or text",
+      "other": "Something else"
+    },
+    "rating": "{count, plural, one {# star} other {# stars}}",
+    "context": {
+      "general": "General",
+      "resolved": "After getting the plate back"
+    },
+    "auditLog": "Admin activity",
+    "revealLog": "Contact reveals",
+    "revealLogHint": "Only a short, daily-changing IP hash is shown, never the IP.",
+    "actions": {
+      "hide": "Hide",
+      "restore": "Show again",
+      "dismiss": "Clear reports",
+      "delete": "Delete",
+      "confirmDelete": "Confirm delete",
+      "cancel": "Cancel"
+    },
+    "actionFailed": "That did not work. Try again."
+  },
+  "account": {
+    "signInTitle": "Manage your posts from any device (optional)",
+    "signInBody": "Sign in with Google and your posts are linked to your account, so you can see and manage them from another phone or computer. Nothing to remember. You can post without signing in, but then you can manage it only on this device.",
+    "signInBodyManage": "Posts from other devices show here when you sign in with the Google account you posted with.",
+    "signIn": "Sign in with Google",
+    "waiting": "Finish signing in in the new window, then come back here…",
+    "inAppBody": "This app (LINE, Facebook and the like) can't open Google sign-in. To sign in, open this page in Chrome or Safari first; photos and details you entered here won't come along. Or keep posting here without signing in.",
+    "inAppOpen": "Open this page in Chrome or Safari",
+    "inAppMenu": "Tap the ⋯ menu in the corner and choose “Open in browser”.",
+    "signedInAs": "Signed in as {email}",
+    "signedInNote": "Your posts are linked to this account: manage them from any device.",
+    "signOut": "Sign out",
+    "emailFromAccount": "Filled in from your Google account. You can remove or change it.",
+    "doneTitle": "You are signed in",
+    "doneBody": "Go back to the page you were on. You can close this one.",
+    "failedTitle": "Signing in didn’t work",
+    "failedBody": "Close this page and try again, or carry on without signing in.",
+    "close": "Close this page"
+  }
+}
