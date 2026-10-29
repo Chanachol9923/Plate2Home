@@ -1,17 +1,38 @@
 # Plate2Home
 
+**Live: https://plate2-home.vercel.app** (Thai) · [English](https://plate2-home.vercel.app/en)
+
 A mobile-first web app that reunites people in Thailand with vehicle licence plates lost in
 floods. People who **lost** a plate register a watch. People who **found** plates photograph
-them, and the app reads the plates in the browser and matches them instantly. It is
-non-commercial, has no user accounts, and deletes everything automatically.
+them; the app finds and reads the plates in the browser and matches them against the watches
+instantly. It is non-commercial, posting needs no account, and data is deleted automatically.
 
-> **Status: Phases 1–3 done** (foundation; Thai plate module; lost/found/search/match flows with manual entry). See [`docs/plan.md`](docs/plan.md) for the phase plan.
+## What works today
+
+- **Lost, found, search and match flows** with Turnstile, rate limits and origin checks on every
+  write. Lost watches never appear in search; an owner's contact is shown only to the finder of
+  a matched found plate that has a photo (see the [threat model](docs/threat-model.md)).
+- **Plate reading in the browser** (photos never leave the device): a plate finder suggests
+  boxes on the photo, the user confirms each crop, and a small CNN trained on 150k synthetic
+  plate lines (`ml/recognizer`, run in plain TypeScript) reads the number line. On a private
+  set of 22 real plates, exact reads went from 3 to 16 and character accuracy from 45% to 90%;
+  see [`docs/ocr-eval.md`](docs/ocr-eval.md) for the method and the known gaps.
+- **Optional Google sign-in** to see and manage your posts on any device (mark returned,
+  extend, delete). Without signing in, posts belong to the device that made them.
+- **Reports, feedback and an admin area**, Terms of Service and Privacy Policy in Thai and
+  English, and a **daily retention job** that really deletes expired data and photos.
+
+Not done yet: push/email notifications (matches show up on the match page and in "My posts"),
+automatic finding of motorcycle plates, and an evaluation on a larger set of real photos.
+[`docs/plan.md`](docs/plan.md) has the original phase plan and
+[`docs/decisions.md`](docs/decisions.md) records every change to it.
 
 ## Stack
 
 Next.js 16 (App Router, `proxy.ts`) · TypeScript strict · Tailwind CSS 4 (custom tokens) ·
 next-intl 4 (Thai default, English at `/en`) · Supabase (Postgres + RLS, Storage, Auth for
-admins only) · Vitest · PGlite for database tests without Docker.
+Google sign-in) · Tesseract.js + a custom PyTorch-trained recognizer · Vitest · PGlite for
+database tests without Docker · Playwright · Vercel (Singapore, daily cron).
 
 ## Getting started
 
@@ -24,8 +45,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000 (Thai) or http://localhost:3000/en (English). Phase 1 pages don't
-need a database.
+Open http://localhost:3000 (Thai) or http://localhost:3000/en (English).
 
 ### Development backend: hosted Supabase dev project (no Docker needed)
 
@@ -40,7 +60,8 @@ need a database.
 3. In the dashboard, under **Project Settings → API Keys**, copy the project URL, the
    **publishable** key and a **secret** key into `.env.local` (see `.env.example`). The secret
    key bypasses RLS: keep it out of chat, screenshots and commits.
-4. Under **Authentication → Sign In / Providers**, turn off "Allow new users to sign up".
+4. For Google sign-in, set up the Google provider and the redirect URL as described in
+   `.env.example`. Everything else works without it.
 5. `npm run dev`, then try lost → found → match. `npm run test:integration` runs the API flow
    against the same project and cleans up after itself.
 
@@ -49,12 +70,15 @@ the migrations and prints local keys).
 
 ## Checks
 
+CI (`.github/workflows/ci.yml`) runs all of these on every push, the database and E2E tests
+against a local Supabase.
+
 | Command                                  | What it does                                                                         |
 | ---------------------------------------- | ------------------------------------------------------------------------------------ |
 | `npm run check`                          | Everything below except the build                                                    |
 | `npm run lint`                           | ESLint, including the no-hard-coded-text and no-server-env-in-client rules           |
 | `npm run typecheck`                      | `next typegen` + `tsc`                                                               |
-| `npm run test:unit`                      | Unit tests (plate module, matching, CSP, env, messages, lint rule, secret scanner)   |
+| `npm run test:unit`                      | Unit tests (plate module, matching, OCR, CSP, env, messages, lint rule, secret scan) |
 | `npm run test:db`                        | Migrations + RLS tests. PGlite by default; set `DATABASE_URL` to use a real database |
 | `npm run test:integration`               | API flow against real Supabase (needs Supabase keys in the environment/.env.local)   |
 | `npx playwright test`                    | E2E in mobile viewports (needs a built app and Supabase)                             |
@@ -66,21 +90,22 @@ the migrations and prints local keys).
 
 ```
 app/[locale]/        localized pages (root layout)
-app/global-not-found.tsx
-components/          UI (site chrome, theme, icons, ui recipes)
+app/admin/           admin area (second root layout)
+app/api/             route handlers: posting, search, reveal, auth, reports, cron
+components/          UI (flows, plate input, OCR overlay, site chrome, theme, ui recipes)
 i18n/                next-intl routing, navigation, request config
-lib/                 config, env, security (CSP, headers), db (server-only)
+lib/                 plate module, matching, OCR, auth, config, env, security, db (server-only)
 messages/            th.json, en.json
+ml/recognizer/       synthetic data, training and export of the plate-text recognizer
 supabase/            config, migrations, DB tests (harness + PGlite shim)
-scripts/             contrast check, province seed generator, client secret scan
+scripts/             contrast check, province seed generator, client secret scan, OCR assets
 eslint-rules/        project ESLint rules
-docs/                plan, architecture, decisions, threat model, security checklist, legal TODOs
+docs/                plan, architecture, decisions, threat model, OCR evaluation, legal TODOs
 ```
 
 ## Docs
 
 - [Plan](docs/plan.md) · [Architecture](docs/architecture.md) · [Decisions](docs/decisions.md)
 - [Threat model](docs/threat-model.md) · [Security checklist](docs/security-checklist.md) ·
+  [OCR evaluation](docs/ocr-eval.md) · [Plate formats](docs/plate-formats.md) ·
   [Legal TODOs](docs/legal-todo.md)
-
-Deployment, cron, keepalive and the dormant-mode runbook come in Phase 9.
