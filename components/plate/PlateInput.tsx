@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useId, useRef, useState } from 'react';
 import { Choice } from '@/components/ui/Choice';
 import { headerControl } from '@/components/ui/styles';
@@ -17,18 +17,23 @@ export type PlateFieldErrors = Partial<Record<'series' | 'number' | 'provinceCod
  * The signature component: a plate-shaped input. The whole plate is typed in one field, the
  * way people read it off the plate ("กค7812", "1กข 1234"); it is split into series and number
  * automatically and the reading is shown back underneath. The province opens a searchable
- * sheet. `?` marks unreadable characters.
+ * sheet. `?` marks unreadable characters; its button shows only where a plate may be hard to
+ * read (`unreadable`: the found flow), and the ก–ฮ picker only off the Thai site, since phones
+ * in Thailand have a Thai keyboard (D-097).
  */
 export function PlateInput({
   value,
   onChange,
   errors = {},
+  unreadable = false,
 }: {
   value: PlateDraft;
   onChange: (draft: PlateDraft) => void;
   errors?: PlateFieldErrors;
+  unreadable?: boolean;
 }) {
   const t = useTranslations('plate');
+  const letters = useLocale() !== 'th';
   const id = useId();
   const textRef = useRef<HTMLInputElement>(null);
   const [provinceOpen, setProvinceOpen] = useState(false);
@@ -99,25 +104,33 @@ export function PlateInput({
         </p>
       )}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          className={headerControl}
-          onClick={() => setLettersOpen(true)}
-          aria-label={t('lettersButtonLabel')}
-        >
-          {t('lettersButton')}
-        </button>
-        <button
-          type="button"
-          className={headerControl}
-          onClick={() => append('?')}
-          aria-label={t('wildcardButtonLabel')}
-        >
-          {t('wildcardButton')}
-        </button>
-        <p className="flex-1 text-sm text-ink-muted">{t('wildcardHint')}</p>
-      </div>
+      {(letters || unreadable) && (
+        <div className="flex flex-wrap items-center gap-2">
+          {letters && (
+            <button
+              type="button"
+              className={headerControl}
+              onClick={() => setLettersOpen(true)}
+              aria-label={t('lettersButtonLabel')}
+            >
+              {t('lettersButton')}
+            </button>
+          )}
+          {unreadable && (
+            <>
+              <button
+                type="button"
+                className={headerControl}
+                onClick={() => append('?')}
+                aria-label={t('wildcardButtonLabel')}
+              >
+                {t('wildcardButton')}
+              </button>
+              <p className="flex-1 text-sm text-ink-muted">{t('wildcardHint')}</p>
+            </>
+          )}
+        </div>
+      )}
 
       <Choice<PlateType>
         pills

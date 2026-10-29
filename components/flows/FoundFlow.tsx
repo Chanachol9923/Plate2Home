@@ -574,6 +574,7 @@ export function FoundFlow() {
                       value={p.draft}
                       onChange={(draft) => updatePlate(p.id, { draft })}
                       errors={p.errors}
+                      unreadable
                     />
                     {(() => {
                       const input = draftToInput(p.draft);
