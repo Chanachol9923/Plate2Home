@@ -34,9 +34,9 @@
     "search": "Search a plate number",
     "how": {
       "title": "How it works",
-      "step1": "Register a lost plate, or photograph one you found",
-      "step2": "We match plate numbers instantly",
-      "step3": "The owner and the finder contact each other to arrange the handover"
+      "step1": "Lost a plate? Enter its number. Found one? Take a photo.",
+      "step2": "We match the numbers for you.",
+      "step3": "You get each other's contact details and arrange the return."
     },
     "myPosts": "My posts",
     "manage": "New phone? Sign in with Google under “My posts”"
