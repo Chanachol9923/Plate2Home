@@ -46,7 +46,7 @@
     "body": "We'll reopen when floods return. Stay safe."
   },
   "footer": {
-    "nonCommercial": "No ads. Not for profit in any way.",
+    "nonCommercial": "No ads. Non-profit.",
     "privacy": "No GPS tracking. Posts are deleted automatically when they expire.",
     "credit": "{brand} By an {author}",
     "about": "About",
@@ -90,11 +90,11 @@
     "wildcardButtonLabel": "Add ? for a character you can't read",
     "wildcardHint": "Can't read a character? Put ? in its place.",
     "viewLabel": "Licence plate {plate} {province}",
-    "unverified": "Unverified",
+    "unverified": "Unusual format",
     "unverifiedHint": "This doesn't look like a standard plate. It may have a typo; please check it.",
     "textLabel": "Plate number",
     "textPlaceholder": "กค7812",
-    "parsed": "Read as: letters {series} · number {number}"
+    "parsed": "Reads as: letters {series} · number {number}"
   },
   "errors": {
     "invalid": "Something isn't right. Please check and try again.",
@@ -160,11 +160,11 @@
     "foundAlreadyBody": "Compare the photo with your plate first. If it is yours, get the finder’s contact details from the card below.",
     "notFoundYet": "Nobody has found this plate yet. Report it lost and it will be matched automatically when someone does.",
     "submit": "Report lost plate",
-    "doneTitle": "Your lost plate is reported. It will be matched automatically when someone finds it.",
+    "doneTitle": "Reported. When someone finds this plate, we'll match it straight away.",
     "doneManage": "Check matches and manage the post under “My posts” on this device, or on any device if you sign in with Google.",
     "doneMatches": "Someone may have found your plate",
     "viewMatch": "View details",
-    "alsoWatch": "Report it lost too, in case more turn up"
+    "alsoWatch": "Report it lost too, in case these aren't yours or there's another plate"
   },
   "found": {
     "title": "I found a plate",
@@ -206,7 +206,7 @@
     "ownerLooking": "The plate's owner is looking for it!",
     "ownerLookingBody": "This plate matches one its owner reported lost. Open it to contact the owner.",
     "viewMatch": "View details",
-    "reviewNote": "This plate will be shown after a moderator checks it.",
+    "reviewNote": "This plate will be shown once a moderator has checked it.",
     "doneManage": "Check matches and manage the post under “My posts” on this device, or on any device if you sign in with Google.",
     "lostCheck": {
       "checking": "Checking whether anyone is looking for this plate…",
@@ -241,7 +241,7 @@
     "near": "Possible match",
     "nearHint": "The number may differ slightly. Compare it with the photo.",
     "none": "Nobody has found this plate yet",
-    "noneBody": "Register your lost plate and it will be matched automatically when someone finds it.",
+    "noneBody": "Report your plate lost and we'll match it as soon as someone finds it.",
     "reportLost": "Register a lost plate",
     "posted": "Found {when}",
     "cropAlt": "Photo of a found plate",
@@ -318,16 +318,16 @@
     "lost": "Lost (my plate)",
     "found": "Found by me",
     "posted": "Posted {when}",
-    "expires": "Deleted automatically {when}",
+    "expires": "Deleted {when}",
     "matches": "{count, plural, one {# match} other {# matches}}",
-    "noMatches": "No match yet. It will be matched automatically when a matching post appears.",
+    "noMatches": "No match yet. We'll match it as soon as a matching post comes in.",
     "viewMatch": "View match",
     "needsReview": "Waiting for a moderator before it’s shown",
     "hidden": "Temporarily hidden",
     "loading": "Loading…",
     "resolveLost": "I got my plate back",
     "resolveFound": "Returned to the owner",
-    "resolvedLost": "Plate back",
+    "resolvedLost": "Got it back",
     "resolvedFound": "Returned",
     "extend": "Extend 30 days",
     "delete": "Delete post",
@@ -343,7 +343,7 @@
     "feedbackLink": "Send feedback"
   },
   "ocr": {
-    "loading": "Loading the automatic plate reader {percent}% (about 5 MB the first time)",
+    "loading": "Loading the plate reader {percent}% (about 7 MB the first time)",
     "scanning": "Looking for plates in the photo…",
     "found": "{count, plural, one {Found # plate} other {Found # plates}}",
     "none": "No plates found automatically. Draw a box around a plate yourself.",
@@ -442,7 +442,7 @@
     "noteLabel": "More details",
     "send": "Send report",
     "thanks": "Thank you for telling us",
-    "thanksBody": "We'll take a look. If several people report it, the post is hidden until then."
+    "thanksBody": "We'll look into it. If several people report a post, it's hidden while we check."
   },
   "feedback": {
     "title": "Send feedback",
@@ -541,7 +541,7 @@
     "signInBody": "Sign in with Google and your posts are linked to your account, so you can see and manage them from another phone or computer. Nothing to remember. You can post without signing in, but then you can manage it only on this device.",
     "signInBodyManage": "Posts from other devices show here when you sign in with the Google account you posted with.",
     "signIn": "Sign in with Google",
-    "waiting": "Finish signing in in the new window, then come back here…",
+    "waiting": "Complete the sign-in in the new window, then come back here…",
     "inAppBody": "This app (LINE, Facebook and the like) can't open Google sign-in. To sign in, open this page in Chrome or Safari first; photos and details you entered here won't come along. Or keep posting here without signing in.",
     "inAppOpen": "Open this page in Chrome or Safari",
     "inAppMenu": "Tap the ⋯ menu in the corner and choose “Open in browser”.",

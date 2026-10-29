@@ -49,20 +49,18 @@ test('owner and finder are matched and can reach each other', async ({ page, bro
   // --- Owner: register a watch --------------------------------------------------------------
   await owner.goto('/lost');
   await fillPlate(owner, number);
-  await owner.getByRole('button', { name: 'ต่อไป' }).click();
+  await owner.getByRole('button', { name: 'ถัดไป' }).click();
   await expect(owner).toHaveURL(/step=contact/);
 
   await owner.getByLabel('LINE ID (แนะนำ)').fill('e2e.owner');
   await owner.getByLabel(/^หมายเหตุ/).fill('ป้ายหลัง มีสติกเกอร์');
-  await owner.getByRole('button', { name: 'ต่อไป' }).click();
+  await owner.getByRole('button', { name: 'ถัดไป' }).click();
   await expect(owner).toHaveURL(/step=confirm/);
 
   await owner.getByRole('checkbox').check();
   await passTurnstile(owner);
   await owner.getByRole('button', { name: 'แจ้งป้ายหาย', exact: true }).click();
-  await expect(
-    owner.getByText('แจ้งป้ายหายแล้ว เมื่อมีคนเก็บป้ายนี้ได้ ระบบจะจับคู่ให้อัตโนมัติ'),
-  ).toBeVisible();
+  await expect(owner.getByText('แจ้งป้ายหายแล้ว พอมีคนเก็บได้ เราจะจับคู่ให้ทันที')).toBeVisible();
 
   // --- Finder: photograph, crop, confirm, send ------------------------------------------------
   await finder.goto('/found');
@@ -74,7 +72,7 @@ test('owner and finder are matched and can reach each other', async ({ page, bro
   await fillPlate(finder, number);
   // Step 1 already says someone is looking for this plate, before anything is posted.
   await expect(finder.getByText('มีคนกำลังตามหาป้ายนี้อยู่!')).toBeVisible();
-  await finder.getByRole('button', { name: 'ต่อไป' }).click();
+  await finder.getByRole('button', { name: 'ถัดไป' }).click();
   await expect(finder).toHaveURL(/step=details/);
 
   await finder.getByLabel(/^หมายเหตุ/).fill('เจอใกล้วัด ทั้งป้ายหน้าและหลัง');
@@ -103,7 +101,7 @@ test('owner and finder are matched and can reach each other', async ({ page, bro
   await expect(owner.getByText('e2e.finder')).toHaveCount(0);
 
   await owner.getByRole('button', { name: 'ดูช่องทางติดต่อคนที่เก็บป้ายได้' }).click();
-  const sheet = owner.getByRole('dialog', { name: 'ก่อนติดต่อคนที่เก็บป้ายได้ โปรดอ่านให้จบ' });
+  const sheet = owner.getByRole('dialog', { name: 'อ่านก่อนติดต่อคนที่เก็บป้ายได้' });
   await expect(sheet.getByText('ถ้ามีคนขอให้โอนเงินก่อนได้ป้ายคืน อย่าโอนเด็ดขาด')).toBeVisible();
   await sheet.getByRole('checkbox').check();
   await passTurnstile(owner);
