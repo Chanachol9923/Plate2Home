@@ -541,9 +541,10 @@
     "actionFailed": "That did not work. Try again."
   },
   "account": {
-    "signInTitle": "Manage your posts from any device (optional)",
-    "signInBody": "Sign in with Google and your posts are linked to your account, so you can see and manage them from another phone or computer. Nothing to remember. You can post without signing in, but then you can manage it only on this device.",
-    "signInBodyManage": "Posts from other devices show here when you sign in with the Google account you posted with.",
+    "signInTitle": "See your posts on any device",
+    "signInBody": "Sign in with Google to check or update your posts from any phone or computer. No new password to remember.",
+    "signInOptional": "Optional. You can post without signing in, but you can only manage the post on this device.",
+    "signInBodyManage": "Sign in with the Google account you posted with. Posts from your other devices show up here, and posts on this device show up there too.",
     "signIn": "Sign in with Google",
     "waiting": "Complete the sign-in in the new window, then come back here…",
     "inAppBody": "This app (LINE, Facebook and the like) can't open Google sign-in. To sign in, open this page in Chrome or Safari first; photos and details you entered here won't come along. Or keep posting here without signing in.",
