@@ -10,6 +10,7 @@ import { postJson } from '@/lib/client/api';
 import { readDevicePosts } from '@/lib/client/devices';
 import { useSession } from '@/lib/client/session';
 import { ContactCard } from './ContactCard';
+import { ManyFindersAlert, ManyOwnersAlert } from './ManyClaims';
 import { RevealContact } from './RevealContact';
 
 interface OwnerContact {
@@ -31,11 +32,16 @@ export function MatchContact({
   foundPostId,
   foundBatchId,
   lostBatchId,
+  owners,
+  finders,
 }: {
   matchId: string;
   foundPostId: string;
   foundBatchId: string;
   lostBatchId: string;
+  /** Active lost reports on this found plate, and found posts on this lost plate (D-104). */
+  owners: number;
+  finders: number;
 }) {
   const t = useTranslations('match');
   const tc = useTranslations('common');
@@ -88,17 +94,21 @@ export function MatchContact({
   if (isFinder) {
     if (contact) {
       return (
-        <ContactCard
-          title={t('ownerContactTitle')}
-          reminder={t('finderReminder')}
-          lineId={contact.lineId}
-          phone={contact.phone}
-          email={contact.email}
-        />
+        <div className="space-y-3">
+          <ManyOwnersAlert count={owners} />
+          <ContactCard
+            title={t('ownerContactTitle')}
+            reminder={t('finderReminder')}
+            lineId={contact.lineId}
+            phone={contact.phone}
+            email={contact.email}
+          />
+        </div>
       );
     }
     return (
       <div className="space-y-3">
+        <ManyOwnersAlert count={owners} />
         <Alert tone="highlight" title={t('youAreFinder')}>
           <p>{t('finderBody')}</p>
         </Alert>
@@ -131,6 +141,7 @@ export function MatchContact({
       {(isOwner || (signedIn && roles.owner)) && (
         <p className="font-semibold">{t('youAreOwner')}</p>
       )}
+      <ManyFindersAlert count={finders} />
       <RevealContact postId={foundPostId} />
     </div>
   );

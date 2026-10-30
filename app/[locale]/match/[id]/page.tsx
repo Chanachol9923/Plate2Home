@@ -6,7 +6,7 @@ import { ReportButton } from '@/components/report/ReportButton';
 import { MatchContact } from '@/components/reveal/MatchContact';
 import { PageShell } from '@/components/site/PageShell';
 import { Alert } from '@/components/ui/Alert';
-import { getMatchView } from '@/lib/db/matches';
+import { getMatchCounts, getMatchView } from '@/lib/db/matches';
 import { signCropUrls } from '@/lib/db/storage';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -26,6 +26,7 @@ export default async function MatchPage({ params }: PageProps<'/[locale]/match/[
   if (!UUID.test(id)) notFound();
   const view = await getMatchView(id);
   if (!view) notFound();
+  const counts = await getMatchCounts(id);
 
   const t = await getTranslations('match');
   const tn = await getTranslations('note');
@@ -84,6 +85,8 @@ export default async function MatchPage({ params }: PageProps<'/[locale]/match/[
           foundPostId={view.found.postId}
           foundBatchId={view.foundBatchId}
           lostBatchId={view.lostBatchId}
+          owners={counts.owners}
+          finders={counts.finders}
         />
         <div className="border-t-2 border-line-soft pt-2">
           <ReportButton postId={view.found.postId} />

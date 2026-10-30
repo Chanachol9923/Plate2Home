@@ -127,3 +127,43 @@ export async function getMatchView(matchId: string): Promise<MatchView | null> {
     },
   };
 }
+
+export interface MatchCounts {
+  /** Active lost reports matched to this match's found plate: people saying it is theirs. */
+  owners: number;
+  /** Active found posts matched to this match's lost report: front and rear plates, often. */
+  finders: number;
+}
+
+/** How many active posts sit on each side of a match's plate (D-104). */
+export async function getMatchCounts(matchId: string): Promise<MatchCounts> {
+  const sb = serviceClient();
+  const { data: match, error } = await sb
+    .from('matches')
+    .select('lost_post_id, found_post_id')
+    .eq('id', matchId)
+    .maybeSingle();
+  if (error) throw toDbError('match_counts', error);
+  if (!match) return { owners: 0, finders: 0 };
+
+  const activeOn = async (side: 'found_post_id' | 'lost_post_id', id: string) => {
+    const other = side === 'found_post_id' ? 'lost_post_id' : 'found_post_id';
+    const { data: rows, error: e1 } = await sb.from('matches').select(other).eq(side, id);
+    if (e1) throw toDbError('match_counts', e1);
+    const ids = (rows as Record<string, string>[]).map((r) => r[other]!);
+    if (ids.length === 0) return 0;
+    const { count, error: e2 } = await sb
+      .from('posts')
+      .select('id', { count: 'exact', head: true })
+      .in('id', ids)
+      .eq('status', 'active');
+    if (e2) throw toDbError('match_counts', e2);
+    return count ?? 0;
+  };
+
+  const [owners, finders] = await Promise.all([
+    activeOn('found_post_id', match.found_post_id as string),
+    activeOn('lost_post_id', match.lost_post_id as string),
+  ]);
+  return { owners, finders };
+}

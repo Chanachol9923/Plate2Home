@@ -12,6 +12,7 @@ import { LostWatchHint } from '@/components/found/LostWatchHint';
 import { OwnPostNotice } from '@/components/own/OwnPostNotice';
 import { MANUAL_CROP_PADDING, PhotoCropper } from '@/components/found/PhotoCropper';
 import { ScanOverlay } from '@/components/found/ScanOverlay';
+import { ManyOwnersAlert } from '@/components/reveal/ManyClaims';
 import { PlateInput, type PlateFieldErrors } from '@/components/plate/PlateInput';
 import { PlateView } from '@/components/plate/PlateView';
 import { Alert } from '@/components/ui/Alert';
@@ -386,17 +387,37 @@ export function FoundFlow() {
                 <p className="mt-2 text-sm text-ink-muted">{t('reviewNote')}</p>
               )}
               {p.upload.state === 'done' && p.upload.matches.length > 0 && (
-                <div className="mt-3">
-                  <Alert tone="highlight" title={t('ownerLooking')}>
+                <div className="mt-3 space-y-3">
+                  {/* Every person looking for it, not just the first (D-104). */}
+                  <Alert
+                    tone="highlight"
+                    title={
+                      p.upload.matches.length > 1
+                        ? t('ownersLooking', { count: p.upload.matches.length })
+                        : t('ownerLooking')
+                    }
+                  >
                     <p>{t('ownerLookingBody')}</p>
-                    <Link
-                      href={`/match/${p.upload.matches[0]!.matchId}`}
-                      className={`${buttonClass('primary')} mt-2`}
-                      aria-label={`${t('viewMatch')} · ${t('cardTitle', { n: i + 1 })}`}
-                    >
-                      {t('viewMatch')}
-                    </Link>
+                    <div className="mt-2 grid gap-2">
+                      {p.upload.matches.map((m, k) => {
+                        const label =
+                          p.upload.state === 'done' && p.upload.matches.length > 1
+                            ? t('viewMatchN', { n: k + 1 })
+                            : t('viewMatch');
+                        return (
+                          <Link
+                            key={m.matchId}
+                            href={`/match/${m.matchId}`}
+                            className={buttonClass('primary', true)}
+                            aria-label={`${label} · ${t('cardTitle', { n: i + 1 })}`}
+                          >
+                            {label}
+                          </Link>
+                        );
+                      })}
+                    </div>
                   </Alert>
+                  <ManyOwnersAlert count={p.upload.matches.length} />
                 </div>
               )}
             </li>

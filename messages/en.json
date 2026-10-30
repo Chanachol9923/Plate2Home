@@ -248,7 +248,9 @@
     "addedFromPhoto": "{count, plural, one {# plate added from this photo} other {# plates added from this photo}}",
     "addMoreFromPhoto": "Add another plate from this photo",
     "pickAnother": "Tap a dashed box to pick another plate.",
-    "useWholeHint": "Plate fills the whole photo?"
+    "useWholeHint": "Plate fills the whole photo?",
+    "ownersLooking": "{count, plural, one {# person is looking for this plate!} other {# people are looking for this plate!}}",
+    "viewMatchN": "See person {n}"
   },
   "search": {
     "exact": "Match",
@@ -276,7 +278,11 @@
     "youAreOwner": "This is your plate. Contact the finder with the button below.",
     "finderReminder": "If you haven't seen a registration book and ID card showing they own it, don't hand the plate over yet.",
     "bothYoursTitle": "Both posts in this match are yours",
-    "bothYoursBody": "You reported this plate lost and also posted it as found, so there is nobody else to contact. If you have the plate back, close your posts in “My posts”."
+    "bothYoursBody": "You reported this plate lost and also posted it as found, so there is nobody else to contact. If you have the plate back, close your posts in “My posts”.",
+    "manyOwnersTitle": "{count, plural, one {# person says this is their plate} other {# people say this is their plate}}",
+    "manyOwnersBody": "Return it only to someone who shows you the vehicle registration book, with the plate number matching and the name matching their ID card. If you are not sure, don’t hand it over yet, or take it to a police station.",
+    "manyFindersTitle": "{count, plural, one {# found post for this number} other {# found posts for this number}}",
+    "manyFindersBody": "They may be the front and rear plates, or the same plate posted twice. Look at each photo and contact every finder."
   },
   "reveal": {
     "button": "See the finder's contact details",
@@ -350,7 +356,8 @@
       "delete": "Deleted."
     },
     "feedbackAsk": "Plate back, congratulations! Tell us how it went?",
-    "feedbackLink": "Send feedback"
+    "feedbackLink": "Send feedback",
+    "viewMatchN": "View match {n}"
   },
   "ocr": {
     "loading": "Loading the plate reader {percent}% (about 7 MB the first time)",

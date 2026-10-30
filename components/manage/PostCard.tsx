@@ -3,6 +3,7 @@
 import { useFormatter, useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { PlateView } from '@/components/plate/PlateView';
+import { ManyFindersAlert, ManyOwnersAlert } from '@/components/reveal/ManyClaims';
 import { Button, buttonClass } from '@/components/ui/Button';
 import { Link } from '@/i18n/navigation';
 import type { OwnPost } from '@/lib/client/own-posts';
@@ -71,13 +72,19 @@ export function PostCard({
         ) : (
           <div className="space-y-2">
             <p className="font-semibold">{t('matches', { count: post.matches.length })}</p>
-            {post.matches.map((m) => (
+            {/* Several on one plate: claimants for a found plate, front/rear for a lost one. */}
+            {post.kind === 'found' ? (
+              <ManyOwnersAlert count={post.matches.length} />
+            ) : (
+              <ManyFindersAlert count={post.matches.length} />
+            )}
+            {post.matches.map((m, i) => (
               <Link
                 key={m.matchId}
                 href={`/match/${m.matchId}`}
                 className={buttonClass('primary', true)}
               >
-                {t('viewMatch')}
+                {post.matches.length > 1 ? t('viewMatchN', { n: i + 1 }) : t('viewMatch')}
               </Link>
             ))}
           </div>

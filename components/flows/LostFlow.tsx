@@ -17,6 +17,7 @@ import { Turnstile, type TurnstileHandle } from '@/components/forms/Turnstile';
 import { useErrorText } from '@/components/forms/useErrorText';
 import { PlateInput, type PlateFieldErrors } from '@/components/plate/PlateInput';
 import { PlateView } from '@/components/plate/PlateView';
+import { ManyFindersAlert } from '@/components/reveal/ManyClaims';
 import { FoundResults, type FoundResult } from '@/components/results/FoundResults';
 import { Alert } from '@/components/ui/Alert';
 import { Button, buttonClass } from '@/components/ui/Button';
@@ -281,6 +282,8 @@ export function LostFlow() {
                     <p>{t('foundNearBody')}</p>
                   </Alert>
                 )}
+                {/* Two found posts for the same number are often the front and rear plates. */}
+                <ManyFindersAlert count={search.results.filter((r) => r.kind === 'exact').length} />
                 <FoundResults results={search.results} />
                 {!reported && (
                   <div className="space-y-2 rounded-md border-2 border-line-soft p-3">
