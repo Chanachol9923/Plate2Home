@@ -112,9 +112,9 @@ Thai is at `/`, English at `/en` (next-intl `localePrefix: 'as-needed'`). All ro
 | Route | Purpose |
 |---|---|
 | `/` | Home: two big buttons, search link, 3-step explainer, admin banner. Shows a calm "closed" state in dormant mode. |
-| `/lost` | 3-step watch flow. The step is in `?step=` so the Back button works. The draft is kept in `sessionStorage` (never the PIN). |
+| `/lost` | Search first, then a 2-step watch flow if the user reports it lost (D-100, D-101). The step is in `?step=` so the Back button works. The draft is kept in `sessionStorage` (never the PIN). |
 | `/found` | Photos → cards → details. This is the only route that loads the ML worker. Crops are kept in IndexedDB so a reload doesn't lose 10 plates. |
-| `/search` | Plate-shaped input. The query is sent by **POST**, so plates never appear in URLs or logs. |
+| `/search` | Redirects to `/lost`, whose first step is the search (D-101). The query is sent by **POST**, so plates never appear in URLs or logs. |
 | `/match/[id]` | Match page. Opened from a notification link. The id is an unguessable UUID. |
 | `/manage` | Redirects to My posts (device token or Google account, D-085). |
 | `/privacy`, `/terms`, `/request` | Legal pages and the data-subject / forgotten-PIN request form. |

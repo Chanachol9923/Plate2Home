@@ -18,8 +18,11 @@ export const actionTile =
 export const textLink =
   'font-semibold text-accent-ink underline decoration-2 underline-offset-4 hover:text-ink';
 
-/** Full-width, easy-to-spot secondary action on the home page (search, my posts). */
+/**
+ * Full-width link to “My posts” on the home page: tinted amber, so it reads as a different
+ * kind of place from the two white action tiles above it (D-101).
+ */
 export const bigLink =
-  'flex min-h-16 w-full items-center gap-3 rounded-md border-2 border-line bg-surface px-4 ' +
+  'flex min-h-16 w-full items-center gap-3 rounded-md border-2 border-line bg-accent-soft px-4 ' +
   'font-heading text-lg font-bold text-ink shadow-sign transition-[transform,box-shadow] ' +
-  'duration-100 hover:bg-surface-sunk active:translate-y-0.5 active:shadow-sign-pressed';
+  'duration-100 hover:bg-surface active:translate-y-0.5 active:shadow-sign-pressed';

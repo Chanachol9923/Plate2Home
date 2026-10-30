@@ -116,8 +116,8 @@ test('owner and finder are matched and can reach each other', async ({ page, bro
     'https://line.me/ti/p/~e2e.finder',
   );
 
-  // --- Search finds the found plate --------------------------------------------------------
-  await owner.goto('/search');
+  // --- Searching again shows the found plate under the owner's own report (D-101) ---------
+  await owner.goto('/lost');
   await fillPlate(owner, number);
   await owner.getByRole('button', { name: 'ค้นหา', exact: true }).click();
   await expect(owner.getByText('ตรงกัน', { exact: true }).first()).toBeVisible();

@@ -62,6 +62,7 @@ export function LostFlow() {
   const [consent, setConsent] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const turnstile = useRef<TurnstileHandle>(null);
+  const answer = useRef<HTMLDivElement>(null);
 
   const [plateErrors, setPlateErrors] = useState<PlateFieldErrors>({});
   const [contactErrors, setContactErrors] = useState<Record<string, string | null>>({});
@@ -115,15 +116,14 @@ export function LostFlow() {
       return;
     }
     setPlateErrors({});
+    // Close the phone keyboard so the answer is not hidden behind it.
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     setBusy(true);
     const ownNow = await ownPostsReady();
+    // Already reported by this user (D-091): no second report, but the search still runs, so
+    // an owner coming back sees plates found since.
     const mine = ownPostsFor(ownNow, plateInput, 'lost')[0];
-    if (mine) {
-      setBusy(false);
-      setAlready({ for: plateKey, post: mine });
-      return;
-    }
-    setAlready(null);
+    setAlready(mine ? { for: plateKey, post: mine } : null);
     const res = await postJson<{ results: FoundResult[] }>('/api/search', { plate: plateInput });
     setBusy(false);
     // A failed search must not block reporting it lost (matching runs again on submit).
@@ -132,6 +132,15 @@ export function LostFlow() {
     const results = res.ok ? res.data.results.filter((r) => !mineFound.has(r.postId)) : [];
     // Search first (D-100): the result is shown here; reporting starts only when asked for.
     setSearch({ for: plateKey, results, failed: !res.ok });
+    showAnswer();
+  }
+
+  /** Bring the answer into view once it has rendered (the plate input is tall on phones). */
+  function showAnswer() {
+    requestAnimationFrame(() => {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      answer.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    });
   }
 
   function checkContact() {
@@ -232,6 +241,7 @@ export function LostFlow() {
   const index = STEPS.indexOf(step as Step);
   const total = STEPS.length - 1;
   const searchedThis = search?.for === plateKey;
+  const reported = already?.for === plateKey;
 
   return (
     <div>
@@ -251,43 +261,67 @@ export function LostFlow() {
       {step === 'plate' && (
         <div className="space-y-5">
           <p>{t('plateIntro')}</p>
-          <PlateInput value={plate} onChange={setPlate} errors={plateErrors} />
-          {already?.for === plateKey ? (
-            <OwnPostNotice post={already.post} variant="lostAgain" />
-          ) : searchedThis && search.results.length > 0 ? (
-            <div className="space-y-4">
-              <Alert tone="highlight" title={t('foundAlready')} live>
-                <p>{t('foundAlreadyBody')}</p>
-              </Alert>
-              <FoundResults results={search.results} />
-              <Button block variant="secondary" onClick={() => go('contact')}>
-                {t('alsoWatch')}
-              </Button>
-            </div>
-          ) : searchedThis && search.failed ? (
-            <div className="space-y-3">
-              <Alert tone="error" title={t('searchFailed')} live />
+          <PlateInput
+            value={plate}
+            onChange={setPlate}
+            errors={plateErrors}
+            onEnter={() => void checkPlate()}
+          />
+          <div ref={answer} className="scroll-mt-4 space-y-4">
+            {reported && already && <OwnPostNotice post={already.post} variant="lostAgain" />}
+            {searchedThis && search.results.length > 0 ? (
+              <div className="space-y-4">
+                {/* Only "near" results: say so, rather than "someone found it". */}
+                {search.results.some((r) => r.kind === 'exact') ? (
+                  <Alert tone="highlight" title={t('foundAlready')} live>
+                    <p>{t('foundAlreadyBody')}</p>
+                  </Alert>
+                ) : (
+                  <Alert tone="highlight" title={t('foundNear')} live>
+                    <p>{t('foundNearBody')}</p>
+                  </Alert>
+                )}
+                <FoundResults results={search.results} />
+                {!reported && (
+                  <div className="space-y-2 rounded-md border-2 border-line-soft p-3">
+                    <p className="text-sm">{t('notYours')}</p>
+                    <Button block variant="secondary" onClick={() => go('contact')}>
+                      {t('report')}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : searchedThis && search.failed ? (
+              <div className="space-y-3">
+                <Alert
+                  tone="error"
+                  title={t(reported ? 'searchFailedReported' : 'searchFailed')}
+                  live
+                />
+                <Button block busy={busy} busyLabel={t('checking')} onClick={checkPlate}>
+                  {t('retry')}
+                </Button>
+                {!reported && (
+                  <Button block variant="secondary" onClick={() => go('contact')}>
+                    {t('report')}
+                  </Button>
+                )}
+              </div>
+            ) : searchedThis && reported ? null : searchedThis ? (
+              <div className="space-y-3">
+                <Alert tone="info" title={t('notFoundTitle')} live>
+                  <p>{t('notFoundBody')}</p>
+                </Alert>
+                <Button block onClick={() => go('contact')}>
+                  {t('report')}
+                </Button>
+              </div>
+            ) : (
               <Button block busy={busy} busyLabel={t('checking')} onClick={checkPlate}>
-                {t('retry')}
+                {t('search')}
               </Button>
-              <Button block variant="secondary" onClick={() => go('contact')}>
-                {t('report')}
-              </Button>
-            </div>
-          ) : searchedThis ? (
-            <div className="space-y-3">
-              <Alert tone="info" title={t('notFoundTitle')} live>
-                <p>{t('notFoundBody')}</p>
-              </Alert>
-              <Button block onClick={() => go('contact')}>
-                {t('report')}
-              </Button>
-            </div>
-          ) : (
-            <Button block busy={busy} busyLabel={t('checking')} onClick={checkPlate}>
-              {t('search')}
-            </Button>
-          )}
+            )}
+          </div>
         </div>
       )}
 

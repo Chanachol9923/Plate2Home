@@ -55,12 +55,9 @@ test('the owner manages the post from My posts on the same device, no sign-in ne
   await expect(page.getByText('อยากเปิดดูโพสต์จากเครื่องอื่นด้วย?')).toBeVisible();
   await expect(page.getByRole('button', { name: 'เข้าสู่ระบบด้วย Google' })).toBeVisible();
 
-  // Searching for it says it is theirs instead of offering to report it lost.
+  // The old search page leads to the lost-plate search (D-101).
   await page.goto('/search');
-  await fillPlate(page, number);
-  await page.getByRole('button', { name: 'ค้นหา', exact: true }).click();
-  await expect(page.getByText('นี่คือป้ายที่คุณแจ้งหายไว้เอง')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'แจ้งป้ายหาย' })).toHaveCount(0);
+  await expect(page).toHaveURL(/\/lost$/);
 
   await page.goto('/my-posts');
   await page.getByRole('button', { name: 'ต่ออายุอีก 30 วัน' }).click();

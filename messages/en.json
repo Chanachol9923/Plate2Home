@@ -25,13 +25,12 @@
     "actionsLabel": "What would you like to do?",
     "lost": {
       "title": "I lost a plate",
-      "hint": "Enter the number and see if someone has found it."
+      "hint": "Search the number and see if someone found it."
     },
     "found": {
       "title": "I found a plate",
       "hint": "Take a photo of it and we'll help find the owner."
     },
-    "search": "Search a plate number",
     "how": {
       "title": "How it works",
       "step1": "Post the plate",
@@ -159,28 +158,31 @@
     "introFound": "Only the plate's owner sees this, and only once there is a match. Add at least one."
   },
   "lost": {
-    "title": "Find my lost plate",
+    "title": "I lost a plate",
     "steps": {
       "plate": "Lost plate number",
       "contact": "How to reach you",
       "confirm": "Confirm and send"
     },
-    "plateIntro": "Enter the number of the lost plate. We'll check right away whether someone has found it.",
+    "plateIntro": "Enter the lost plate number. We’ll search the plates people have found right away.",
     "search": "Search",
     "checking": "Searching…",
     "foundAlready": "Someone has found this plate!",
     "foundAlreadyBody": "Compare the photo with your plate first. If it is yours, get the finder’s contact details from the card below.",
+    "foundNear": "Found plates with a similar number",
+    "foundNearBody": "The number may differ slightly. Check the photo to be sure it’s yours before asking for contact details.",
+    "notYours": "Not yours, or still missing another plate? Report it lost and we’ll match it when someone finds it.",
     "notFoundTitle": "No one has found this plate yet",
     "notFoundBody": "Report it lost and we’ll match it the moment someone finds it. You’ll see it under “My posts”.",
     "report": "Report it lost",
     "searchFailed": "The search didn’t work. Try again, or report it lost anyway (we match it when you do).",
+    "searchFailedReported": "The search didn’t work. Try again.",
     "retry": "Search again",
     "submit": "Report lost plate",
     "doneTitle": "Reported. When someone finds this plate, we'll match it straight away.",
     "doneManage": "Check matches and manage the post under “My posts” on this device, or on any device if you sign in with Google.",
     "doneMatches": "Someone may have found your plate",
-    "viewMatch": "View details",
-    "alsoWatch": "Report it lost too, in case these aren't yours or there's another plate"
+    "viewMatch": "View details"
   },
   "found": {
     "title": "I found a plate",
@@ -249,19 +251,11 @@
     "useWholeHint": "Plate fills the whole photo?"
   },
   "search": {
-    "title": "Search a plate number",
-    "intro": "Search plates that people have found and posted.",
-    "submit": "Search",
-    "searching": "Searching…",
     "exact": "Match",
     "near": "Possible match",
     "nearHint": "The number may differ slightly. Compare it with the photo.",
-    "none": "Nobody has found this plate yet",
-    "noneBody": "Report your plate lost and we'll match it as soon as someone finds it.",
-    "reportLost": "Register a lost plate",
     "posted": "Found {when}",
     "cropAlt": "Photo of a found plate",
-    "resultsCount": "{count, plural, one {# result} other {# results}}",
     "viewPost": "View details and contact the finder"
   },
   "match": {
@@ -377,9 +371,9 @@
       "title": "How to use it",
       "ownerTitle": "If you lost a plate",
       "owner": {
-        "a": "Tap “I lost a plate”, type the plate number and choose the province.",
+        "a": "Tap “I lost a plate”, type the plate number and tap “Search”.",
         "b": "If someone has already found it, you see it straight away. Compare the photo with your plate, then get the finder’s contact details.",
-        "c": "If not, add your contact details and report it lost. When someone finds it, it is matched automatically. Check “My posts” for matches (sign in with Google to see them on another device)."
+        "c": "If not, tap “Report it lost” and add your contact details. When someone finds it, it is matched automatically. Check “My posts” for matches (sign in with Google to see them on another device)."
       },
       "finderTitle": "If you found a plate",
       "finder": {

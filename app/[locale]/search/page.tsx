@@ -1,18 +1,7 @@
-import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
-import { SearchPanel } from '@/components/flows/SearchPanel';
-import { PageShell } from '@/components/site/PageShell';
+import { getLocale } from 'next-intl/server';
+import { redirect } from '@/i18n/navigation';
 
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations('search');
-  return { title: t('title') };
-}
-
+/** Searching a plate is the first step of "I lost a plate" now (D-101); old links land there. */
 export default async function SearchPage() {
-  const t = await getTranslations('search');
-  return (
-    <PageShell title={t('title')}>
-      <SearchPanel />
-    </PageShell>
-  );
+  redirect({ href: '/lost', locale: await getLocale() });
 }

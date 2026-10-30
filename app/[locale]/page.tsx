@@ -1,12 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
-import {
-  ArrowRightIcon,
-  PostsIcon,
-  SearchIcon,
-  CameraIcon,
-  LostPlateIcon,
-} from '@/components/icons';
+import { ArrowRightIcon, PostsIcon, CameraIcon, LostPlateIcon } from '@/components/icons';
 import { HomeAccountHint } from '@/components/auth/HomeAccountHint';
 import { HowItWorks } from '@/components/home/HowItWorks';
 import { Phrased } from '@/components/ui/Phrased';
@@ -58,14 +52,8 @@ export default async function HomePage() {
         />
       </nav>
 
-      {/* Full-width, bordered and with an icon: easy to spot for people checking a plate. */}
-      <Link href="/search" className={`${bigLink} mt-4`}>
-        <SearchIcon size={28} />
-        <span className="flex-1">{t('search')}</span>
-        <ArrowRightIcon size={24} />
-      </Link>
-
-      <Link href="/my-posts" className={`${bigLink} mt-3`}>
+      {/* Searching a plate is the first step of "I lost a plate" (D-101). */}
+      <Link href="/my-posts" className={`${bigLink} mt-4`}>
         <PostsIcon size={28} />
         <span className="flex-1">{t('myPosts')}</span>
         <ArrowRightIcon size={24} />

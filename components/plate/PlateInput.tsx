@@ -26,11 +26,17 @@ export function PlateInput({
   onChange,
   errors = {},
   unreadable = false,
+  onEnter,
 }: {
   value: PlateDraft;
   onChange: (draft: PlateDraft) => void;
   errors?: PlateFieldErrors;
   unreadable?: boolean;
+  /**
+   * The keyboard's Enter key runs this (e.g. a search) and is labelled "search". Not a form:
+   * the province sheet's own search box sits inside this component and must not submit.
+   */
+  onEnter?: () => void;
 }) {
   const t = useTranslations('plate');
   const letters = useLocale() !== 'th';
@@ -70,13 +76,19 @@ export function PlateInput({
             ref={textRef}
             value={value.text}
             onChange={(e) => set({ text: e.target.value })}
+            onKeyDown={(e) => {
+              if (onEnter && e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                onEnter();
+              }
+            }}
             aria-label={t('textLabel')}
             aria-invalid={Boolean(textError) || undefined}
             aria-describedby={describedBy}
             placeholder={t('textPlaceholder')}
             lang="th"
             inputMode="text"
-            enterKeyHint="next"
+            enterKeyHint={onEnter ? 'search' : 'next'}
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="none"
