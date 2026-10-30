@@ -2,7 +2,6 @@
 
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
-import { AccountBox } from '@/components/auth/AccountBox';
 import { useErrorText } from '@/components/forms/useErrorText';
 import { PostCard, type OwnPost, type PostAction } from '@/components/manage/PostCard';
 import { Alert } from '@/components/ui/Alert';
@@ -111,7 +110,6 @@ export function MyPostsList() {
           <p>{t('emptyBody')}</p>
         </Alert>
         {notice && <Alert tone={notice.tone} title={notice.text} live />}
-        <AccountBox context="manage" />
       </div>
     );
   }
@@ -138,7 +136,6 @@ export function MyPostsList() {
           />
         ))}
       </ul>
-      <AccountBox context="manage" />
     </div>
   );
 }
