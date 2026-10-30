@@ -11,7 +11,9 @@ import { markDevicePostsLinked, unlinkedDevicePosts } from '@/lib/client/devices
  */
 
 export type Session =
-  { status: 'loading' } | { status: 'signed-out' } | { status: 'signed-in'; email: string | null };
+  | { status: 'loading' }
+  | { status: 'signed-out' }
+  | { status: 'signed-in'; email: string | null; avatarUrl: string | null };
 
 const CHANNEL = 'p2h-auth';
 const STORAGE_KEY = 'p2h.auth';
@@ -50,8 +52,12 @@ async function linkDevicePosts() {
 export function refreshSession(): Promise<void> {
   inflight ??= fetch('/api/auth/me', { cache: 'no-store' })
     .then((r) => (r.ok ? r.json() : { user: null }))
-    .then((body: { user: { email: string | null } | null }) =>
-      set(body.user ? { status: 'signed-in', email: body.user.email } : { status: 'signed-out' }),
+    .then((body: { user: { email: string | null; avatarUrl?: string | null } | null }) =>
+      set(
+        body.user
+          ? { status: 'signed-in', email: body.user.email, avatarUrl: body.user.avatarUrl ?? null }
+          : { status: 'signed-out' },
+      ),
     )
     .catch(() => set({ status: 'signed-out' }))
     .finally(() => {

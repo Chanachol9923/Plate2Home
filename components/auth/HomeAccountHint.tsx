@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useSyncExternalStore } from 'react';
+import { AccountBadge } from '@/components/auth/AccountBadge';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { Link } from '@/i18n/navigation';
 import { readDevicePosts } from '@/lib/client/devices';
@@ -17,7 +18,7 @@ const noSubscribe = () => () => undefined;
 
 /**
  * The sign-in part of the home page, fitted to the visitor (D-093, D-099): signed in, one line
- * saying the posts follow the account; signed out, a short question (posts on this device or
+ * with the account's Google picture and email (D-102); signed out, a short question (posts on this device or
  * not) and the Google button itself, so signing in is one tap from here (signing in links this
  * device's posts, D-094). Inside LINE and the like, where Google sign-in fails, it links to
  * "My posts", which explains how to open the page in the phone's browser.
@@ -40,9 +41,10 @@ export function HomeAccountHint() {
   let content = null;
   if (session.status === 'signed-in') {
     content = (
-      <Link href="/my-posts" className="text-sm text-ink-muted underline underline-offset-4">
-        {t('signedIn')}
-      </Link>
+      <p className="flex max-w-full items-center justify-center gap-2 text-sm">
+        <span className="shrink-0 text-ink-muted">{t('signedIn')}</span>
+        <AccountBadge email={session.email} avatarUrl={session.avatarUrl} />
+      </p>
     );
   } else if (session.status === 'signed-out' && hasDevicePosts !== null) {
     content = inApp ? (
@@ -58,7 +60,8 @@ export function HomeAccountHint() {
   }
 
   // Keeps the signed-out height while loading so the page below does not jump.
+  const reserve = session.status === 'signed-in' ? '' : 'min-h-24';
   return (
-    <div className="mt-4 flex min-h-24 flex-col items-center gap-2 text-center">{content}</div>
+    <div className={`mt-4 flex flex-col items-center gap-2 text-center ${reserve}`}>{content}</div>
   );
 }

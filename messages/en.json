@@ -44,7 +44,7 @@
     },
     "myPosts": "My posts",
     "account": {
-      "signedIn": "Signed in. Your posts are on every device.",
+      "signedIn": "Signed in as",
       "deviceOnly": "Want these posts on your other devices too? Sign in with Google under “My posts”.",
       "elsewhere": "Posted from another device? Sign in with Google under “My posts” to see it.",
       "deviceOnlyLead": "Want to see your posts on other devices too?",
@@ -408,7 +408,7 @@
         "a": "The plate number, province and note you enter",
         "b": "The contact details you enter (LINE ID, phone, email)",
         "c": "Cropped plate photos only (from finders)",
-        "d": "If you sign in with Google (optional): your account id and email, to link your posts to you. We never see your Google password and never post anything to your account. Your email is shown to the other side only if you choose it as a contact.",
+        "d": "If you sign in with Google (optional): your account id and email, to link your posts to you, and your profile picture, so you can see which account you are signed in with. We never see your Google password and never post anything to your account. Your email is shown to the other side only if you choose it as a contact.",
         "e": "Your IP address, turned into a code that changes daily, used only against spam and abuse"
       },
       "notTitle": "What we don’t keep",
@@ -556,8 +556,7 @@
     "inAppBody": "This app (LINE, Facebook and the like) can't open Google sign-in. To sign in, open this page in Chrome or Safari first; photos and details you entered here won't come along. Or keep posting here without signing in.",
     "inAppOpen": "Open this page in Chrome or Safari",
     "inAppMenu": "Tap the ⋯ menu in the corner and choose “Open in browser”.",
-    "signedInAs": "Signed in as {email}",
-    "signedInNote": "Your posts are linked to this account: manage them from any device.",
+    "signedInAs": "Signed in as",
     "signOut": "Sign out",
     "emailFromAccount": "Filled in from your Google account. You can remove or change it.",
     "doneTitle": "You are signed in",
@@ -694,7 +693,7 @@
           "items": {
             "a": "2.1 What you enter when posting: the plate number, province, plate type, a note, and any contact details you choose to give (LINE ID, phone number or email).",
             "b": "2.2 Plate photos. A finder’s photo is cropped to the plate on their own device before it is sent, so we only ever receive the cropped plate, never the full photo. Data embedded in the photo, such as GPS location, is removed.",
-            "c": "2.3 Google account details, only if you choose to sign in: your account ID and email address. We never receive your password and do not ask for access to anything else in your account.",
+            "c": "2.3 Google account details, only if you choose to sign in: your account ID, email address and profile picture (the picture is shown only to you, never to other users). We never receive your password and do not ask for access to anything else in your account.",
             "d": "2.4 Technical data. Your IP address is turned into a code that changes every day before it is stored; we never store the IP address itself. The code is used to limit unusually frequent submissions, prevent spam, and record when contact details are viewed.",
             "e": "2.5 Feedback and reports: the rating and comments you send through the feedback form, and the reason you give when reporting a post.",
             "f": "2.6 We do not collect your name, national ID number, bank account number or location, and our forms will not accept them."

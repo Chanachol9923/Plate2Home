@@ -12,6 +12,26 @@ import { serverEnv } from '@/lib/env/server';
 export interface SessionUser {
   id: string;
   email: string | null;
+  /** The Google profile picture, shown only to the user themselves (D-102). */
+  avatarUrl: string | null;
+}
+
+const GOOGLE_AVATAR_HOST = 'lh3.googleusercontent.com';
+
+/**
+ * The profile picture Google sent at sign-in, if it really is a Google one. user_metadata can
+ * be changed by the user through Supabase, so anything else is dropped (the CSP allows only
+ * this host for images too).
+ */
+export function googleAvatar(meta: Record<string, unknown> | undefined): string | null {
+  const raw = meta?.avatar_url ?? meta?.picture;
+  if (typeof raw !== 'string') return null;
+  try {
+    const url = new URL(raw);
+    return url.protocol === 'https:' && url.hostname === GOOGLE_AVATAR_HOST ? url.href : null;
+  } catch {
+    return null;
+  }
 }
 
 export function authConfigured(): boolean {
@@ -51,7 +71,11 @@ export async function currentUser(): Promise<SessionUser | null> {
   const { data, error } = await sb.auth.getUser();
   if (error || !data.user) return null;
   if (!isGoogleAccount(data.user.app_metadata)) return null;
-  return { id: data.user.id, email: data.user.email ?? null };
+  return {
+    id: data.user.id,
+    email: data.user.email ?? null,
+    avatarUrl: googleAvatar(data.user.user_metadata),
+  };
 }
 
 /**

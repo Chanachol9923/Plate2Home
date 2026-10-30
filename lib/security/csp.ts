@@ -38,7 +38,8 @@ export function buildCsp({ nonce, isDev, supabaseUrl, secure = true }: CspOption
     'style-src-elem': ["'self'", isDev ? "'unsafe-inline'" : n],
     // Style attributes cannot execute script; allowing them keeps third-party widgets working.
     'style-src-attr': ["'unsafe-inline'"],
-    'img-src': ["'self'", 'blob:', 'data:', supabase],
+    // Google profile pictures of the signed-in user (D-102).
+    'img-src': ["'self'", 'blob:', 'data:', supabase, 'https://lh3.googleusercontent.com'],
     'font-src': ["'self'"],
     'connect-src': ["'self'", supabase, TURNSTILE],
     'frame-src': [TURNSTILE],

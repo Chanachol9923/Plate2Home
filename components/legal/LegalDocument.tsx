@@ -9,7 +9,7 @@ import { brand } from '@/lib/config/brand';
  * either document. LEGAL-TODO(terms), LEGAL-TODO(data-controller): both are drafts awaiting
  * review by a Thai lawyer (docs/legal-todo.md).
  */
-export const LEGAL_UPDATED = new Date('2026-10-29T00:00:00+07:00');
+export const LEGAL_UPDATED = new Date('2026-10-30T00:00:00+07:00');
 
 type Doc = 'terms' | 'privacy';
 

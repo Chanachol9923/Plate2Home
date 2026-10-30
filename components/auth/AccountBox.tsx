@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { AccountBadge } from '@/components/auth/AccountBadge';
 import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { buttonClass } from '@/components/ui/Button';
 import { inAppBrowser, lineExternalUrl } from '@/lib/client/inapp';
@@ -21,8 +22,10 @@ export function AccountBox({ context }: { context: 'post' | 'manage' }) {
   if (session.status === 'signed-in') {
     return (
       <div className="space-y-1 rounded-md border-2 border-line-soft bg-surface p-3">
-        <p className="font-semibold">{t('signedInAs', { email: session.email ?? '' })}</p>
-        <p className="text-sm text-ink-muted">{t('signedInNote')}</p>
+        <p className="flex max-w-full items-center gap-2">
+          <span className="shrink-0">{t('signedInAs')}</span>
+          <AccountBadge email={session.email} avatarUrl={session.avatarUrl} />
+        </p>
         <button
           type="button"
           onClick={() => void signOut()}

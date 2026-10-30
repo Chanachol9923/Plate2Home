@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isGoogleAccount, safeNext } from './session';
+import { googleAvatar, isGoogleAccount, safeNext } from './session';
 
 describe('isGoogleAccount', () => {
   it('accepts accounts with a Google identity', () => {
@@ -25,5 +25,25 @@ describe('safeNext', () => {
     for (const bad of [null, '', 'https://evil.test', '//evil.test', '/\\evil.test', 'lost']) {
       expect(safeNext(bad)).toBe('/signed-in');
     }
+  });
+});
+
+describe('googleAvatar (D-102)', () => {
+  const pic = 'https://lh3.googleusercontent.com/a/ACg8ocK=s96-c';
+
+  it('takes the Google profile picture from avatar_url or picture', () => {
+    expect(googleAvatar({ avatar_url: pic })).toBe(pic);
+    expect(googleAvatar({ picture: pic })).toBe(pic);
+  });
+
+  it('drops anything not served by Google over https (user_metadata is user-editable)', () => {
+    expect(googleAvatar({ avatar_url: 'https://evil.example/a.png' })).toBeNull();
+    expect(googleAvatar({ avatar_url: 'http://lh3.googleusercontent.com/a/x' })).toBeNull();
+    expect(
+      googleAvatar({ avatar_url: 'https://lh3.googleusercontent.com.evil.example/a' }),
+    ).toBeNull();
+    expect(googleAvatar({ avatar_url: 'javascript:alert(1)' })).toBeNull();
+    expect(googleAvatar({ avatar_url: 42 })).toBeNull();
+    expect(googleAvatar(undefined)).toBeNull();
   });
 });
