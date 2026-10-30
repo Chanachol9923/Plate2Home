@@ -25,7 +25,7 @@
     "actionsLabel": "What would you like to do?",
     "lost": {
       "title": "I lost a plate",
-      "hint": "Register your plate. It’s matched the moment someone finds it."
+      "hint": "Enter the number and see if someone has found it."
     },
     "found": {
       "title": "I found a plate",
@@ -159,17 +159,22 @@
     "introFound": "Only the plate's owner sees this, and only once there is a match. Add at least one."
   },
   "lost": {
-    "title": "I lost a plate",
+    "title": "Find my lost plate",
     "steps": {
       "plate": "Lost plate number",
       "contact": "How to reach you",
       "confirm": "Confirm and send"
     },
     "plateIntro": "Enter the number of the lost plate. We'll check right away whether someone has found it.",
-    "checking": "Checking whether someone found it…",
+    "search": "Search",
+    "checking": "Searching…",
     "foundAlready": "Someone has found this plate!",
     "foundAlreadyBody": "Compare the photo with your plate first. If it is yours, get the finder’s contact details from the card below.",
-    "notFoundYet": "Nobody has found this plate yet. Report it lost and it will be matched automatically when someone does.",
+    "notFoundTitle": "No one has found this plate yet",
+    "notFoundBody": "Report it lost and we’ll match it the moment someone finds it. You’ll see it under “My posts”.",
+    "report": "Report it lost",
+    "searchFailed": "The search didn’t work. Try again, or report it lost anyway (we match it when you do).",
+    "retry": "Search again",
     "submit": "Report lost plate",
     "doneTitle": "Reported. When someone finds this plate, we'll match it straight away.",
     "doneManage": "Check matches and manage the post under “My posts” on this device, or on any device if you sign in with Google.",

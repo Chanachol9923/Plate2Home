@@ -126,12 +126,12 @@ export function LostFlow() {
     setAlready(null);
     const res = await postJson<{ results: FoundResult[] }>('/api/search', { plate: plateInput });
     setBusy(false);
-    // A failed search must not block registering a watch (matching runs again on submit).
+    // A failed search must not block reporting it lost (matching runs again on submit).
     // The user's own found posts are not "someone found it".
     const mineFound = ownFoundIds(ownNow);
     const results = res.ok ? res.data.results.filter((r) => !mineFound.has(r.postId)) : [];
+    // Search first (D-100): the result is shown here; reporting starts only when asked for.
     setSearch({ for: plateKey, results, failed: !res.ok });
-    if (results.length === 0) go('contact');
   }
 
   function checkContact() {
@@ -228,16 +228,20 @@ export function LostFlow() {
     );
   }
 
-  const index = STEPS.indexOf(step as Step) + 1;
+  // The search is not a step: the stepper counts only the steps of reporting it lost.
+  const index = STEPS.indexOf(step as Step);
+  const total = STEPS.length - 1;
   const searchedThis = search?.for === plateKey;
 
   return (
     <div>
-      <Stepper
-        current={index}
-        total={STEPS.length}
-        label={`${tc('step', { current: index, total: STEPS.length })} · ${t(`steps.${step}`)}`}
-      />
+      {step !== 'plate' && (
+        <Stepper
+          current={index}
+          total={total}
+          label={`${tc('step', { current: index, total })} · ${t(`steps.${step}`)}`}
+        />
+      )}
       {formError && (
         <div className="mb-4">
           <Alert tone="error" title={formError} live />
@@ -260,9 +264,28 @@ export function LostFlow() {
                 {t('alsoWatch')}
               </Button>
             </div>
+          ) : searchedThis && search.failed ? (
+            <div className="space-y-3">
+              <Alert tone="error" title={t('searchFailed')} live />
+              <Button block busy={busy} busyLabel={t('checking')} onClick={checkPlate}>
+                {t('retry')}
+              </Button>
+              <Button block variant="secondary" onClick={() => go('contact')}>
+                {t('report')}
+              </Button>
+            </div>
+          ) : searchedThis ? (
+            <div className="space-y-3">
+              <Alert tone="info" title={t('notFoundTitle')} live>
+                <p>{t('notFoundBody')}</p>
+              </Alert>
+              <Button block onClick={() => go('contact')}>
+                {t('report')}
+              </Button>
+            </div>
           ) : (
             <Button block busy={busy} busyLabel={t('checking')} onClick={checkPlate}>
-              {tc('next')}
+              {t('search')}
             </Button>
           )}
         </div>
@@ -270,9 +293,8 @@ export function LostFlow() {
 
       {step === 'contact' && (
         <div className="space-y-5">
-          {searchedThis && !search.failed && search.results.length === 0 && (
-            <Alert tone="info">{t('notFoundYet')}</Alert>
-          )}
+          {/* Which plate is being reported, now that the search is behind. */}
+          {plateUsable && <PlateView plate={normalizePlate(plateInput)} size="sm" />}
           <AccountBox context="post" />
           <ContactFields
             shownTo="finder"

@@ -49,7 +49,10 @@ test('owner and finder are matched and can reach each other', async ({ page, bro
   // --- Owner: register a watch --------------------------------------------------------------
   await owner.goto('/lost');
   await fillPlate(owner, number);
-  await owner.getByRole('button', { name: 'ถัดไป' }).click();
+  // Search first (D-100); nobody has found it yet, so the owner reports it lost.
+  await owner.getByRole('button', { name: 'ค้นหา', exact: true }).click();
+  await expect(owner.getByText('ยังไม่มีใครเก็บป้ายนี้ได้')).toBeVisible();
+  await owner.getByRole('button', { name: 'แจ้งป้ายหายไว้' }).click();
   await expect(owner).toHaveURL(/step=contact/);
 
   await owner.getByLabel('LINE ID (แนะนำ)').fill('e2e.owner');

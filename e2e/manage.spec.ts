@@ -22,7 +22,8 @@ async function passTurnstile(page: Page) {
 async function reportLost(page: Page, number: string) {
   await page.goto('/lost');
   await fillPlate(page, number);
-  await page.getByRole('button', { name: 'ถัดไป' }).click();
+  await page.getByRole('button', { name: 'ค้นหา', exact: true }).click();
+  await page.getByRole('button', { name: 'แจ้งป้ายหายไว้' }).click();
   // Signing in is offered next to the contact details, never required.
   await expect(page.getByRole('button', { name: 'เข้าสู่ระบบด้วย Google' })).toBeVisible();
   await page.getByLabel('LINE ID (แนะนำ)').fill('e2e.manage');
@@ -44,10 +45,10 @@ test('the owner manages the post from My posts on the same device, no sign-in ne
   // The same plate again on this device: shown the existing report, no second one (D-091).
   await page.goto('/lost');
   await fillPlate(page, number);
-  await page.getByRole('button', { name: 'ถัดไป' }).click();
+  await page.getByRole('button', { name: 'ค้นหา', exact: true }).click();
   await expect(page.getByText('คุณแจ้งป้ายนี้หายไว้แล้ว')).toBeVisible();
   await expect(page).not.toHaveURL(/step=contact/);
-  await expect(page.getByRole('button', { name: 'ถัดไป' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'แจ้งป้ายหายไว้' })).toHaveCount(0);
 
   // The home page knows this device has a post and offers signing in to see it elsewhere.
   await page.goto('/');
