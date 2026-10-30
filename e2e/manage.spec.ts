@@ -51,7 +51,8 @@ test('the owner manages the post from My posts on the same device, no sign-in ne
 
   // The home page knows this device has a post and offers signing in to see it elsewhere.
   await page.goto('/');
-  await expect(page.getByRole('link', { name: /^อยากดูโพสต์จากเครื่องอื่นด้วย/ })).toBeVisible();
+  await expect(page.getByText('อยากเปิดดูโพสต์จากเครื่องอื่นด้วย?')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'เข้าสู่ระบบด้วย Google' })).toBeVisible();
 
   // Searching for it says it is theirs instead of offering to report it lost.
   await page.goto('/search');
@@ -75,7 +76,8 @@ test('the owner manages the post from My posts on the same device, no sign-in ne
   // Another device without the post: offered to sign in; the old PIN page leads here.
   const other = await (await browser.newContext(test.info().project.use)).newPage();
   await other.goto('/');
-  await expect(other.getByRole('link', { name: /^เคยโพสต์จากเครื่องอื่น/ })).toBeVisible();
+  await expect(other.getByText(/^เคยโพสต์จากเครื่องอื่น/)).toBeVisible();
+  await expect(other.getByRole('button', { name: 'เข้าสู่ระบบด้วย Google' })).toBeVisible();
   await other.goto('/manage');
   await expect(other).toHaveURL(/\/my-posts$/);
   await expect(other.getByRole('button', { name: 'เข้าสู่ระบบด้วย Google' })).toBeVisible();

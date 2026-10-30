@@ -34,20 +34,22 @@
     "search": "Search a plate number",
     "how": {
       "title": "How it works",
-      "lostTitle": "Lost a plate",
+      "step1": "Post the plate",
+      "lostTitle": "Lost one",
       "lostDo": "Type the number",
       "foundTitle": "Found one",
       "foundDo": "Take a photo",
-      "matchTitle": "Same number",
-      "matchDo": "We match you right away",
-      "contactTitle": "Get in touch and return it",
-      "contactDo": "You see each other’s contact details"
+      "step2": "Same number? We match you right away",
+      "step3": "Get in touch and return it",
+      "step3Do": "You see each other’s contact details"
     },
     "myPosts": "My posts",
     "account": {
       "signedIn": "Signed in. Your posts are on every device.",
       "deviceOnly": "Want these posts on your other devices too? Sign in with Google under “My posts”.",
-      "elsewhere": "Posted from another device? Sign in with Google under “My posts” to see it."
+      "elsewhere": "Posted from another device? Sign in with Google under “My posts” to see it.",
+      "deviceOnlyLead": "Want to see your posts on other devices too?",
+      "elsewhereLead": "Posted from another device? Sign in to see it here."
     }
   },
   "dormant": {
